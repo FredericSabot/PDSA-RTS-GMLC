@@ -1,3 +1,9 @@
+# Changes compared to the RTS-GMLC
+
+## Time series
+
+* Real-time wind and load time series have been replaced by the day ahead ones due to unrealistically large forecast issues (that often lead to load shedding in the PRESCIENT model), see issues [114](https://github.com/GridMod/RTS-GMLC/issues/114) and [129](https://github.com/GridMod/RTS-GMLC/issues/114) in the original RTS-GMLC [repo](https://github.com/GridMod/RTS-GMLC)
+
 # SourceData
 
 This folder contains six CSV files wit all RTS-GMLC (non-timeseries) data and problem formulation parameters, the contents of each file follow. Timeseries data can be found [here](https://github.com/GridMod/RTS-GMLC/tree/master/RTS_Data/timeseries_data_files).
