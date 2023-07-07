@@ -7,7 +7,7 @@ for i in range(24):
         lines = file.readlines()
 
         if 'slurmstepd: error' in lines[-1]:
-            print('Run', i, 'timeout')
+            print('Run', i, 'SLURM error (probably timeout)')
             continue
 
         time = lines[-3].strip()
