@@ -130,13 +130,6 @@ DAY_AHEAD,Generator,118_RTPV_8,PMin MW,11.2,timeseries_data_files/RTPV/DAY_AHEAD
 DAY_AHEAD,Generator,118_RTPV_9,PMin MW,10.3,timeseries_data_files/RTPV/DAY_AHEAD_rtpv.csv
 DAY_AHEAD,Generator,118_RTPV_10,PMin MW,4.5,timeseries_data_files/RTPV/DAY_AHEAD_rtpv.csv
 DAY_AHEAD,Generator,213_RTPV_1,PMin MW,13.2,timeseries_data_files/RTPV/DAY_AHEAD_rtpv.csv
-DAY_AHEAD,Reserve,Flex_Down,Requirement,1,timeseries_data_files/Reserves/DAY_AHEAD_regional_Flex_Down.csv
-DAY_AHEAD,Reserve,Flex_Up,Requirement,1,timeseries_data_files/Reserves/DAY_AHEAD_regional_Flex_Up.csv
-DAY_AHEAD,Reserve,Reg_Down,Requirement,1,timeseries_data_files/Reserves/DAY_AHEAD_regional_Reg_Down.csv
-DAY_AHEAD,Reserve,Reg_Up,Requirement,1,timeseries_data_files/Reserves/DAY_AHEAD_regional_Reg_Up.csv
-DAY_AHEAD,Reserve,Spin_Up_R1,Requirement,1,timeseries_data_files/Reserves/DAY_AHEAD_regional_Spin_Up_R1.csv
-DAY_AHEAD,Reserve,Spin_Up_R2,Requirement,1,timeseries_data_files/Reserves/DAY_AHEAD_regional_Spin_Up_R2.csv
-DAY_AHEAD,Reserve,Spin_Up_R3,Requirement,1,timeseries_data_files/Reserves/DAY_AHEAD_regional_Spin_Up_R3.csv
 DAY_AHEAD,Area,1,MW Load,2850,timeseries_data_files/Load/DAY_AHEAD_regional_Load.csv
 DAY_AHEAD,Area,2,MW Load,2850,timeseries_data_files/Load/DAY_AHEAD_regional_Load.csv
 DAY_AHEAD,Area,3,MW Load,2850,timeseries_data_files/Load/DAY_AHEAD_regional_Load.csv
@@ -273,11 +266,6 @@ REAL_TIME,Generator,118_RTPV_8,PMin MW,11.2,timeseries_data_files/RTPV/REAL_TIME
 REAL_TIME,Generator,118_RTPV_9,PMin MW,10.3,timeseries_data_files/RTPV/REAL_TIME_rtpv.csv
 REAL_TIME,Generator,118_RTPV_10,PMin MW,4.5,timeseries_data_files/RTPV/REAL_TIME_rtpv.csv
 REAL_TIME,Generator,213_RTPV_1,PMin MW,13.2,timeseries_data_files/RTPV/REAL_TIME_rtpv.csv
-REAL_TIME,Reserve,Reg_Down,Requirement,1,timeseries_data_files/Reserves/REAL_TIME_regional_Reg_Down.csv
-REAL_TIME,Reserve,Reg_Up,Requirement,1,timeseries_data_files/Reserves/REAL_TIME_regional_Reg_Up.csv
-REAL_TIME,Reserve,Spin_Up_R1,Requirement,1,timeseries_data_files/Reserves/REAL_TIME_regional_Spin_Up_R1.csv
-REAL_TIME,Reserve,Spin_Up_R2,Requirement,1,timeseries_data_files/Reserves/REAL_TIME_regional_Spin_Up_R2.csv
-REAL_TIME,Reserve,Spin_Up_R3,Requirement,1,timeseries_data_files/Reserves/REAL_TIME_regional_Spin_Up_R3.csv
 REAL_TIME,Area,1,MW Load,2850,timeseries_data_files/Load/REAL_TIME_regional_load.csv
 REAL_TIME,Area,2,MW Load,2850,timeseries_data_files/Load/REAL_TIME_regional_load.csv
 REAL_TIME,Area,3,MW Load,2850,timeseries_data_files/Load/REAL_TIME_regional_load.csv

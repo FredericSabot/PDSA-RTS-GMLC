@@ -1,2 +1,12 @@
+1-Prescient/data/*
 1-Prescient/*output*/*
 1-Prescient/*output/*
+1-Prescient/PrescientDispatch*/*
+2-SCOPF/**/*.gdx
+2-SCOPF/**/*.lst
+2-SCOPF/**/*.pf
+2-SCOPF/**/*.dat
+2-SCOPF/**/*.sh
+2-SCOPF/**/*.log
+2-SCOPF/*/*/*.opt
+2-SCOPF/d-Final-dispatch/*

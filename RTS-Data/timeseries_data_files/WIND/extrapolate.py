@@ -16,4 +16,7 @@ for row in reader:
         continue
     else:
         for i in range(int(60/5)):
-            writer.writerow(row)
+            year, month, day = row[0:3]
+            period = int(row[3])
+            data = row[4:]
+            writer.writerow([year, month, day, int((period-1)*60/5 + i + 1)] + data)

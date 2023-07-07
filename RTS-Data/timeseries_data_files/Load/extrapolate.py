@@ -8,12 +8,12 @@ csv_out = open('REAL_TIME_regional_load.csv', 'w')
 reader = csv.reader(csv_in)
 writer = csv.writer(csv_out)
 
-header = True
+header = next(reader)
+writer.writerow(header)
+
 for row in reader:
-    if header:
-        writer.writerow(row)
-        header = False
-        continue
-    else:
-        for i in range(int(60/5)):
-            writer.writerow(row)
+    for i in range(int(60/5)):
+        year, month, day = row[0:3]
+        period = int(row[3])
+        load = [float(i) for i in row[4:]]
+        writer.writerow([year, month, day, int((period-1)*60/5 + i + 1)] + load)
