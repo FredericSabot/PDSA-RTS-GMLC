@@ -11,6 +11,19 @@ It consists in:
 
 # Usage
 
+## Data preparation
+
+The following scripts should be rerun if the input data in /RTS-Data is modified
+
+```
+cd RTS-Data
+python source_to_iidm.py
+cd timeseries_data_files/Load
+python extrapolate.py
+cd ../WIND
+python extrapolate.py
+```
+
 ## Prescient
 
 ```
