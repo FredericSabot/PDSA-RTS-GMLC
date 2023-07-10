@@ -383,10 +383,10 @@ Qg_thermal_max_ck(i_thermal, i_contingency)..
 Q_thermal_ck(i_thermal, i_contingency) =l= thermal_Qmax(i_thermal);
 
 thermal_PQswitchMax(i_thermal, i_contingency)..
-(Q_thermal_ck(i_thermal, i_contingency) - thermal_Qmax(i_thermal)) * sum(i_bus$(thermal_map(i_thermal,i_bus)), Vdev_pos_ck(i_bus, i_contingency)) =e= 0;
+(Q_thermal_ck(i_thermal, i_contingency) - thermal_Qmax(i_thermal)) * sum(i_bus$(thermal_map(i_thermal,i_bus)), Vdev_neg_ck(i_bus, i_contingency)) =e= 0;
 
 thermal_PQswitchMin(i_thermal, i_contingency)..
-(Q_thermal_ck(i_thermal, i_contingency) - thermal_Qmin(i_thermal)) * sum(i_bus$(thermal_map(i_thermal,i_bus)), Vdev_neg_ck(i_bus, i_contingency)) =e= 0;
+(Q_thermal_ck(i_thermal, i_contingency) - thermal_Qmin(i_thermal)) * sum(i_bus$(thermal_map(i_thermal,i_bus)), Vdev_pos_ck(i_bus, i_contingency)) =e= 0;
 
 Qg_hydro_min_ck(i_hydro, i_contingency)..
 Q_hydro_ck(i_hydro, i_contingency) =g= hydro_Qmin(i_hydro);
@@ -395,10 +395,10 @@ Qg_hydro_max_ck(i_hydro, i_contingency)..
 Q_hydro_ck(i_hydro, i_contingency) =l= hydro_Qmax(i_hydro);
 
 hydro_PQswitchMax(i_hydro, i_contingency)..
-(Q_hydro_ck(i_hydro, i_contingency) - hydro_Qmax(i_hydro)) * sum(i_bus$(hydro_map(i_hydro,i_bus)), Vdev_pos_ck(i_bus, i_contingency)) =e= 0;
+(Q_hydro_ck(i_hydro, i_contingency) - hydro_Qmax(i_hydro)) * sum(i_bus$(hydro_map(i_hydro,i_bus)), Vdev_neg_ck(i_bus, i_contingency)) =e= 0;
 
 hydro_PQswitchMin(i_hydro, i_contingency)..
-(Q_hydro_ck(i_hydro, i_contingency) - hydro_Qmin(i_hydro)) * sum(i_bus$(hydro_map(i_hydro,i_bus)), Vdev_neg_ck(i_bus, i_contingency)) =e= 0;
+(Q_hydro_ck(i_hydro, i_contingency) - hydro_Qmin(i_hydro)) * sum(i_bus$(hydro_map(i_hydro,i_bus)), Vdev_pos_ck(i_bus, i_contingency)) =e= 0;
 
 Qg_syncon_min_ck(i_syncon, i_contingency)..
 Q_syncon_ck(i_syncon, i_contingency) =g= syncon_Qmin(i_syncon);
@@ -407,10 +407,10 @@ Qg_syncon_max_ck(i_syncon, i_contingency)..
 Q_syncon_ck(i_syncon, i_contingency) =l= syncon_Qmax(i_syncon);
 
 syncon_PQswitchMax(i_syncon, i_contingency)..
-(Q_syncon_ck(i_syncon, i_contingency) - syncon_Qmax(i_syncon)) * sum(i_bus$(syncon_map(i_syncon,i_bus)), Vdev_pos_ck(i_bus, i_contingency)) =e= 0;
+(Q_syncon_ck(i_syncon, i_contingency) - syncon_Qmax(i_syncon)) * sum(i_bus$(syncon_map(i_syncon,i_bus)), Vdev_neg_ck(i_bus, i_contingency)) =e= 0;
 
 syncon_PQswitchMin(i_syncon, i_contingency)..
-(Q_syncon_ck(i_syncon, i_contingency) - syncon_Qmin(i_syncon)) * sum(i_bus$(syncon_map(i_syncon,i_bus)), Vdev_neg_ck(i_bus, i_contingency)) =e= 0;
+(Q_syncon_ck(i_syncon, i_contingency) - syncon_Qmin(i_syncon)) * sum(i_bus$(syncon_map(i_syncon,i_bus)), Vdev_pos_ck(i_bus, i_contingency)) =e= 0;
 
 Qg_wind_min_ck(i_wind, i_contingency)..
 Q_wind_ck(i_wind, i_contingency) =g= wind_Qmin(i_wind);
@@ -419,10 +419,10 @@ Qg_wind_max_ck(i_wind, i_contingency)..
 Q_wind_ck(i_wind, i_contingency) =l= wind_Qmax(i_wind);
 
 wind_PQswitchMax(i_wind, i_contingency)..
-(Q_wind_ck(i_wind, i_contingency) - wind_Qmax(i_wind)) * sum(i_bus$(wind_map(i_wind,i_bus)), Vdev_pos_ck(i_bus, i_contingency)) =e= 0;
+(Q_wind_ck(i_wind, i_contingency) - wind_Qmax(i_wind)) * sum(i_bus$(wind_map(i_wind,i_bus)), Vdev_neg_ck(i_bus, i_contingency)) =e= 0;
 
 wind_PQswitchMin(i_wind, i_contingency)..
-(Q_wind_ck(i_wind, i_contingency) - wind_Qmin(i_wind)) * sum(i_bus$(wind_map(i_wind,i_bus)), Vdev_neg_ck(i_bus, i_contingency)) =e= 0;
+(Q_wind_ck(i_wind, i_contingency) - wind_Qmin(i_wind)) * sum(i_bus$(wind_map(i_wind,i_bus)), Vdev_pos_ck(i_bus, i_contingency)) =e= 0;
 
 Voltage_min_ck(i_bus, i_contingency)..
 V_ck(i_bus, i_contingency) =g= 0.85;
@@ -479,7 +479,7 @@ P2_ck(i_branch, i_contingency)*P2_ck(i_branch, i_contingency)+Q2_ck(i_branch, i_
 
 model test /all/;
 
-option reslim = 600;
+*option reslim = 600;
 option nlp=ipopt;
 test.optfile=1;
 

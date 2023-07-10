@@ -646,7 +646,7 @@ while True:
 
     pscacopf_path = os.path.join('c-PSCACOPF', str(hour))
     Path(pscacopf_path).mkdir(parents=True, exist_ok=True)
-    ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), pscacopf_path))  #, debug=gams.DebugLevel.Verbose)
+    ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), pscacopf_path))  #, debug=gams.DebugLevel.ShowLog)
     db_prePSCAC = ws.add_database()
     shutil.copy(os.path.join('c-PSCACOPF', 'ipopt.opt'), pscacopf_path)
 
