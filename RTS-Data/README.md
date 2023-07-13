@@ -9,7 +9,7 @@
     * Remove the 3 100 MVar shunts (note that some scripts migth thus not handle shunts)
     * Reduce the susceptance of cables from 2.459 to 1.459, except cable C10 that is reduced to 0.459
     * Remove the synchronous compensator at bus 14 and replace it with two compensators of half capacities at buses 8 and 14
-    * Add a 125 MVA synchronous compensator at bus 306
+    * Add a 100 MVA synchronous compensator at bus 306
     * Add reactive capabilities to wind generators (corresponding to 0.95 power factor at peak capacity)
 * Time series
     * Real-time wind and load time series have been replaced by the day ahead ones due to unrealistically large forecast issues (that often lead to load shedding in the PRESCIENT model), see issues [114](https://github.com/GridMod/RTS-GMLC/issues/114) and [129](https://github.com/GridMod/RTS-GMLC/issues/114) in the original RTS-GMLC [repo](https://github.com/GridMod/RTS-GMLC)
