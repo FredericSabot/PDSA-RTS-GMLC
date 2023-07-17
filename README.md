@@ -24,6 +24,8 @@ cd ../WIND
 python extrapolate.py
 ```
 
+Then manually set the source format of RTS-Data/RTS.iidm to "RTS-GMLC" (or any value actually) as it is not possible to write it with Powsybl and Dynawo requires a non null value
+
 ## Prescient
 
 ```
