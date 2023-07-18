@@ -47,8 +47,8 @@ def unit_group_translation(unit_group):
             raise NotImplementedError(unit_group, 'is not considered')
 
 
-case = 'january'
-input_files = glob.glob('../2-SCOPF/d-Final-dispatch/' + case + '/*.iidm')
+# case = 'january'
+# input_files = glob.glob('../2-SCOPF/d-Final-dispatch/' + case + '/*.iidm')
 
 input_file = '../RTS-Data/RTS.iidm'
 network = pp.network.load(input_file)
@@ -455,7 +455,7 @@ for i in range(N_gens):
         references = [
             {'name': 'generator_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
             # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
-            {'name': 'generator_Q0Pu', 'origData': 'IIDM', 'origName': 'q_pu', 'type': 'DOUBLE'},
+            {'name': 'generator_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
             {'name': 'generator_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
             {'name': 'generator_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
         ]
@@ -551,7 +551,7 @@ for i in range(N_gens):
             references = [
                 {'name': 'WTG4B_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
                 # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
-                {'name': 'WTG4B_Q0Pu', 'origData': 'IIDM', 'origName': 'q_pu', 'type': 'DOUBLE'},
+                {'name': 'WTG4B_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
                 {'name': 'WTG4B_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
                 {'name': 'WTG4B_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
             ]
@@ -592,7 +592,7 @@ for i in range(N_gens):
             references = [
                 {'name': 'ibg_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
                 # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
-                {'name': 'ibg_Q0Pu', 'origData': 'IIDM', 'origName': 'q_pu', 'type': 'DOUBLE'},
+                {'name': 'ibg_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
                 {'name': 'ibg_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
                 {'name': 'ibg_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},                
             ]
