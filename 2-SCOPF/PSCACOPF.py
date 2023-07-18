@@ -789,6 +789,12 @@ while True:
     network.update_generators(id=pv_gens['GEN UID'], target_p=np.array(list(P_PSCAC_pv.values())) * baseMVA)
     network.update_generators(id=syncon_gens['GEN UID'], target_q=np.array(list(Q_PSCAC_syncon.values())) * baseMVA)
 
+    # Disconnect PV generators at night
+    for i in range(N_pv_gens):
+        network.update_generators(id=pv_gens['GEN UID'][i], connected = pv_max[i] > 0)
+    for i in range(N_rtpv_gens):
+        network.update_generators(id=rtpv_gens['GEN UID'][i], connected = rtpv_max[i] > 0)
+
     for i in range(N_gens):
         bus_id = gens['Bus ID'][i]
         index = buses['Bus ID'].index(bus_id)

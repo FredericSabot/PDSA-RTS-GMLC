@@ -43,6 +43,12 @@ cd ../2-SCOPF
 ```
 Note that a SLURM-based runner (run_cluster.sh) is also available for use in high-performing computing
 
+## Dynamic data
+
+```
+cd ../3-DynData
+python add_dyn_data.py
+```
 
 # Requirements
 

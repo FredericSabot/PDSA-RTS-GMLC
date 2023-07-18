@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<curvesInput xmlns="http://www.rte-france.com/dynawo">
+  <curve model="NETWORK" variable="B-101_Upu_value"/>
+  <curve model="NETWORK" variable="B-102_Upu_value"/>
+  <curve model="NETWORK" variable="B-103_Upu_value"/>
+  <curve model="NETWORK" variable="B-104_Upu_value"/>
+  <curve model="NETWORK" variable="B-105_Upu_value"/>
+  <curve model="OMEGA_REF" variable="omegaRef_0_value"/>
+</curvesInput>

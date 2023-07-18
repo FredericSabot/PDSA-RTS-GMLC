@@ -12,3 +12,7 @@
 2-SCOPF/**/*.log
 2-SCOPF/*/*/*.opt
 2-SCOPF/d-Final-dispatch/*
+3-DynData/outputs/*
+3-DynData/RTS.dyd
+3-DynData/RTS.par
+3-DynData/RTS.iidm
