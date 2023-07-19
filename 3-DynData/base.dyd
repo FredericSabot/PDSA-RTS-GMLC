@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<dyn:dynamicModelsArchitecture xmlns:dyn="http://www.rte-france.com/dynawo">  
+<dyn:dynamicModelsArchitecture xmlns:dyn="http://www.rte-france.com/dynawo">
   <dyn:macroConnector id="LOAD-CONNECTOR">
     <dyn:connect var1="load_terminal" var2="@STATIC_ID@@NODE@_ACPIN"/>
     <dyn:connect var1="load_switchOffSignal1" var2="@STATIC_ID@@NODE@_switchOff"/>
@@ -32,13 +32,13 @@
     <dyn:staticRef var="generator_state" staticVar="state"/>
   </dyn:macroStaticReference>
   <dyn:macroStaticReference id="Wind">
-    <dyn:staticRef var="WTG4B_PGenPu" staticVar="p"/>
-    <dyn:staticRef var="WTG4B_QGenPu" staticVar="q"/>
-    <dyn:staticRef var="WTG4B_state" staticVar="state"/>
+    <dyn:staticRef var="WTG4B_measurements_PPu" staticVar="p"/>
+    <dyn:staticRef var="WTG4B_measurements_QPu" staticVar="q"/>
+    <dyn:staticRef var="WTG4B_injector_state" staticVar="state"/>
   </dyn:macroStaticReference>
   <dyn:macroStaticReference id="PV">
-    <dyn:staticRef var="ibg_PGenPu" staticVar="p"/>
-    <dyn:staticRef var="ibg_QGenPu" staticVar="q"/>
-    <dyn:staticRef var="ibg_state" staticVar="state"/>
+    <dyn:staticRef var="ibg_injector_PInjPu" staticVar="p"/>
+    <dyn:staticRef var="ibg_injector_QInjPu" staticVar="q"/>
+    <dyn:staticRef var="ibg_injector_state" staticVar="state"/>
   </dyn:macroStaticReference>
 </dyn:dynamicModelsArchitecture>

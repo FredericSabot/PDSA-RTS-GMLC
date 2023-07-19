@@ -1,0 +1,8 @@
+<criteria xmlns="http://www.rte-france.com/dynawo">
+	<busCriteria>
+		<parameters id="minimum bus voltage" scope="FINAL" type="LOCAL_VALUE" uMinPu="0.9" />
+	</busCriteria>
+	<busCriteria>
+		<parameters id="maximum bus voltage" scope="FINAL" type="LOCAL_VALUE" uMaxPu="1.1" />
+	</busCriteria>
+</criteria>
