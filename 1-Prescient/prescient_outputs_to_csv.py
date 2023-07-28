@@ -41,10 +41,10 @@ with open(os.path.join(folder_in, 'thermal_detail.csv'), 'r') as thermal:
             state = 1
         else:
             state = 0
-        
+
         if 'SYNC_COND' in name:
             continue
-        
+
         date = datetime.datetime.strptime(date, '%Y-%m-%d') + datetime.timedelta(hours = hour)
         hour = int((date - init_date).total_seconds() / 3600)
 
@@ -64,7 +64,7 @@ with open(os.path.join(folder_in, 'renewables_detail.csv'), 'r') as renew:
         hour = int(row[1])
         name = row[3]
         p = float(row[4])
-        
+
         date = datetime.datetime.strptime(date, '%Y-%m-%d') + datetime.timedelta(hours = hour)
         hour = int((date - init_date).total_seconds() / 3600)
 

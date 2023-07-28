@@ -28,14 +28,14 @@ Prescient().simulate(
     reserve_factor = 0.0, # Additional reserve factor *not* included in the data, fraction of load at every time step
     deterministic_ruc_solver = "gurobi", # MILP solver to use for unit commitment
     sced_solver = "gurobi", # (MI)LP solver to use for the SCED
-    output_solver_logs = False, # If True, outputs the logs from the unit commitment and SCED solves      
+    output_solver_logs = False, # If True, outputs the logs from the unit commitment and SCED solves
     ruc_horizon = 48, # Number of hours in unit commitment. Typically needs to be at least 24 (default = 48).
     monitor_all_contingencies = True,
 )
 
 # print outs only
-# --output-sced-initial-conditions 
+# --output-sced-initial-conditions
 # --output-sced-loads
-# --output-ruc-initial-conditions 
-# --output-ruc-solutions 
+# --output-ruc-initial-conditions
+# --output-ruc-solutions
 # --output-solver-logs

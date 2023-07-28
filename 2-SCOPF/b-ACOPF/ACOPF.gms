@@ -160,7 +160,7 @@ deviation =e= sum(i_thermal, power(P_thermal(i_thermal) - P_thermal_0(i_thermal)
 * + sum(i_hydro, power(P_hydro(i_hydro) - P_hydro_0(i_hydro), 2))
 * + sum(i_pv, power(P_pv(i_pv) - P_pv_0(i_pv), 2))
 * + sum(i_wind, power(P_wind(i_wind) - P_wind_0(i_wind), 2))
-* 
+*
 * + Kg * sum(i_thermal, power(Q_thermal(i_thermal) - (Q_thermal_max(i_thermal) + Q_thermal_min(i_thermal))/2, 2) / power(Q_thermal_max(i_thermal) - Q_thermal_min(i_thermal) + Epsilon, 2))
 * + Kg * sum(i_hydro, power(Q_hydro(i_hydro) - (Q_hydro_max(i_hydro) + Q_hydro_min(i_hydro))/2, 2) / power(Q_hydro_max(i_hydro) - Q_hydro_min(i_hydro) + Epsilon, 2))
 * + Kg * sum(i_syncon, power(Q_syncon(i_syncon) - (Q_syncon_max(i_syncon) + Q_syncon_min(i_syncon))/2, 2) / power(Q_syncon_max(i_syncon) - Q_syncon_min(i_syncon) + Epsilon, 2))

@@ -32,7 +32,7 @@ The [`REAL_TIME_rtpv.csv`](https://github.com/GridMod/RTS-GMLC/blob/master/RTS_D
 
 ## Reserves
 Day-Ahead reserve requirements are defined for the Flex_Down, Reg_Down, Spin_Up_R1, Spin_Up_R3, Flex_Up, Reg_Up, Spin_Up_R2 reserve products by region for each hour.
-Real-time reserve requirements are defined for the Reg_Down, Spin_Up_R1, Spin_Up_R3, Reg_Up, Spin_Up_R2 reserve products by region for each 5-minute interval. 
+Real-time reserve requirements are defined for the Reg_Down, Spin_Up_R1, Spin_Up_R3, Reg_Up, Spin_Up_R2 reserve products by region for each 5-minute interval.
 
 ## WIND
 The [`DAY_AHEAD_wind.csv`](https://github.com/GridMod/RTS-GMLC/blob/master/RTS_Data/timeseries_data_files/WIND/DAY_AHEAD_wind.csv) contains the forecasted avialable energy generation for each wind plant by hour.

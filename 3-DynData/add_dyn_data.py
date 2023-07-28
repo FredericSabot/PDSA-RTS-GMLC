@@ -88,7 +88,7 @@ for i in range(N_gens):
     unit_group = gens_csv['Unit Group'][i]
     unit_group = unit_group_translation(unit_group)
     genID = gens_csv['GEN UID'][i]
-    
+
     if unit_group == 'PV' or unit_group == 'RTPV':
         lib = 'GenericIBG'
         synchronous = False
@@ -107,7 +107,7 @@ for i in range(N_gens):
 
     gen_attrib = {'id': genID, 'lib': lib, 'parFile': name + '.par', 'parId': genID, 'staticId': genID}
     gen = etree.SubElement(dyd_root, etree.QName(namespace, 'blackBoxModel'), gen_attrib)
-    
+
     if synchronous:
         etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'OMEGA_REF', 'connector': 'MS_OMEGAREF_CONNECTOR', 'index2': str(omega_index)})
         etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'GEN'})
@@ -444,14 +444,14 @@ for i in range(N_gens):
                     {'type': 'DOUBLE', 'name': 'voltageRegulator_EfdSatHighPu', 'value': '0.95'},
                     {'type': 'DOUBLE', 'name': 'voltageRegulator_Kf', 'value': '0.040'},
                     {'type': 'DOUBLE', 'name': 'voltageRegulator_tF', 'value': '1'},
-                ]            
+                ]
             else:
                 raise NotImplementedError(unit_group, 'not considered')
 
 
         for par_attrib in par_attribs:
             etree.SubElement(gen_par_set, etree.QName(namespace, 'par'), par_attrib)
-        
+
         references = [
             {'name': 'generator_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
             # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
@@ -464,7 +464,7 @@ for i in range(N_gens):
 
         etree.SubElement(omega_par_set, etree.QName(namespace, 'par'), {'type': 'DOUBLE', 'name': 'weight_gen_' + str(omega_index), 'value': str(max(p_max, q_max))})  # Use q_max instead of p_max for syncons
         omega_index += 1
-    
+
     else:  # Not synchronous (PV, wind, RTPV)
         if unit_group == 'Wind':
             SNom = gens_csv['PMax MW'][i]
@@ -547,7 +547,7 @@ for i in range(N_gens):
                 {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq22', 'value': '1'},
                 {'type': 'DOUBLE', 'name': 'WTG4B_SNom', 'value': str(SNom)},
             ]
-            
+
             references = [
                 {'name': 'WTG4B_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
                 # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
@@ -594,12 +594,12 @@ for i in range(N_gens):
                 # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
                 {'name': 'ibg_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
                 {'name': 'ibg_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
-                {'name': 'ibg_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},                
+                {'name': 'ibg_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
             ]
 
         else:
             raise NotImplemented(unit_group, 'is not considered')
-        
+
         for par_attrib in par_attribs:
             etree.SubElement(gen_par_set, etree.QName(namespace, 'par'), par_attrib)
         for ref in references:

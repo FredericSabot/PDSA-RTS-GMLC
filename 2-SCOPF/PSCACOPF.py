@@ -109,7 +109,7 @@ for key in gens.keys():
 
 for i in range(N_gens):
     for key in gens.keys():
-        if gens['Fuel'][i] == 'Oil' or gens['Fuel'][i] == 'Coal' or gens['Fuel'][i] == 'NG' or gens['Fuel'][i] == 'Nuclear':        
+        if gens['Fuel'][i] == 'Oil' or gens['Fuel'][i] == 'Coal' or gens['Fuel'][i] == 'NG' or gens['Fuel'][i] == 'Nuclear':
             thermal_gens[key].append(gens[key][i])
         elif gens['Fuel'][i] == 'Hydro':
             hydro_gens[key].append(gens[key][i])
@@ -282,7 +282,7 @@ print('Total generation',
       sum(np.array(prescient_thermal_dispatch['Output']) / baseMVA) +
       sum(np.array(prescient_hydro_dispatch['Output']) / baseMVA) +
       sum(np.array(prescient_pv_dispatch['Output']) / baseMVA) +
-      sum(np.array(prescient_wind_dispatch['Output']) / baseMVA) + 
+      sum(np.array(prescient_wind_dispatch['Output']) / baseMVA) +
       sum(rtpv_max))
 
 print('Deviation:', round(deviation, 2))
@@ -433,7 +433,7 @@ print('Generation:',
       sum(P_AC_thermal.values()) +
       sum(P_AC_hydro.values()) +
       sum(P_AC_pv.values()) +
-      sum(P_AC_wind.values()) + 
+      sum(P_AC_wind.values()) +
       sum(rtpv_max))
 
 print('Deviation:', round(deviation, 2))
@@ -602,7 +602,7 @@ while True:
             Q_syncon_cont[i][j] = -gen_results['q'][syncon_gens['GEN UID'][i]] / baseMVA
         for i in range(N_wind_gens):
             Q_wind_cont[i][j] = -gen_results['q'][wind_gens['GEN UID'][i]] / baseMVA
-        
+
         V = []
         theta = []
         bus_results = network.get_buses()
@@ -634,7 +634,7 @@ while True:
                 if j not in current_critical_contingencies:
                     current_critical_contingencies.append(j)
                     print('Critical contingency', branches['UID'][j], ': low voltage at bus', int(buses['Bus ID'][i]), V_cont[i,j])
-    
+
     if set(current_critical_contingencies).issubset(critical_contingencies):  # No new critical contingencies compared to last iteration
         break
 
@@ -758,7 +758,7 @@ while True:
         sum(np.array(prescient_thermal_dispatch['Output']) / baseMVA) +
         sum(np.array(prescient_hydro_dispatch['Output']) / baseMVA) +
         sum(np.array(prescient_pv_dispatch['Output']) / baseMVA) +
-        sum(np.array(prescient_wind_dispatch['Output']) / baseMVA) + 
+        sum(np.array(prescient_wind_dispatch['Output']) / baseMVA) +
         sum(rtpv_max))
 
     print('Deviation:', round(deviation, 2))
@@ -783,7 +783,7 @@ while True:
     network.update_generators(id=hydro_gens['GEN UID'],
                               target_p=np.array(list(P_PSCAC_hydro.values())) * baseMVA,
                               target_q=np.array(list(Q_PSCAC_hydro.values())) * baseMVA)
-    network.update_generators(id=wind_gens['GEN UID'], 
+    network.update_generators(id=wind_gens['GEN UID'],
                               target_p=np.array(list(P_PSCAC_wind.values())) * baseMVA,
                               target_q=np.array(list(Q_PSCAC_wind.values())) * baseMVA)
     network.update_generators(id=pv_gens['GEN UID'], target_p=np.array(list(P_PSCAC_pv.values())) * baseMVA)
@@ -809,7 +809,7 @@ for j in range(N_branches):
         network.update_lines(id=branches['UID'][j], connected1=False, connected2=False)
     else:
         network.update_2_windings_transformers(id=branches['UID'][j], connected1=False, connected2=False)
-    
+
     sol = pp.loadflow.run_ac(network)
     if str(sol[0].status) == 'ComponentStatus.MAX_ITERATION_REACHED':
         raise RuntimeError('Post PSCACOPF: load flow did not converge for contingency of line', branches['UID'][j])

@@ -18,7 +18,7 @@ def create_RTS(path):
     transformers = {}
     for key in branches.keys():
         lines[key] = []
-        transformers[key] = []    
+        transformers[key] = []
     for i in range(N_branches):
         for key in branches.keys():
             if branches['Tr Ratio'][i] == 0:
@@ -39,7 +39,7 @@ def create_RTS(path):
 
         if bus_substation_map[bus1] < bus_substation_map[bus2]:  # The lowest bus ID is kept as the name of the substation
             bus_substation_map[bus2] = bus_substation_map[bus1]
-        
+
         if bus_substation_map[bus2] < bus_substation_map[bus1]:
             bus_substation_map[bus1] = bus_substation_map[bus2]
     substations = []
