@@ -18,3 +18,5 @@
 3-DynData/RTS.iidm
 3-DynData/N-1_Analysis/*
 3-DynData/protected/*
+4-PDSA/__pycache__/*
+4-PDSA/simulations/*

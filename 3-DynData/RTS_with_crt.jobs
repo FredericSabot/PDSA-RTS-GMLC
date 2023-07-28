@@ -8,7 +8,9 @@
       <dyn:precompiledModels useStandardModels="true"/>
       <dyn:modelicaModels useStandardModels="true"/>
     </dyn:modeler>
-    <dyn:simulation startTime="0" stopTime="20"/>
+    <dyn:simulation startTime="0" stopTime="20">
+      <dyn:criteria criteriaFile="RTS.crt"/>
+    </dyn:simulation>
     <dyn:outputs directory="outputs">
       <dyn:timeline exportMode="TXT" filter="true"/>
       <dyn:curves inputFile="RTS.crv" exportMode="CSV"/>
