@@ -20,3 +20,4 @@
 3-DynData/protected/*
 4-PDSA/__pycache__/*
 4-PDSA/simulations/*
+4-PDSA/log*.log

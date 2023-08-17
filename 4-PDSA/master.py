@@ -1,11 +1,11 @@
 from mpi4py import MPI
 from common import *
 from job import Job
-from contingencies import *
+from contingencies import Contingency
 import glob
 import os
 import random
-import time
+import logger
 from math import sqrt, ceil
 
 class Master:
@@ -25,19 +25,23 @@ class Master:
         N_2_contingencies = Contingency.create_N_2_contingencies()[0:2]  # Limit number of contingencies for first tests
 
         self.contingency_list = base_contingency + N_1_contingencies + N_2_contingencies
-        logging.info('Considering {} contingencies: {} base, {} N-1, {} N-2'.format(len(self.contingency_list), len(base_contingency), len(N_1_contingencies), len(N_2_contingencies)))
+        logger.logger.info('Considering {} contingencies: {} base, {} N-1, {} N-2'.format(len(self.contingency_list), len(base_contingency), len(N_1_contingencies), len(N_2_contingencies)))
 
     def run(self):
-        for job in self.job_queue.get_next_job():  # The master is directly stopped regardless of whether slaves are still running
+        init = True
+        jobs_to_run, _ = self.job_queue.get_next_jobs(init=True)
+        n_iter = 0
+        while True:
             status = MPI.Status()
             self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
             slave = status.Get_source()
             tag = status.Get_tag()
 
             if tag == MPI_TAGS.READY.value:
+                job = jobs_to_run.pop(0)
                 self.comm.recv(source=slave, tag=MPI_TAGS.READY.value, status=status)
 
-                logging.debug('Master: sending input job {} to slave {}'.format(job, slave))
+                logger.logger.log(logger.logging.TRACE, 'Master: sending input job {} to slave {}'.format(job, slave))
                 self.comm.send(obj=job, dest=slave, tag=MPI_TAGS.START.value)
 
             elif tag == MPI_TAGS.DONE.value:
@@ -45,11 +49,30 @@ class Master:
                 self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI_TAGS.DONE.value, status=status)
                 slave = status.Get_source()
                 job = self.comm.recv(source=slave, tag=MPI_TAGS.DONE.value)
-                logging.debug('Master: slave {} returned {}'.format(slave, job))
+                logger.logger.log(logger.logging.TRACE, 'Master: slave {} returned {}'.format(slave, job))
                 self.job_queue.store_completed_job(job)
 
             else:
                 raise NotImplementedError("Unexpected tag:", tag)
+
+            if len(jobs_to_run) == 0:
+                if init:
+                    logger.logger.info('Launched all NB_MIN_RUNS jobs')
+                    init = False
+                n_iter += 1
+                logger.logger.info("Launching batch {} of simulations".format(n_iter))
+                jobs_to_run, wait_for_data = self.job_queue.get_next_jobs(init=False)
+
+                while wait_for_data:
+                    self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI_TAGS.DONE.value, status=status)
+                    slave = status.Get_source()
+                    job = self.comm.recv(source=slave, tag=MPI_TAGS.DONE.value)
+                    logger.logger.log(logger.logging.TRACE, 'Master: slave {} returned {}'.format(slave, job))
+                    self.job_queue.store_completed_job(job)
+                    jobs_to_run, wait_for_data = self.job_queue.get_next_jobs(init=False)
+
+                if len(jobs_to_run) == 0:  # No more jobs to run and not waiting for data
+                    break  # Note that the master is directly stopped when statistical indicators are satisfied even if some slaves are still running
 
         self.terminate_slaves()
 
@@ -70,6 +93,7 @@ class JobQueue:
         self.random = random.Random()
         self.random.seed(0)
 
+        list[Job]: self.running_jobs
         self.running_jobs = []
         self.contingencies = contingencies
 
@@ -106,34 +130,40 @@ class JobQueue:
         raise RuntimeError('Job', job, 'not in running_jobs list', self.running_jobs)
 
 
-    def get_next_job(self) -> Job:
-        # Run an arbitrary number of simulations to start up the algorithm (allow to have a first estimate of the total
-        # risk and sampled variances)
-        for contingency in self.contingencies:
-            min_nb_runs = JobQueue.get_minimum_number_of_runs(contingency)
-            for i in range(min_nb_runs):
-                static_sample = self.random.choice(self.static_samples)  # TODO: best to shuffle then pick if no dynamic uncertainty (or if use indicator)
+    def get_next_jobs(self, init: bool) -> list[Job]:
+        jobs = []
+        wait_for_data = False
+        if init:
+            # Run an arbitrary number of simulations to start up the algorithm (allow to have a first estimate of the total
+            # risk and sampled variances)
+            for contingency in self.contingencies:
+                min_nb_runs = JobQueue.get_minimum_number_of_runs(contingency)
+                for i in range(min_nb_runs):
+                    static_sample = self.random.choice(self.static_samples)  # TODO: best to shuffle then pick if no dynamic uncertainty (or if use indicator)
 
-                dynamic_seed = self.dynamic_seed_counters[contingency.id][static_sample]
-                self.dynamic_seed_counters[contingency.id][static_sample] += 1
+                    dynamic_seed = self.dynamic_seed_counters[contingency.id][static_sample]
+                    self.dynamic_seed_counters[contingency.id][static_sample] += 1
 
-                dynamic_seed = 0  # No dynamic uncertainty to start with
-                job = Job(static_sample, dynamic_seed, contingency)
-                self.running_jobs.append(job)
-                yield job
-        logging.info('Launched all NB_MIN_RUNS jobs')
+                    dynamic_seed = 0  # No dynamic uncertainty to start with
+                    job = Job(static_sample, dynamic_seed, contingency)
+                    self.running_jobs.append(job)
+                    jobs.append(job)
+            return jobs, wait_for_data
 
-        # Run simulations until requested statistical accuracy is reached
-        while True:
+        else:
+            # Run simulations until requested statistical accuracy is reached
             contingencies_to_run = []
-            contingencies_waiting = []
+            contingencies_waiting = []  # Wait for the NB_MIN_RUNS of each contingency to be done before evaluating statistical indicators
+            logger.logger.info("##############################################")
+            logger.logger.info("# Contingency convergence")
+            logger.logger.info("##############################################")
             for contingency in self.contingencies:
                 nb_completed_runs = self.simulation_results[contingency.id].nb_run_jobs
                 min_nb_runs = JobQueue.get_minimum_number_of_runs(contingency)
                 if nb_completed_runs < min_nb_runs:
                     contingencies_waiting.append(contingency)
-                    logging.debug('Contingency %s waiting for %d remaining MIN_NUMBER runs' % (contingency.id, min_nb_runs - nb_completed_runs))
-                    continue  # Perform at least the minimum number of runs before evaluating statistical indicators
+                    logger.logger.log(logger.logging.TRACE, 'Contingency {} waiting for {} remaining MIN_NUMBER runs'.format(contingency.id, min_nb_runs - nb_completed_runs))
+                    continue
 
                 if self.is_statistical_accuracy_reached(contingency):
                     continue
@@ -141,32 +171,39 @@ class JobQueue:
                     contingencies_to_run.append(contingency)
 
             if not contingencies_to_run and not contingencies_waiting:
-                break
+                logger.logger.info("##############################################")
+                logger.logger.info("# Master process sucessfully terminated")
+                logger.logger.info("##############################################")
+                return [], wait_for_data
 
             if not contingencies_to_run and contingencies_waiting:
-                logging.warn('Convergence criteria satisfied before end of starting runs')
-                logging.warn('This is typically caused by a high number of slaves compared to the number of contingencies (typically in testing)')
-                logging.warn('Or a high MIN_NUMBER_RUN compared to the requested statistical accuracy')
-                logging.warn('Set logging level to debug to see which contingencies are blocking')
+                logger.logger.warn('Convergence criteria satisfied before end of starting runs')
+                logger.logger.warn('This is typically caused by a high number of slaves compared to the number of contingencies (typically in testing)')
+                logger.logger.warn('Or a high MIN_NUMBER_RUN compared to the requested statistical accuracy')
+                logger.logger.warn('Blocking contingencies: {}'.format([contingency.id for contingency in contingencies_waiting]))
 
-                time.sleep(5)  # Wait for the MIN_NUMBER_RUN jobs to complete
-                # Could also preventivelly run new jobs for contingencies with min_nb_runs < MIN_NB_RUNS
+                wait_for_data = True
+                return [], wait_for_data
 
-
+            logger.logger.info("##############################################")
+            logger.logger.info("# Contingency weigths")
+            logger.logger.info("##############################################")
             # Prioritise contingencies that have the most impact on the accuracy of the indicators
             weights = {}
             sum_weigths = 0
             for contingency in contingencies_to_run:
                 weigth = self.get_statistical_indicator_derivative(contingency)
+                logger.logger.info('Contingency {}: {}'.format(contingency.id, weigth))
                 weights[contingency.id] = weigth
                 sum_weigths += weigth
 
             for contingency in contingencies_to_run:
-                nb_runs = weigth / sum_weigths * MAX_RUNS_WITHOUT_INDICATOR_EVALUATION
+                nb_runs = weigth / sum_weigths * NB_RUNS_PER_INDICATOR_EVALUATION
 
                 nb_already_run_jobs = self.simulation_results[contingency.id].nb_run_jobs
                 nb_runs = max(nb_runs, 0.2 * nb_already_run_jobs)  # Derivative might not be very accurate if we run many job compared to what has already be done + avoid overcommiting to a single contingency
                 nb_runs = ceil(nb_runs)  # At least one run
+                # TODO: if too many contingencies with nb_runs << 1 rounded up to 1, can select a reduced number (while keeping deterministic behaviour)
 
                 for i in range(nb_runs):
                     static_sample = self.random.choice(self.static_samples)  # TODO: best to shuffle then pick if no dynamic uncertainty (or if use indicator)
@@ -177,11 +214,8 @@ class JobQueue:
                     dynamic_seed = 0  # No dynamic uncertainty to start with
                     job = Job(static_sample, dynamic_seed, contingency)
                     self.running_jobs.append(job)
-                    yield job
-
-            # Update indicators # TODO: check when it is actually done
-
-
+                    jobs.append(job)
+            return jobs, wait_for_data
 
 
     @staticmethod
@@ -200,19 +234,34 @@ class JobQueue:
         std_dev = contingency_results.get_std_dev()
         N = contingency_results.nb_run_jobs
 
-        if contingency.frequency * std_dev / sqrt(N) > 0.01 * self.total_risk:
-            return False
+        accuracy_reached = True
+        indicator_1 = contingency.frequency * std_dev / sqrt(N)
+        indicator_2 = contingency.frequency * (100 - mean) / N
+        if indicator_1 > 0.01 * self.total_risk:
+            accuracy_reached = False
+            logger.logger.info("Contingency {}: statistical indicator 1 not satisfied: {} > {}".format(contingency.id, indicator_1, 0.01 * self.total_risk))
 
-        if contingency.frequency * (100 - mean) / N > 0.01 * self.total_risk:
-            return False
+        if indicator_2 > 0.01 * self.total_risk:
+            accuracy_reached = False
+            logger.logger.info("Contingency {}: statistical indicator 2 not satisfied: {} > {}".format(contingency.id, indicator_2, 0.01 * self.total_risk))
 
-        return True
+        if accuracy_reached:
+            logger.logger.info("Contingency {}: statistical accuracy reached".format(contingency.id))
+
+        if self.total_risk == 0:
+            logger.logger.critical('Total risk is 0, so statistical indicators cannot be satisfied')
+            # accuracy_reached = True
+
+        return accuracy_reached
 
     def get_statistical_indicator_derivative(self, contingency: Contingency) -> float:
         contingency_results = self.simulation_results[contingency.id]
         mean = contingency_results.get_average_load_shedding()
         std_dev = contingency_results.get_std_dev()
         N = contingency_results.nb_run_jobs
+        for running_job in self.running_jobs:
+            if running_job.contingency.id == contingency.id:  # Lower priority of contingencies that have jobs currently running
+                N += 1
 
         derivative_1 = contingency.frequency * std_dev / sqrt(N) - contingency.frequency * std_dev / sqrt(N + 1)
         derivative_2 = contingency.frequency * (100 - mean) / N - contingency.frequency * (100 - mean) / (N + 1)

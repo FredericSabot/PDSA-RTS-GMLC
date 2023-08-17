@@ -1,5 +1,4 @@
 from enum import Enum
-import logging
 
 class MPI_TAGS(Enum):
     READY = 1
@@ -12,7 +11,6 @@ class INIT_EVENT_CATEGORIES(Enum):
     LINE_DISC = 2
     GEN_DISC = 3
 
-logging.getLogger().setLevel(logging.DEBUG)  # CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 JOB_TIMEOUT_S = 300  # Timeout for a single job in seconds
 
 DYNAWO_PATH = '/home/fsabot/Desktop/dynawo_new/myEnvDynawo.sh'
@@ -24,10 +22,11 @@ CASE = 'january'
 
 REUSE_RESULTS = True  # If true, don't run simulations if there is already an 'outputs' directory in the working dir of a given job
 # TODO: read outputdir from .jobs instead of assuming it is 'outputs'
+# TODO: delete previous simulations outputs if REUSE_RESULTS = False (with confirmation prompt, only for case CASE)
 
 MIN_NUMBER_RUN_N_1 = 50
 MIN_NUMBER_RUN_N_2 = 10
-MAX_RUNS_WITHOUT_INDICATOR_EVALUATION = 100
+NB_RUNS_PER_INDICATOR_EVALUATION = 10
 
 # Contingency parameters
 T_INIT = 5
@@ -38,3 +37,5 @@ X_FAULT = 0.0001
 
 OUTAGE_RATE_PER_KM = 0.27 / 100
 CB_FAILURE_RATE = 0.01
+
+CSV_SEPARATOR = ','

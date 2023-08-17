@@ -1,21 +1,21 @@
+from __future__ import annotations
 from common import *
 from lxml import etree
 import os
-from job import Job
+import job
 from pathlib import Path
 import shutil
 import dynawo_protections
 import dynawo_init_events
 
 
-def write_job_files(job : Job):
-    output_dir = os.path.join('./simulations', CASE, str(job.static_id), str(job.dynamic_seed), job.contingency.id)
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
+def write_job_files(job : job.Job):
+    Path(job.working_dir).mkdir(parents=True, exist_ok=True)
 
     # Copy static file for the considered sample
     static_data_path = os.path.join('../2-SCOPF/d-Final-dispatch', CASE)
     iidm_file = os.path.join(static_data_path, str(job.static_id) + '.iidm')
-    shutil.copy(iidm_file, os.path.join(output_dir, NETWORK_NAME + '.iidm'))
+    shutil.copy(iidm_file, os.path.join(job.working_dir, NETWORK_NAME + '.iidm'))
 
     # Add data to dyd and par files
     dyn_data_path = '../3-DynData'
@@ -27,16 +27,14 @@ def write_job_files(job : Job):
     dynawo_protections.add_protections(dyd_root, par_root, iidm_file, job.dynamic_seed)
 
     # Write dyd and par files
-    with open(os.path.join(output_dir, NETWORK_NAME + '.dyd'), 'wb') as doc:
+    with open(os.path.join(job.working_dir, NETWORK_NAME + '.dyd'), 'wb') as doc:
         doc.write(etree.tostring(dyd_root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
-    with open(os.path.join(output_dir, NETWORK_NAME + '.par'), 'wb') as doc:
+    with open(os.path.join(job.working_dir, NETWORK_NAME + '.par'), 'wb') as doc:
         doc.write(etree.tostring(par_root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
 
     # Copy other input files
-    shutil.copy(os.path.join(dyn_data_path, NETWORK_NAME + '.jobs'), output_dir)
+    shutil.copy(os.path.join(dyn_data_path, NETWORK_NAME + '.jobs'), job.working_dir)
     if os.path.isfile(os.path.join(dyn_data_path, NETWORK_NAME + '.crv')):
-        shutil.copy(os.path.join(dyn_data_path, NETWORK_NAME + '.crv'), output_dir)
+        shutil.copy(os.path.join(dyn_data_path, NETWORK_NAME + '.crv'), job.working_dir)
     if os.path.isfile(os.path.join(dyn_data_path, NETWORK_NAME + '.fsv')):
-        shutil.copy(os.path.join(dyn_data_path, NETWORK_NAME + '.fsv'), output_dir)
-
-    return output_dir
+        shutil.copy(os.path.join(dyn_data_path, NETWORK_NAME + '.fsv'), job.working_dir)

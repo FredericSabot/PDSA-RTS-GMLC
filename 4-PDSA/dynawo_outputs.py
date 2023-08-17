@@ -1,4 +1,4 @@
-from job import Results
+from results import Results
 from common import *
 from dataclasses import dataclass
 

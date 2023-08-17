@@ -2,6 +2,7 @@ from common import *
 from mpi4py import MPI
 from master import Master
 from slave import Slave
+import logger
 
 def main():
     rank = MPI.COMM_WORLD.Get_rank()
@@ -12,7 +13,7 @@ def main():
     else:
         Slave()
 
-    logging.debug('Task completed (rank %d)' % (rank))
+    logger.logger.debug('Task completed (rank %d)' % (rank))
 
 if __name__ == "__main__":
     main()
