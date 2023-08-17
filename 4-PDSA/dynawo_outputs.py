@@ -44,16 +44,21 @@ def get_job_results(working_dir):
     distance_arming_timeline = []
     distance_disarming_timeline = []
     generator_disconnection_timeline = []
+    disconnected_models = []
     with open(os.path.join(timeline_file), 'r') as f:
         events = f.readlines()
         for event in events:
             (time, model, event_description) = event.strip().split(' | ')
             event = TimeLineEvent(time, model, event_description)
 
+            if model in disconnected_models:
+                continue  # Disregard spurious events for models that are already disconnected
+
             timeline.append(event)
 
             if 'trip' in event.event_description:  # Does not include UFLS (might need update if other protections are added)
                 trip_timeline.append(event)
+                disconnected_models.append(event.model)
 
             if 'Distance protection zone' in event.event_description:
                 if 'disarming' in event.event_description:
