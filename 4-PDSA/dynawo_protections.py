@@ -3,6 +3,7 @@ import pypowsybl as pp
 from math import pi
 import random
 from common import *
+import pandas as pd
 
 def get_buses_to_lines(network):
     """
@@ -13,24 +14,24 @@ def get_buses_to_lines(network):
     buses = network.get_buses()
     out = {}
 
-    for busID in buses.index:
-        out[busID] = []
-        for lineID in lines.index:
-            if lines.at[lineID, 'bus1_id'] == busID or lines.at[lineID, 'bus2_id'] == busID:
-                out[busID].append(lineID)
+    for bus_id in buses.index:
+        out[bus_id] = []
+        for line_id in lines.index:
+            if lines.at[line_id, 'bus1_id'] == bus_id or lines.at[line_id, 'bus2_id'] == bus_id:
+                out[bus_id].append(line_id)
     return out
 
 
-def get_adjacent_lines(bus_to_lines, network, lineID, side):
+def get_adjacent_lines(bus_to_lines, network, line_id, side):
     """
-    Get the list of lines that are connected to the side 'side' (1 or 2) or the line with ID 'lineID'. 'bus_to_lines' is the dict that
+    Get the list of lines that are connected to the side 'side' (1 or 2) or the line with ID 'line_id'. 'bus_to_lines' is the dict that
     maps buses to the lines that are connected to them (computed with function get_buses_to_lines(network))
     """
     lines = network.get_lines()
-    common_bus = lines.at[lineID, 'bus{}_id'.format(side)]
+    common_bus = lines.at[line_id, 'bus{}_id'.format(side)]
 
     adj_lines = bus_to_lines[common_bus].copy()
-    adj_lines.remove(lineID) # Remove the line itself from adjacent elements
+    adj_lines.remove(line_id) # Remove the line itself from adjacent elements
     return adj_lines
 
 
@@ -168,25 +169,25 @@ def add_UFLS(dyd_root, par_root, network):
         etree.SubElement(ufls_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
 
 
-def add_line_dist_protection(dyd_root, par_root, network, bus2lines, lineID, CB_time, CB_max_error, special, measurement_max_error = 0.1):
+def add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, line_rating, CB_time, CB_max_error, special, measurement_max_error = 0.1):
     lines = network.get_lines()
     for side in [1,2]:
         opposite_side = 3-side  # 2 if side == 1, 1 if side == 2
-        protection_id = lineID + '_side{}'.format(side) + '_Distance'
+        protection_id = line_id + '_side{}'.format(side) + '_Distance'
         if special:
             protection_ids = [protection_id + 'Slow', protection_id + 'Fast']
         else:
             protection_ids = [protection_id]
-        lib = 'DistanceProtectionLineFourZones'
+        lib = 'DistanceProtectionLineFourZonesWithBlinder'
         for protection_id in protection_ids:
             dist_attrib = {'id': protection_id, 'lib': lib, 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
             etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), dist_attrib)
 
             connect_attribs = [
-                {'id1': protection_id, 'var1': 'distance_UMonitoredPu', 'id2': 'NETWORK', 'var2': lineID + '_U{}_value'.format(side)},
-                {'id1': protection_id, 'var1': 'distance_PMonitoredPu', 'id2': 'NETWORK', 'var2': lineID + '_P{}_value'.format(side)},
-                {'id1': protection_id, 'var1': 'distance_QMonitoredPu', 'id2': 'NETWORK', 'var2': lineID + '_Q{}_value'.format(side)},
-                {'id1': protection_id, 'var1': 'distance_lineState', 'id2': 'NETWORK', 'var2': lineID + '_state'}
+                {'id1': protection_id, 'var1': 'distance_UMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_U{}_value'.format(side)},
+                {'id1': protection_id, 'var1': 'distance_PMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_P{}_value'.format(side)},
+                {'id1': protection_id, 'var1': 'distance_QMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_Q{}_value'.format(side)},
+                {'id1': protection_id, 'var1': 'distance_lineState', 'id2': 'NETWORK', 'var2': line_id + '_state'}
             ]
             for connect_attrib in connect_attribs:
                 etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'connect'), connect_attrib)
@@ -194,18 +195,18 @@ def add_line_dist_protection(dyd_root, par_root, network, bus2lines, lineID, CB_
             # Parameters
             dist_par_set = etree.SubElement(par_root, etree.QName(DYNAWO_NAMESPACE, 'set'), {'id' : protection_id})
 
-            voltage_level = lines.at[lineID, 'voltage_level1_id']
+            voltage_level = lines.at[line_id, 'voltage_level1_id']
             Ub = float(network.get_voltage_levels().at[voltage_level, 'nominal_v']) * 1000
             Sb = 100e6  # 100MW is the default base in Dynawo
             Zb = Ub**2/Sb
 
-            X = lines.at[lineID, 'x'] / Zb
-            # R = lines.at[lineID, 'r'] / Zb
+            X = lines.at[line_id, 'x'] / Zb
+            # R = lines.at[line_id, 'r'] / Zb
 
             X1 = 0.8 * X
             R1 = X1
 
-            adj_lines = get_adjacent_lines(bus2lines, network, lineID, opposite_side)  # Only the adjacent lines that can be "seen" from a forward looking distance relay
+            adj_lines = get_adjacent_lines(bus2lines, network, line_id, opposite_side)  # Only the adjacent lines that can be "seen" from a forward looking distance relay
             adj_lines_X = [lines.at[adj_line, 'x'] for adj_line in adj_lines]
             if not adj_lines_X: # is empty
                 adj_lines_X = [0]
@@ -220,6 +221,11 @@ def add_line_dist_protection(dyd_root, par_root, network, bus2lines, lineID, CB_
 
             X4 = X3 * 1.2  # X4 is only used to signal when apparent impedance is close to entering zone 3, not used for actual tripping
             R4 = R3 * 1.2
+
+            # Load blinder taken as 1.5 times the nominal current at 0.85pu voltage with power factor of 30 degrees following NERC recommandations
+            I_max = line_rating / 100
+            blinder_reach = 0.85 / (1.5 * I_max)
+            blinder_angle = 30 * (pi/180)
 
             if adj_lines_X == [0]: # No adjacent lines
                 X3 = 99  # Zone 2 and zone 3 would be identical -> remove zone 3
@@ -249,8 +255,8 @@ def add_line_dist_protection(dyd_root, par_root, network, bus2lines, lineID, CB_
                     {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * (1 + measurement_max_error))},
                     {'type':'DOUBLE', 'name':'distance_RPu_3_', 'value': str(R3 * (1 + measurement_max_error))},
                     {'type':'DOUBLE', 'name':'distance_XPu_3_', 'value': str(X3 * (1 + measurement_max_error))},
-                    # {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(30 * (pi/180))},  # Load blinder taken as 1.5 times the nominal current at 0.85pu voltage with power factor of 30 degrees following NERC recommandations
-                    # {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(reach)},
+                    {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(blinder_angle)},
+                    {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(blinder_reach)},
                     {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime', 'value': str(CB_time - CB_max_error)},
                     {'type':'BOOL', 'name':'distance_TrippingZone_0_', 'value': 'false'},
                     {'type':'BOOL', 'name':'distance_TrippingZone_1_', 'value': 'false'},
@@ -272,8 +278,8 @@ def add_line_dist_protection(dyd_root, par_root, network, bus2lines, lineID, CB_
                     {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * (1 - measurement_max_error))},
                     {'type':'DOUBLE', 'name':'distance_RPu_3_', 'value': str(R3 * (1 - measurement_max_error))},
                     {'type':'DOUBLE', 'name':'distance_XPu_3_', 'value': str(X3 * (1 - measurement_max_error))},
-                    # {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(30 * (pi/180))},  # Load blinder taken as 1.5 times the nominal current at 0.85pu voltage with power factor of 30 degrees following NERC recommandations
-                    # {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(reach)},
+                    {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(blinder_angle)},
+                    {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(blinder_reach)},
                     {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime', 'value': str(CB_time + CB_max_error)},
                     {'type':'BOOL', 'name':'distance_TrippingZone_0_', 'value': 'true'},
                     {'type':'BOOL', 'name':'distance_TrippingZone_1_', 'value': 'true'},
@@ -295,8 +301,8 @@ def add_line_dist_protection(dyd_root, par_root, network, bus2lines, lineID, CB_
                     {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * rand_measurement_ratio)},
                     {'type':'DOUBLE', 'name':'distance_RPu_3_', 'value': str(R4 * rand_measurement_ratio)},
                     {'type':'DOUBLE', 'name':'distance_XPu_3_', 'value': str(X4 * rand_measurement_ratio)},
-                    # {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(30 * (pi/180))},  # Load blinder taken as 1.5 times the nominal current at 0.85pu voltage with power factor of 30 degrees following NERC recommandations
-                    # {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(reach)},
+                    {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(blinder_angle)},
+                    {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(blinder_reach)},
                     {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime', 'value': str(CB_time + rand_CB)},
                     {'type':'BOOL', 'name':'distance_TrippingZone_0_', 'value': 'true'},
                     {'type':'BOOL', 'name':'distance_TrippingZone_1_', 'value': 'true'},
@@ -340,5 +346,11 @@ def add_protections(dyd_root, par_root, iidm_file, seed):
     # Line/distance protection
     dyd_root.append(etree.Comment('Line protection'))
     bus2lines = get_buses_to_lines(network)
-    for lineID in lines.index:
-        add_line_dist_protection(dyd_root, par_root, network, bus2lines, lineID, CB_time, CB_max_error, special)
+    lines_csv = pd.read_csv('../RTS-Data/branch.csv').to_dict()
+
+    for i in range(len(lines_csv['UID'])):
+        line_id = lines_csv['UID'][i]
+        line_rating = lines_csv['Cont Rating'][i]
+        if lines_csv['Tr Ratio'][i] != 0:
+            continue  # Consider lines, not transformers
+        add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, line_rating, CB_time, CB_max_error, special)

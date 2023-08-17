@@ -119,9 +119,9 @@ class Contingency:
 
         if with_generators:
             raise NotImplementedError('The code below most likely works, but automatic merging of generator contingencies has not been implemented (and identical generators might not always be connected at the same time)')
-            for genID in gens.index:
-                contingency_id = genID
-                bus_id = '@' + genID + '@@NODE@'
+            for gen_id in gens.index:
+                contingency_id = gen_id
+                bus_id = '@' + gen_id + '@@NODE@'
                 fault_id = 'FAULT_' + bus_id
                 init_events = []
                 init_events.append(InitFault(time_start=T_INIT, time_end=T_CLEARING, category=INIT_EVENT_CATEGORIES.BUS_FAULT, element=bus_id,
