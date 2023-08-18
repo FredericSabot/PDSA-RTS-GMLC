@@ -7,6 +7,7 @@ import os
 import random
 import logger
 from math import sqrt, ceil
+from lxml import etree
 
 class Master:
     def __init__(self, slaves):
@@ -31,50 +32,54 @@ class Master:
         init = True
         jobs_to_run, _ = self.job_queue.get_next_jobs(init=True)
         n_iter = 0
-        while True:
-            status = MPI.Status()
-            self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-            slave = status.Get_source()
-            tag = status.Get_tag()
-
-            if tag == MPI_TAGS.READY.value:
-                job = jobs_to_run.pop(0)
-                self.comm.recv(source=slave, tag=MPI_TAGS.READY.value, status=status)
-
-                logger.logger.log(logger.logging.TRACE, 'Master: sending input job {} to slave {}'.format(job, slave))
-                self.comm.send(obj=job, dest=slave, tag=MPI_TAGS.START.value)
-
-            elif tag == MPI_TAGS.DONE.value:
-                # Read data
-                self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI_TAGS.DONE.value, status=status)
+        try:
+            while True:
+                status = MPI.Status()
+                self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
                 slave = status.Get_source()
-                job = self.comm.recv(source=slave, tag=MPI_TAGS.DONE.value)
-                logger.logger.log(logger.logging.TRACE, 'Master: slave {} returned {}'.format(slave, job))
-                self.job_queue.store_completed_job(job)
+                tag = status.Get_tag()
 
-            else:
-                raise NotImplementedError("Unexpected tag:", tag)
+                if tag == MPI_TAGS.READY.value:
+                    job = jobs_to_run.pop(0)
+                    self.comm.recv(source=slave, tag=MPI_TAGS.READY.value, status=status)
 
-            if len(jobs_to_run) == 0:
-                if init:
-                    logger.logger.info('Launched all NB_MIN_RUNS jobs')
-                    init = False
-                n_iter += 1
-                logger.logger.info("Launching batch {} of simulations".format(n_iter))
-                jobs_to_run, wait_for_data = self.job_queue.get_next_jobs(init=False)
+                    logger.logger.log(logger.logging.TRACE, 'Master: sending input job {} to slave {}'.format(job, slave))
+                    self.comm.send(obj=job, dest=slave, tag=MPI_TAGS.START.value)
 
-                while wait_for_data:
+                elif tag == MPI_TAGS.DONE.value:
+                    # Read data
                     self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI_TAGS.DONE.value, status=status)
                     slave = status.Get_source()
                     job = self.comm.recv(source=slave, tag=MPI_TAGS.DONE.value)
                     logger.logger.log(logger.logging.TRACE, 'Master: slave {} returned {}'.format(slave, job))
                     self.job_queue.store_completed_job(job)
+
+                else:
+                    raise NotImplementedError("Unexpected tag:", tag)
+
+                if len(jobs_to_run) == 0:
+                    if init:
+                        logger.logger.info('Launched all NB_MIN_RUNS jobs')
+                        init = False
+                    n_iter += 1
+                    logger.logger.info("Launching batch {} of simulations".format(n_iter))
                     jobs_to_run, wait_for_data = self.job_queue.get_next_jobs(init=False)
 
-                if len(jobs_to_run) == 0:  # No more jobs to run and not waiting for data
-                    break  # Note that the master is directly stopped when statistical indicators are satisfied even if some slaves are still running
+                    while wait_for_data:
+                        self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI_TAGS.DONE.value, status=status)
+                        slave = status.Get_source()
+                        job = self.comm.recv(source=slave, tag=MPI_TAGS.DONE.value)
+                        logger.logger.log(logger.logging.TRACE, 'Master: slave {} returned {}'.format(slave, job))
+                        self.job_queue.store_completed_job(job)
+                        jobs_to_run, wait_for_data = self.job_queue.get_next_jobs(init=False)
 
-        self.terminate_slaves()
+                    if len(jobs_to_run) == 0:  # No more jobs to run and not waiting for data
+                        break  # Note that the master is directly stopped when statistical indicators are satisfied even if some slaves are still running
+
+            self.job_queue.write_analysis_output()
+            self.terminate_slaves()
+        except KeyboardInterrupt:
+            self.job_queue.write_analysis_output()
 
     def terminate_slaves(self):
         for s in self.slaves:
@@ -217,6 +222,36 @@ class JobQueue:
                     jobs.append(job)
             return jobs, wait_for_data
 
+    def write_analysis_output(self):
+        root = etree.Element('Analysis')  # TODO: use real code, add global attribute convergence = 'CONVERGED', 'USER INTERRUPT' or 'TIMEOUT'
+
+        for contingency in self.contingencies:
+            contingency_results = self.simulation_results[contingency.id]
+            mean = contingency_results.get_average_load_shedding()
+            N = contingency_results.nb_run_jobs
+            indicator_1, indicator_2 = self.get_statistical_indivators(contingency)
+
+            contingency_attrib = {'id': contingency.id,
+                                  'frequency': str(contingency.frequency),
+                                  'mean_load_shed': str(mean),
+                                  'risk': str(contingency.frequency * mean),
+                                  'N': str(N),
+                                  'ind_1': str(indicator_1),
+                                  'ind_2': str(indicator_2)}
+            contingency_element = etree.SubElement(root, 'Contingency', contingency_attrib)
+
+            for job in contingency_results.jobs:
+                job_attrib = {'static_id': str(job.static_id),
+                              'dyn_id': str(job.dynamic_seed),
+                              'simulation_time': '{:.2f}'.format(job.elapsed_time),
+                              'timeout': str(job.timed_out)}
+                if job.completed:
+                    job_attrib['load_shedding'] = '{:.2f}'.format(job.results.load_shedding)
+                etree.SubElement(contingency_element, 'Job', job_attrib)
+
+        with open('AnalysisOutput.xml', 'wb') as doc:
+            doc.write(etree.tostring(root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
+
 
     @staticmethod
     def get_minimum_number_of_runs(contingency: Contingency):
@@ -229,14 +264,9 @@ class JobQueue:
         return min_nb_runs
 
     def is_statistical_accuracy_reached(self, contingency: Contingency) -> bool:
-        contingency_results = self.simulation_results[contingency.id]
-        mean = contingency_results.get_average_load_shedding()
-        std_dev = contingency_results.get_std_dev()
-        N = contingency_results.nb_run_jobs
+        indicator_1, indicator_2 = self.get_statistical_indivators(contingency)
 
         accuracy_reached = True
-        indicator_1 = contingency.frequency * std_dev / sqrt(N)
-        indicator_2 = contingency.frequency * (100 - mean) / N
         if indicator_1 > 0.01 * self.total_risk:
             accuracy_reached = False
             logger.logger.info("Contingency {}: statistical indicator 1 not satisfied: {} > {}".format(contingency.id, indicator_1, 0.01 * self.total_risk))
@@ -254,7 +284,18 @@ class JobQueue:
 
         return accuracy_reached
 
-    def get_statistical_indicator_derivative(self, contingency: Contingency) -> float:
+    def get_statistical_indivators(self, contingency: Contingency):
+        contingency_results = self.simulation_results[contingency.id]
+        mean = contingency_results.get_average_load_shedding()
+        std_dev = contingency_results.get_std_dev()
+        N = contingency_results.nb_run_jobs
+
+        indicator_1 = contingency.frequency * std_dev / sqrt(N)
+        indicator_2 = contingency.frequency * (100 - mean) / N
+        return indicator_1, indicator_2
+
+
+    def get_statistical_indicator_derivatives(self, contingency: Contingency):
         contingency_results = self.simulation_results[contingency.id]
         mean = contingency_results.get_average_load_shedding()
         std_dev = contingency_results.get_std_dev()
@@ -266,8 +307,10 @@ class JobQueue:
         derivative_1 = contingency.frequency * std_dev / sqrt(N) - contingency.frequency * std_dev / sqrt(N + 1)
         derivative_2 = contingency.frequency * (100 - mean) / N - contingency.frequency * (100 - mean) / (N + 1)
 
-        return max(derivative_1, derivative_2)
+        return derivative_1, derivative_2
 
+    def get_statistical_indicator_derivative(self, contingency: Contingency):
+        return max(self.get_statistical_indicator_derivatives(contingency))
 
 class ContingencyResults:
     def __init__(self):
@@ -287,7 +330,7 @@ class ContingencyResults:
         """
         Naive computation of the variance following https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         Since N should be at most 1000, and the variance at most two order of magnitudes below the average (and not
-        event both at the same time), numerical stability should not be an issue
+        both at the same time), numerical stability should not be an issue
         """
         sum_ = self.sum_load_shedding
         sum_sq = self.sum_load_shedding_squared
