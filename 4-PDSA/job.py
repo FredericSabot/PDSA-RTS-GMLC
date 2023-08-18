@@ -19,7 +19,7 @@ class Job:
         self.dynamic_seed = dynamic_seed
         self.contingency = contingency
         self.completed = False
-        self.timeout = False
+        self.timed_out = False
         self.working_dir = os.path.join('./simulations', CASE, str(self.static_id), str(self.dynamic_seed), self.contingency.id)
 
     def complete(self, elapsed_time, results: Results):
@@ -29,25 +29,25 @@ class Job:
         self.save_results()
 
     def timeout(self):
-        self.timeout = True
+        self.timed_out = True
         self.elapsed_time = JOB_TIMEOUT_S
 
     def save_results(self):
-        if not self.completed and not self.timeout:
+        if not self.completed and not self.timed_out:
             raise RuntimeError('Job should be launched before saving its results')
 
         with open(os.path.join(self.working_dir, 'job.results'), 'w') as file:
             if self.completed:
-                file.write(CSV_SEPARATOR.join([str(item) for item in [self.completed, self.elapsed_time, self.timeout, self.results]]))
+                file.write(CSV_SEPARATOR.join([str(item) for item in [self.completed, self.elapsed_time, self.timed_out, self.results]]))
             else:
-                file.write(CSV_SEPARATOR.join([str(item) for item in [self.completed, self.elapsed_time, self.timeout]]))
+                file.write(CSV_SEPARATOR.join([str(item) for item in [self.completed, self.elapsed_time, self.timed_out]]))
 
     def load_results(self, save_file):
         with open(save_file, 'r') as file:
             save = file.readline().split(CSV_SEPARATOR)
             self.completed = save[0] == 'True'
             self.elapsed_time = float(save[1])
-            self.timeout = save[2] == 'True'
+            self.timed_out = save[2] == 'True'
             if self.completed:
                 self.results = Results.load_from_str(*save[3:])
         # TODO: add try/catch for incompatible saves from different versions, print warning and call_dynawo()
@@ -97,7 +97,7 @@ class Job:
         out += 'Static id: {}\n'.format(self.static_id)
         out += 'Dynamic seed: {}\n'.format(self.dynamic_seed)
         out += 'Contingency: {}\n'.format(self.contingency)
-        if self.timeout:
+        if self.timed_out:
             out += 'Job timeout\n'
         elif not self.completed:
             out += 'Not yet completed\n'
