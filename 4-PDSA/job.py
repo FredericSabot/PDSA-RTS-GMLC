@@ -80,7 +80,19 @@ class Job:
             dynawo_inputs.write_job_files(self)
             cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '.jobs')]
             logger.logger.log(logger.logging.TRACE, 'Launching job %s' % self)
-            proc = subprocess.Popen(cmd)
+            proc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
+
+            try:
+                _, stderr = proc.communicate(timeout=JOB_TIMEOUT_S)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                self.timeout()
+                return
+
+            if 'Error' in str(stderr):  # Simulation failed, so retry with another solver
+                cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '_alt_solver.jobs')]
+                logger.logger.log(logger.logging.TRACE, 'Launching job %s with alternative solver' % self)
+                proc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
 
             try:
                 proc.communicate(timeout=JOB_TIMEOUT_S)
