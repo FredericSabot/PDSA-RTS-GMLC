@@ -93,7 +93,7 @@ for i in range(N_gens):
         lib = 'GenericIBG'
         synchronous = False
     elif unit_group == 'Wind':
-        lib = 'WTG4BWeccCurrentSource'
+        lib = 'GenericIBG'
         synchronous = False
     elif unit_group == 'Syncon':
         lib = 'GeneratorSynchronousThreeWindingsRtsSyncon'
@@ -113,11 +113,7 @@ for i in range(N_gens):
         etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'GEN'})
         etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'GEN-CONNECTOR'})
     else:
-        if unit_group == 'Wind':
-            etree.SubElement(dyd_root, etree.QName(namespace, 'connect'), {'id1': genID, 'var1': 'WTG4B_omegaRefPu', 'id2': 'OMEGA_REF', 'var2': 'omegaRef_grp_0_value'})
-            etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'Wind'})
-            etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'Wind-CONNECTOR'})
-        elif unit_group == 'PV' or unit_group == 'RTPV':
+        if unit_group == 'PV' or unit_group == 'RTPV' or unit_group == 'Wind':
             etree.SubElement(dyd_root, etree.QName(namespace, 'connect'), {'id1': genID, 'var1': 'ibg_omegaRefPu', 'id2': 'OMEGA_REF', 'var2': 'omegaRef_grp_0_value'})
             etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'PV'})
             etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'PV-CONNECTOR'})
@@ -468,92 +464,44 @@ for i in range(N_gens):
     else:  # Not synchronous (PV, wind, RTPV)
         if unit_group == 'Wind':
             SNom = gens_csv['PMax MW'][i]
-            par_attribs = [
-                {'type': 'DOUBLE', 'name': 'WTG4B_RPu', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_XPu', 'value': '0.05'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_DDn', 'value': '20'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_DUp', 'value': '0.001'},
-                {'type': 'BOOL', 'name': 'WTG4B_FreqFlag', 'value': 'true'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_IMaxPu', 'value': '1.2'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_IqFrzPu', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Iqh1Pu', 'value': '1.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Iql1Pu', 'value': '-1.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_IqrMaxPu', 'value': '20'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_IqrMinPu', 'value': '-20'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Kc', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Ki', 'value': '1.5'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Kig', 'value': '2.36'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Kp', 'value': '0.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Kpg', 'value': '0.05'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Kqi', 'value': '0.5'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Kqp', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Kqv', 'value': '2'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Kvi', 'value': '0.7'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Kvp', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_PMaxPu', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_PMinPu', 'value': '0'},
-                {'type': 'BOOL', 'name': 'WTG4B_PPriority', 'value': 'false'},
-                {'type': 'BOOL', 'name': 'WTG4B_PfFlag', 'value': 'false'},
-                {'type': 'BOOL', 'name': 'WTG4B_QFlag', 'value': 'true'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_QMaxPu', 'value': '0.4'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_QMinPu', 'value': '-0.4'},
-                {'type': 'BOOL', 'name': 'WTG4B_RateFlag', 'value': 'false'},
-                {'type': 'BOOL', 'name': 'WTG4B_RefFlag', 'value': 'true'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_tFilterPC', 'value': '0.04'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_tFilterGC', 'value': '0.02'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_tFt', 'value': '1e-5'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_tFv', 'value': '0.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_tG', 'value': '0.02'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Tiq', 'value': '0.01'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_tLag', 'value': '0.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_tP', 'value': '0.05'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_tPord', 'value': '0.01'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_tRv', 'value': '0.01'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_UMaxPu', 'value': '1.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_UMinPu', 'value': '0.9'},
-                {'type': 'BOOL', 'name': 'WTG4B_VFlag', 'value': 'true'},
-                {'type': 'BOOL', 'name': 'WTG4B_VCompFlag', 'value': 'false'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VFrz', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VMaxPu', 'value': '1.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VMinPu', 'value': '0.9'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VRef0Pu', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_DPMax', 'value': '2'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_DPMin', 'value': '-2'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Dbd', 'value': '0.01'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Dbd1', 'value': '-0.05'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Dbd2', 'value': '0.05'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_EMax', 'value': '0.5'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_EMin', 'value': '-0.5'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_FDbd1', 'value': '0.004'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_FDbd2', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_FEMax', 'value': '999'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_FEMin', 'value': '-999'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_Rrpwr', 'value': '10'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_KiPLL', 'value': '20'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_KpPLL', 'value': '3'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_OmegaMaxPu', 'value': '1.5'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_OmegaMinPu', 'value': '0.5'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_HoldIq', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_HoldIpMax', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VRef1Pu', 'value': '0'},
-                {'type': 'BOOL', 'name': 'WTG4B_PFlag', 'value': 'true'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp11', 'value': '1.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp12', 'value': '1.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp21', 'value': '1.5'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp22', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq11', 'value': '1.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq12', 'value': '1.1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq21', 'value': '1.5'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq22', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'WTG4B_SNom', 'value': str(SNom)},
+            par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis
+                {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_US1', 'value': '0.9'},
+                {'type': 'DOUBLE', 'name': 'ibg_US2', 'value': '1.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_kRCI', 'value': '2.5'},
+                {'type': 'DOUBLE', 'name': 'ibg_kRCA', 'value': '2.5'},
+                {'type': 'DOUBLE', 'name': 'ibg_m', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_n', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_tG', 'value': '0.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_Tm', 'value': '0.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_IpSlewMaxPu', 'value': '0.5'},
+                {'type': 'DOUBLE', 'name': 'ibg_IqSlewMaxPu', 'value': '5'},
+                {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0.2'},  # Slightly more strict for wind than PV (big units)
+                {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.3'},
+                {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '1.5'},
+                {'type': 'DOUBLE', 'name': 'ibg_ULVRTMinPu', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0.5'},
+                {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.85'},
+                {'type': 'DOUBLE', 'name': 'ibg_OmegaMaxPu', 'value': '1.05'},
+                {'type': 'DOUBLE', 'name': 'ibg_OmegaDeadBandPu', 'value': '1.01'},
+                {'type': 'DOUBLE', 'name': 'ibg_OmegaMinPu', 'value': '0.95'},
+                {'type': 'DOUBLE', 'name': 'ibg_tFilterOmega', 'value': '0.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
+                {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.2'},
+                {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
+                {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
+                {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_', 'value': '3'},
+                {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
             ]
 
             references = [
-                {'name': 'WTG4B_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
+                {'name': 'ibg_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
                 # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
-                {'name': 'WTG4B_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
-                {'name': 'WTG4B_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
-                {'name': 'WTG4B_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
+                {'name': 'ibg_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
+                {'name': 'ibg_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
+                {'name': 'ibg_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
             ]
 
         elif unit_group == 'PV' or unit_group == 'RTPV':
@@ -565,12 +513,13 @@ for i in range(N_gens):
                 {'type': 'DOUBLE', 'name': 'ibg_US2', 'value': '1.1'},
                 {'type': 'DOUBLE', 'name': 'ibg_kRCI', 'value': '2.5'},
                 {'type': 'DOUBLE', 'name': 'ibg_kRCA', 'value': '2.5'},
-                {'type': 'DOUBLE', 'name': 'ibg_m', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'ibg_n', 'value': '1'},
+                {'type': 'DOUBLE', 'name': 'ibg_m', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_n', 'value': '0'},
                 {'type': 'DOUBLE', 'name': 'ibg_tG', 'value': '0.1'},
                 {'type': 'DOUBLE', 'name': 'ibg_Tm', 'value': '0.1'},
                 {'type': 'DOUBLE', 'name': 'ibg_IpSlewMaxPu', 'value': '0.5'},
-                {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_IqSlewMaxPu', 'value': '5'},
+                {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0.15'},
                 {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.3'},
                 {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '1.5'},
                 {'type': 'DOUBLE', 'name': 'ibg_ULVRTMinPu', 'value': '0'},
