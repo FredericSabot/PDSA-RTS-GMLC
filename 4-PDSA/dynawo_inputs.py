@@ -34,6 +34,7 @@ def write_job_files(job : job.Job):
 
     # Copy other input files
     shutil.copy(os.path.join(dyn_data_path, NETWORK_NAME + '.jobs'), job.working_dir)
+    shutil.copy(os.path.join(dyn_data_path, NETWORK_NAME + '_alt_solver.jobs'), job.working_dir)
     if os.path.isfile(os.path.join(dyn_data_path, NETWORK_NAME + '.crv')):
         shutil.copy(os.path.join(dyn_data_path, NETWORK_NAME + '.crv'), job.working_dir)
     if os.path.isfile(os.path.join(dyn_data_path, NETWORK_NAME + '.fsv')):
