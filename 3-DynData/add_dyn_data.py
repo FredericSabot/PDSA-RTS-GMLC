@@ -504,7 +504,7 @@ for i in range(N_gens):
                 {'name': 'ibg_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
             ]
 
-        elif unit_group == 'PV' or unit_group == 'RTPV':
+        elif unit_group == 'PV':
             SNom = gens_csv['PMax MW'][i]
             par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis
                 {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
@@ -527,6 +527,48 @@ for i in range(N_gens):
                 {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.85'},
                 {'type': 'DOUBLE', 'name': 'ibg_OmegaMaxPu', 'value': '1.05'},
                 {'type': 'DOUBLE', 'name': 'ibg_OmegaDeadBandPu', 'value': '1.01'},
+                {'type': 'DOUBLE', 'name': 'ibg_OmegaMinPu', 'value': '0.95'},
+                {'type': 'DOUBLE', 'name': 'ibg_tFilterOmega', 'value': '0.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
+                {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.2'},
+                {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
+                {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
+                {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_', 'value': '3'},
+                {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
+            ]
+
+            references = [
+                {'name': 'ibg_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
+                # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
+                {'name': 'ibg_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
+                {'name': 'ibg_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
+                {'name': 'ibg_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
+            ]
+
+        elif unit_group == 'RTPV':
+            SNom = gens_csv['PMax MW'][i]
+            par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis, no voltage/frequency support from rooftop solar (LV connected)
+                {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_US1', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_US2', 'value': '10'},
+                {'type': 'DOUBLE', 'name': 'ibg_kRCI', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_kRCA', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_m', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_n', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_tG', 'value': '0.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_Tm', 'value': '0.1'},
+                {'type': 'DOUBLE', 'name': 'ibg_IpSlewMaxPu', 'value': '0.5'},
+                {'type': 'DOUBLE', 'name': 'ibg_IqSlewMaxPu', 'value': '5'},
+                {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0.15'},
+                {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.3'},
+                {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '1.5'},
+                {'type': 'DOUBLE', 'name': 'ibg_ULVRTMinPu', 'value': '0'},
+                {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0.5'},
+                {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.9'},
+                {'type': 'DOUBLE', 'name': 'ibg_OmegaMaxPu', 'value': '1.05'},
+                {'type': 'DOUBLE', 'name': 'ibg_OmegaDeadBandPu', 'value': '1.05'},
                 {'type': 'DOUBLE', 'name': 'ibg_OmegaMinPu', 'value': '0.95'},
                 {'type': 'DOUBLE', 'name': 'ibg_tFilterOmega', 'value': '0.1'},
                 {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
