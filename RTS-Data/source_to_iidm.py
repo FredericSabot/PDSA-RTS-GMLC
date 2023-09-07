@@ -2,6 +2,7 @@ import pypowsybl as pp
 import pandas as pd
 from math import pi, sqrt
 import os
+from lxml import etree
 
 def create_RTS(path):
     n = pp.network.create_empty()
@@ -140,8 +141,11 @@ def create_RTS(path):
 if __name__ == '__main__':
     network = create_RTS('../RTS-Data')
 
-    output_name = "RTS.iidm"
-    network.dump(output_name, 'XIIDM', {'iidm.export.xml.version' : '1.4'})
-    [file, ext] = output_name.rsplit('.', 1)  # Set extension to iidm instead of xiidm
-    if ext != 'xiidm':
-        os.rename(file + '.xiidm', output_name)
+    network_string = network.dump_to_string('XIIDM', {'iidm.export.xml.version' : '1.4'})
+    network_string = network_string.encode()
+    XMLparser = etree.XMLParser(remove_blank_text=True)
+    root = etree.fromstring(network_string, XMLparser)
+    root.set('sourceFormat', 'RTS-GMLC')
+
+    with open('RTS.iidm', 'wb') as doc:
+        doc.write(etree.tostring(root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
