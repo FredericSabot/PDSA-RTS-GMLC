@@ -37,7 +37,7 @@ class Job:
             raise RuntimeError('Job should be launched before saving its results')
 
         with open(os.path.join(self.working_dir, 'job.results'), 'w') as file:
-            if self.completed:
+            if self.completed or self.timed_out:
                 file.write(CSV_SEPARATOR.join([str(item) for item in [self.completed, self.elapsed_time, self.timed_out, self.results]]))
             else:
                 file.write(CSV_SEPARATOR.join([str(item) for item in [self.completed, self.elapsed_time, self.timed_out]]))
@@ -45,16 +45,17 @@ class Job:
     def load_results(self, save_file):
         with open(save_file, 'r') as file:
             save = file.readline().split(CSV_SEPARATOR)
-            self.completed = save[0] == 'True'
-            self.elapsed_time = float(save[1])
-            self.timed_out = save[2] == 'True'
-            if self.completed:
-                self.results = Results.load_from_str(*save[3:])
-        # TODO: add try/catch for incompatible saves from different versions, print warning and call_dynawo()
+            try:
+                self.completed = save[0] == 'True'
+                self.elapsed_time = float(save[1])
+                self.timed_out = save[2] == 'True'
+                if self.completed or self.timed_out:
+                    self.results = Results.load_from_str(*save[3:])
+            except IndexError:
+                logger.logger.warn("Could not load save file {}".format(save_file))
+                self.call_dynawo()
 
     def run(self):
-        self.call_dynawo()
-
         save_file = os.path.join(self.working_dir, 'job.results')
         if REUSE_RESULTS and os.path.exists(save_file):
             self.load_results(save_file)
@@ -64,35 +65,23 @@ class Job:
     def call_dynawo(self):
         t0 = time.time()
 
-        log_file = os.path.join(self.working_dir, 'outputs', 'logs', 'dynawo.log')
-        timeline_file = os.path.join(self.working_dir, 'outputs', 'timeLine', 'timeline.log')  # TODO: read paths from .jobs instead of hardcoding them
+        dynawo_inputs.write_job_files(self)
+        cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '.jobs')]
+        logger.logger.log(logger.logging.TRACE, 'Launching job %s' % self)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        run_simulation = True
-        if REUSE_RESULTS and os.path.exists(log_file) and os.path.exists(timeline_file):  # Don't rerun simulations if outputs exist
-            run_simulation = False
-            with open(timeline_file, 'r') as timeline:
-                timeline = timeline.readlines()
-                if len(timeline) > 0 and any('Simulation stopped : one interrupt signal was received' in
-                                             timeline_string for timeline_string in timeline[-10:]):  # Rerun simulations if it was previously interupted by user (even if partial outputs exist)
-                    run_simulation = True
+        timed_out = False
+        try:
+            _, stderr = proc.communicate(timeout=JOB_TIMEOUT_S)
+        except subprocess.TimeoutExpired:
+            stderr = ''
+            proc.kill()
+            timed_out = True
 
-        if run_simulation:
-            dynawo_inputs.write_job_files(self)
-            cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '.jobs')]
-            logger.logger.log(logger.logging.TRACE, 'Launching job %s' % self)
-            proc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
-
-            try:
-                _, stderr = proc.communicate(timeout=JOB_TIMEOUT_S)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                self.timeout()
-                return
-
-            if 'Error' in str(stderr):  # Simulation failed, so retry with another solver
-                cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '_alt_solver.jobs')]
-                logger.logger.log(logger.logging.TRACE, 'Launching job %s with alternative solver' % self)
-                proc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
+        if 'Error' in str(stderr) or timed_out:  # Simulation failed, so retry with another solver
+            cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '_alt_solver.jobs')]
+            logger.logger.log(logger.logging.TRACE, 'Launching job %s with alternative solver' % self)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             try:
                 proc.communicate(timeout=JOB_TIMEOUT_S)
@@ -101,8 +90,8 @@ class Job:
                 self.timeout()
                 return
 
-            delta_t = time.time() - t0
-            self.complete(delta_t, get_job_results(self.working_dir))
+        delta_t = time.time() - t0
+        self.complete(delta_t)
 
     def __repr__(self) -> str:
         out = '\nJob {}\n'.format(self.id)
