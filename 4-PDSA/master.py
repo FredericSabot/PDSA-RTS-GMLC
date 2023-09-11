@@ -6,6 +6,7 @@ import glob
 import os
 import random
 import logger
+import hashlib
 from math import sqrt, ceil
 from lxml import etree
 
@@ -341,4 +342,8 @@ class ContingencyResults:
         return sqrt(self.get_variance())
 
     def get_average_load_shedding(self):
-        return self.sum_load_shedding / self.nb_run_jobs
+def hash(string):
+    """
+    Deterministic hashing function, implementation does not really matter
+    """
+    return int(hashlib.sha1(bytes(string, 'utf-8')).hexdigest()[:10], 16)  # Only use 10 firs bytes of the hexdigest because that's plenty enough
