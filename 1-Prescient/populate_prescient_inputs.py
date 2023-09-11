@@ -47,12 +47,10 @@ header = next(reader)
 writer.writerow(header)
 
 for row in reader:
-    for i in range(int(60/5)):
-        year, month, day = row[0:3]
-        period = int(row[3])
-        load = [float(i) for i in row[4:]]
-        load_with_losses = [float(i) * (1 + losses) for i in load]
-        writer.writerow([year, month, day, int((period-1)*60/5 + i + 1)] + load_with_losses)
+    year, month, day, period = row[0:4]
+    load = [float(j) for j in row[4:]]
+    load_with_losses = [float(i) * (1 + losses) for i in load]
+    writer.writerow([year, month, day, period] + load_with_losses)
 
 csv_in.close()
 csv_out.close()

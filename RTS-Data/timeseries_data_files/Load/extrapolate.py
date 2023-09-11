@@ -15,5 +15,5 @@ for row in reader:
     for i in range(int(60/5)):
         year, month, day = row[0:3]
         period = int(row[3])
-        load = [float(i) for i in row[4:]]
+        load = [float(j) for j in row[4:]]
         writer.writerow([year, month, day, int((period-1)*60/5 + i + 1)] + load)
