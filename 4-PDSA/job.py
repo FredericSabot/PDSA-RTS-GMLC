@@ -9,7 +9,8 @@ import dynawo_inputs
 from dynawo_outputs import get_job_results
 from results import Results
 import logger
-
+import shutil
+from pathlib import Path
 
 class Job:
     _ids = count(0)
@@ -22,15 +23,21 @@ class Job:
         self.timed_out = False
         self.working_dir = os.path.join('./simulations', CASE, str(self.static_id), str(self.dynamic_seed), self.contingency.id)
 
-    def complete(self, elapsed_time, results: Results):
+    def complete(self, elapsed_time):
         self.elapsed_time = elapsed_time
-        self.results = results
+        self.results = get_job_results(self.working_dir)
         self.completed = True
+        shutil.rmtree(self.working_dir, ignore_errors=True)
+        Path(self.working_dir).mkdir(exist_ok=True)
         self.save_results()
 
     def timeout(self):
         self.timed_out = True
         self.elapsed_time = JOB_TIMEOUT_S
+        self.results = Results(100.2)
+        shutil.rmtree(self.working_dir, ignore_errors=True)
+        Path(self.working_dir).mkdir(exist_ok=True)
+        self.save_results()
 
     def save_results(self):
         if not self.completed and not self.timed_out:
