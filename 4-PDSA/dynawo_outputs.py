@@ -149,17 +149,11 @@ def get_job_results(working_dir):
                 connected_machines.append(macro_connection.get('id1'))
             else:
                 raise ValueError('OmegaRef model expected to be named "OMEGA_REF"')
-    # Generator must be connected both in the dyd and iidm to count
-    gens = n.get_generators()
-    really_connected_machines = []
-    for machine in connected_machines:
-        if gens.at[machine, 'connected']:
-            really_connected_machines.append(machine)
 
-    if len(generator_disconnection_timeline) == len(really_connected_machines):  # All machines are disconnected, i.e. full blackout
+    if len(generator_disconnection_timeline) == len(connected_machines):  # All machines are disconnected, i.e. full blackout
         load_shedding = 100
-    elif len(generator_disconnection_timeline) > len(really_connected_machines):
-        raise RuntimeError('Missing generators in "really_connected_machines", or some generators were reconnected during the simulation')
+    elif len(generator_disconnection_timeline) > len(connected_machines):
+        raise RuntimeError('Working_dir {}: missing generators in "connected_machines", or some generators were reconnected during the simulation'.format(working_dir))
 
 
     # TODO: check for low voltages using the new final values API (load_terminal_V_re, and _im -> compute abs)

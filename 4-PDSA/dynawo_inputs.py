@@ -7,7 +7,10 @@ from pathlib import Path
 import shutil
 import dynawo_protections
 import dynawo_init_events
-
+import pypowsybl as pp
+import sys
+sys.path.insert(1, '../3-DynData')
+import add_dyn_data
 
 def write_job_files(job : job.Job):
     Path(job.working_dir).mkdir(parents=True, exist_ok=True)
@@ -18,11 +21,20 @@ def write_job_files(job : job.Job):
     shutil.copy(iidm_file, os.path.join(job.working_dir, NETWORK_NAME + '.iidm'))
 
     # Add data to dyd and par files
-    dyn_data_path = '../3-DynData'
+    network = pp.network.load(iidm_file)
     XMLparser = etree.XMLParser(remove_blank_text=True)  # Necessary for pretty_print to work
-    dyd_root = etree.parse(os.path.join(dyn_data_path, NETWORK_NAME + '.dyd'), XMLparser).getroot()
-    par_root = etree.parse(os.path.join(dyn_data_path, NETWORK_NAME + '.par'), XMLparser).getroot()
+    dyn_data_path = '../3-DynData'
+    dyd_root = etree.parse(os.path.join(dyn_data_path, 'base.dyd'), XMLparser).getroot()
+    par_root = etree.parse(os.path.join(dyn_data_path, 'base.par'), XMLparser).getroot()
 
+    if CASE == 'january':
+        motor_share = 0.3
+    elif CASE == 'july':
+        motor_share = 0.5
+    else:
+        raise NotImplementedError('')
+
+    add_dyn_data.add_dyn_data(NETWORK_NAME, network, dyd_root, par_root, DYNAWO_NAMESPACE, motor_share)
     dynawo_init_events.add_init_events(dyd_root, par_root, job.contingency.init_events)
     dynawo_protections.add_protections(dyd_root, par_root, iidm_file, job.dynamic_seed)
 
