@@ -6,6 +6,7 @@
     * Increase spinning reserves to 500 MW (total for the three areas) to be able to handle the sudden loss of nuclear power plant (400 MW) or the loss of a wind plant to some extent (847 MW peak)
     * Removed the DC line for the sake of simplicity
     * Double lines 207-208 and 307-308 such that the system can be dispatched in an N-1 secure manner
+    * Add line 220-317 with same parameters as 223-318 and 118-320 with same parameters as 121-325 to help stability given the large wind capacity added in zone 3 in the GMLC version
     * Remove the 3 100 MVar shunts (note that some scripts migth thus not handle shunts)
     * Reduce the susceptance of cables from 2.459 to 1.459, except cable C10 that is reduced to 0.459
     * Remove the synchronous compensator at bus 14 and replace it with two compensators of half capacities at buses 8 and 14
