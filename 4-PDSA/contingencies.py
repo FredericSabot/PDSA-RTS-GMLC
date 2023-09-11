@@ -94,15 +94,23 @@ class Contingency:
 
     @staticmethod
     def create_base_contingency():
-        return [Contingency('Base', 1, [])]  # Contingency with no events
+        return [Contingency('Base', OUTAGE_RATE_PER_KM, [])]  # Contingency with no events, use a low frequency to avoid running it too often
 
     @staticmethod
     def create_N_1_contingencies(with_lines = True, with_generators = False):
         contingencies = []
+        # Read network
+        n = pp.network.load('../RTS-Data/RTS.iidm')
+        lines = n.get_lines()
+        vl = n.get_voltage_levels()
 
         # Fault on each end of the line + disconnection of the line
         if with_lines:
             for line_id in Contingency.unique_lines:
+                voltage_level = lines.at[line_id, 'voltage_level1_id']
+                Vb = float(vl.at[voltage_level, 'nominal_v']) * 1e3
+                if Vb < 220e3:
+                    continue
                 frequency = OUTAGE_RATE_PER_KM * Contingency.line_lengths.at[line_id]
                 bus_ids = ['@' + line_id + '@@NODE1@', '@' + line_id + '@@NODE2@']
                 ends = [1, 2]
@@ -166,12 +174,15 @@ class Contingency:
         # Read network
         n = pp.network.load('../RTS-Data/RTS.iidm')
         lines = n.get_lines()
+        vl = n.get_voltage_levels()
 
         bus2lines = get_buses_to_lines(n)
 
         for line_id in Contingency.unique_lines:
             voltage_level = lines.at[line_id, 'voltage_level1_id']
-            Vb = float(n.get_voltage_levels().at[voltage_level, 'nominal_v']) * 1000
+            Vb = float(vl.at[voltage_level, 'nominal_v']) * 1e3
+            if Vb < 220e3:
+                continue
             Sb = 100e6  # 100MW is default base in Dynawo
             Zb = Vb**2/Sb
             r_line = lines.at[line_id, 'r'] / Zb
