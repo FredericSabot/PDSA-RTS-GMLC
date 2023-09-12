@@ -7,7 +7,8 @@ It consists in:
 
 1. A market model/unit commitment model based on [Prescient](https://github.com/grid-parity-exchange/Prescient). Prescient iterates between day-ahead and hourly dispatch. A (DC) nodal market (considering N-1 limits) is used here.
 2. A preventive security constained AC optimal power flow (PSCACOPF) to refine individual hourly dispatches
-3. Work in progress (dynamic data, scripts for the DPSA itself?)
+3. Scripts to add dynamic data to the RTS in [dynawo](https://dynawo.github.io/) format. These data have been checked to lead to a N-1 secure system (considering all possible line faults occuring at either end of the line and being cleared in 100ms by opening the line) for the cases january at hours 0 (min load), 13 (peak PV) and 17 (peak load), and july at hours 0 (min load) and 15 (peak load).
+4. Scripts for PDSA (TODO add description) Note: results are visualised using Ximple (Windows only)
 
 # Usage
 
@@ -46,6 +47,19 @@ Note that a SLURM-based runner (run_cluster.sh) is also available for use in hig
 ```
 cd ../3-DynData
 python add_dyn_data.py
+```
+
+## PDSA
+
+```
+cd ../4-PDSA
+mpiexec -n 2 main.py
+```
+
+to run locally. However, HPC is almost mandatory for PDSA (except if a limited number of contingencies/operating conditions is considered), so use the following command instead
+
+```
+sbatch PDSA.sh
 ```
 
 # Requirements
