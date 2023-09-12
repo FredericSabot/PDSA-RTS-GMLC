@@ -281,15 +281,7 @@ class JobQueue:
                 dynamic_allocations = allocations[1:]
 
                 for i in range(1, static_allocation + 1):
-                    if nb_static_ids + i >= len(self.static_samples):  # 100 TODO: put back, but avoid too many to start with
-                        """ logger.logger.warn("Contingency {} running out of available static samples".format(contingency.id))
-
-                        # Not possible to generate new static samples, so reallocate runs to create new dynamic samples instead
-                        weigth = 0
-                        if sum(weigth_per_static_id) > 0:
-                            allocations = JobQueue.allocation([weigth] + weigth_per_static_id, nb_runs - i)
-                            dynamic_allocations = allocations[1:]
-                        else: """
+                    if nb_static_ids + i >= len(self.static_samples):
                         logger.logger.critical("Contingency {} running out of static samples, skipping".format(contingency.id))
                         self.contingencies_skipped.append(contingency)
                         break
@@ -449,8 +441,9 @@ class JobQueue:
                 der_1 = 0
                 der_2 = 0
             else:
-                # der_1 = contingency.frequency * variance_per_static_id[i]**2 / (2 * N_per_static_id[i]**2 * std_dev)  # Computed as a continuous derivative for simplicity/performance
-                der_1 = SE - sqrt(max(SE**2 + variance_per_static_id[i] / N * (1/(N_per_static_id[i]+1) - 1/N_per_static_id[i]), 0))
+                N_per_static_id[i] += 1
+                der_1 = SE - sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N)
+                N_per_static_id[i] -= 1
                 der_2 = 0
             derivative_1_per_static_id.append(der_1)
             derivative_2_per_static_id.append(der_2)
