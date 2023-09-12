@@ -26,8 +26,8 @@ class Master:
 
     def create_contingency_list(self):
         base_contingency = Contingency.create_base_contingency()
-        N_1_contingencies = Contingency.create_N_1_contingencies()# [:30] #[:2]
-        N_2_contingencies = Contingency.create_N_2_contingencies()# [:50] #[:2]  # Limit number of contingencies for first tests
+        N_1_contingencies = Contingency.create_N_1_contingencies()
+        N_2_contingencies = Contingency.create_N_2_contingencies()
 
         self.contingency_list = base_contingency + N_1_contingencies + N_2_contingencies
         logger.logger.info('Considering {} contingencies: {} base, {} N-1, {} N-2'.format(len(self.contingency_list), len(base_contingency), len(N_1_contingencies), len(N_2_contingencies)))
@@ -442,7 +442,7 @@ class JobQueue:
                 der_2 = 0
             else:
                 N_per_static_id[i] += 1
-                der_1 = SE - sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N)
+                der_1 = contingency.frequency * (SE - sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N))
                 N_per_static_id[i] -= 1
                 der_2 = 0
             derivative_1_per_static_id.append(der_1)
