@@ -88,7 +88,7 @@ def add_gen_UVA_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error):
     uva_par_set = etree.SubElement(par_root, etree.QName(DYNAWO_NAMESPACE, 'set'), {'id' : protection_id})
     par_attribs = [
         {'type':'DOUBLE', 'name':'underVoltageAutomaton_UMinPu', 'value':str(0.85 + rand_UMin)},
-        {'type':'DOUBLE', 'name':'underVoltageAutomaton_tLagAction', 'value':str(1.5 + rand_CB)}
+        {'type':'DOUBLE', 'name':'underVoltageAutomaton_tLagAction', 'value':str(1.5 + CB_time + rand_CB)}
     ]
     for par_attrib in par_attribs:
         etree.SubElement(uva_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
@@ -174,148 +174,127 @@ def add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, li
     for side in [1,2]:
         opposite_side = 3-side  # 2 if side == 1, 1 if side == 2
         protection_id = line_id + '_side{}'.format(side) + '_Distance'
-        if special:
-            protection_ids = [protection_id + 'Slow', protection_id + 'Fast']
-        else:
-            protection_ids = [protection_id]
         lib = 'DistanceProtectionLineFourZonesWithBlinder'
-        for protection_id in protection_ids:
-            dist_attrib = {'id': protection_id, 'lib': lib, 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
-            etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), dist_attrib)
+        dist_attrib = {'id': protection_id, 'lib': lib, 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
+        etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), dist_attrib)
 
-            connect_attribs = [
-                {'id1': protection_id, 'var1': 'distance_UMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_U{}_value'.format(side)},
-                {'id1': protection_id, 'var1': 'distance_PMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_P{}_value'.format(side)},
-                {'id1': protection_id, 'var1': 'distance_QMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_Q{}_value'.format(side)},
-                {'id1': protection_id, 'var1': 'distance_lineState', 'id2': 'NETWORK', 'var2': line_id + '_state'}
+        connect_attribs = [
+            {'id1': protection_id, 'var1': 'distance_UMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_U{}_value'.format(side)},
+            {'id1': protection_id, 'var1': 'distance_PMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_P{}_value'.format(side)},
+            {'id1': protection_id, 'var1': 'distance_QMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_Q{}_value'.format(side)},
+            {'id1': protection_id, 'var1': 'distance_lineState', 'id2': 'NETWORK', 'var2': line_id + '_state'}
+        ]
+        for connect_attrib in connect_attribs:
+            etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'connect'), connect_attrib)
+
+        # Parameters
+        dist_par_set = etree.SubElement(par_root, etree.QName(DYNAWO_NAMESPACE, 'set'), {'id' : protection_id})
+
+        voltage_level = lines.at[line_id, 'voltage_level1_id']
+        Ub = float(network.get_voltage_levels().at[voltage_level, 'nominal_v']) * 1000
+        Sb = 100e6  # 100MW is the default base in Dynawo
+        Zb = Ub**2/Sb
+
+        X = lines.at[line_id, 'x'] / Zb
+        # R = lines.at[line_id, 'r'] / Zb
+
+        X1 = 0.8 * X
+        R1 = X1
+
+        adj_lines = get_adjacent_lines(bus2lines, network, line_id, opposite_side)  # Only the adjacent lines that can be "seen" from a forward looking distance relay
+        adj_lines_X = [lines.at[adj_line, 'x'] for adj_line in adj_lines]
+        if not adj_lines_X: # is empty
+            adj_lines_X = [0]
+        max_adj_X = max(adj_lines_X) / Zb
+        min_adj_X = min(adj_lines_X) / Zb
+
+        X2 = max(0.9*(X + 0.85*min_adj_X), 1.15*X)
+        R2 = X2
+
+        X3 = (X + 1.15 * max_adj_X)
+        R3 = X3
+
+        X4 = X3 * 1.2  # X4 is only used to signal when apparent impedance is close to entering zone 3, not used for actual tripping
+        R4 = R3 * 1.2
+
+        # Load blinder taken as 1.5 times the nominal current at 0.85pu voltage with power factor of 30 degrees following NERC recommandations
+        I_max = line_rating / 100
+        blinder_reach = 0.85 / (1.5 * I_max)
+        blinder_angle = 45 * (pi/180)  # 45 instead of 30 due to high reactive flows in some lines (mainly interconnections I believe)
+
+        if adj_lines_X == [0]: # No adjacent lines
+            X3 = 99  # Zone 2 and zone 3 would be identical -> remove zone 3
+            R3 = 99
+            X4 = 99
+            R4 = 99
+
+        if RANDOMISE_DYN_DATA:
+            rand_measurement_ratio = 1 + random.uniform(-measurement_max_error, measurement_max_error)
+            rand_CB = random.uniform(-CB_max_error, CB_max_error)
+        else:
+            rand_measurement_ratio = 1
+            rand_CB = 0
+
+        if special:
+            par_attribs = [
+                {'type':'INT', 'name':'distance_LineSide', 'value':str(side)},
+                {'type':'DOUBLE', 'name':'distance_tZone_0_', 'value':str(0.3)},
+                {'type':'DOUBLE', 'name':'distance_tZone_1_', 'value':str(0.3)},
+                {'type':'DOUBLE', 'name':'distance_tZone_2_', 'value':str(0.6)},
+                {'type':'DOUBLE', 'name':'distance_tZone_3_', 'value':str(0.6)},
+                {'type':'DOUBLE', 'name':'distance_RPu_0_', 'value': str(R2 * (1 + measurement_max_error))},
+                {'type':'DOUBLE', 'name':'distance_XPu_0_', 'value': str(X2 * (1 + measurement_max_error))},
+                {'type':'DOUBLE', 'name':'distance_RPu_1_', 'value': str(R2 * (1 - measurement_max_error))},
+                {'type':'DOUBLE', 'name':'distance_XPu_1_', 'value': str(X2 * (1 - measurement_max_error))},
+                {'type':'DOUBLE', 'name':'distance_RPu_2_', 'value': str(R3 * (1 - measurement_max_error))},
+                {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * (1 - measurement_max_error))},
+                {'type':'DOUBLE', 'name':'distance_RPu_3_', 'value': str(R3 * (1 + measurement_max_error))},
+                {'type':'DOUBLE', 'name':'distance_XPu_3_', 'value': str(X3 * (1 + measurement_max_error))},
+                {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(blinder_angle)},
+                {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(blinder_reach)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_0_', 'value': str(CB_time - CB_max_error)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_1_', 'value': str(CB_time + CB_max_error)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_2_', 'value': str(CB_time + CB_max_error)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_3_', 'value': str(CB_time - CB_max_error)},
+                {'type':'BOOL', 'name':'distance_TrippingZone_0_', 'value': 'false'},
+                {'type':'BOOL', 'name':'distance_TrippingZone_1_', 'value': 'true'},
+                {'type':'BOOL', 'name':'distance_TrippingZone_2_', 'value': 'true'},
+                {'type':'BOOL', 'name':'distance_TrippingZone_3_', 'value': 'false'},
             ]
-            for connect_attrib in connect_attribs:
-                etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'connect'), connect_attrib)
-
-            # Parameters
-            dist_par_set = etree.SubElement(par_root, etree.QName(DYNAWO_NAMESPACE, 'set'), {'id' : protection_id})
-
-            voltage_level = lines.at[line_id, 'voltage_level1_id']
-            Ub = float(network.get_voltage_levels().at[voltage_level, 'nominal_v']) * 1000
-            Sb = 100e6  # 100MW is the default base in Dynawo
-            Zb = Ub**2/Sb
-
-            X = lines.at[line_id, 'x'] / Zb
-            # R = lines.at[line_id, 'r'] / Zb
-
-            X1 = 0.8 * X
-            R1 = X1
-
-            adj_lines = get_adjacent_lines(bus2lines, network, line_id, opposite_side)  # Only the adjacent lines that can be "seen" from a forward looking distance relay
-            adj_lines_X = [lines.at[adj_line, 'x'] for adj_line in adj_lines]
-            if not adj_lines_X: # is empty
-                adj_lines_X = [0]
-            max_adj_X = max(adj_lines_X) / Zb
-            min_adj_X = min(adj_lines_X) / Zb
-
-            X2 = max(0.9*(X + 0.85*min_adj_X), 1.15*X)
-            R2 = X2
-
-            X3 = (X + 1.15 * max_adj_X)
-            R3 = X3
-
-            X4 = X3 * 1.2  # X4 is only used to signal when apparent impedance is close to entering zone 3, not used for actual tripping
-            R4 = R3 * 1.2
-
-            # Load blinder taken as 1.5 times the nominal current at 0.85pu voltage with power factor of 30 degrees following NERC recommandations
-            I_max = line_rating / 100
-            blinder_reach = 0.85 / (1.5 * I_max)
-            blinder_angle = 30 * (pi/180)
-
-            if adj_lines_X == [0]: # No adjacent lines
-                X3 = 99  # Zone 2 and zone 3 would be identical -> remove zone 3
-                R3 = 99
-                X4 = 99
-                R4 = 99
-
-            if RANDOMISE_DYN_DATA:
-                rand_measurement_ratio = 1 + random.uniform(-measurement_max_error, measurement_max_error)
-                rand_CB = random.uniform(-CB_max_error, CB_max_error)
-            else:
-                rand_measurement_ratio = 1
-                rand_CB = 0
-
-            if 'Fast' in protection_id:
-                par_attribs = [
-                    {'type':'INT', 'name':'distance_LineSide', 'value':str(side)},
-                    {'type':'DOUBLE', 'name':'distance_tZone_0_', 'value':'999999'},
-                    {'type':'DOUBLE', 'name':'distance_tZone_1_', 'value':str(0.3)},
-                    {'type':'DOUBLE', 'name':'distance_tZone_2_', 'value':str(0.6)},
-                    {'type':'DOUBLE', 'name':'distance_tZone_3_', 'value':'999999'},
-                    {'type':'DOUBLE', 'name':'distance_RPu_0_', 'value': str(R2 * (1 + measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_XPu_0_', 'value': str(X2 * (1 + measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_RPu_1_', 'value': str(R2 * (1 + measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_XPu_1_', 'value': str(X2 * (1 + measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_RPu_2_', 'value': str(R3 * (1 + measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * (1 + measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_RPu_3_', 'value': str(R3 * (1 + measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_XPu_3_', 'value': str(X3 * (1 + measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(blinder_angle)},
-                    {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(blinder_reach)},
-                    {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime', 'value': str(CB_time - CB_max_error)},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_0_', 'value': 'false'},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_1_', 'value': 'false'},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_2_', 'value': 'false'},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_3_', 'value': 'false'},
-                ]
-            elif 'Slow' in protection_id:
-                par_attribs = [
-                    {'type':'INT', 'name':'distance_LineSide', 'value':str(side)},
-                    {'type':'DOUBLE', 'name':'distance_tZone_0_', 'value':'999999'},
-                    {'type':'DOUBLE', 'name':'distance_tZone_1_', 'value':str(0.3)},
-                    {'type':'DOUBLE', 'name':'distance_tZone_2_', 'value':str(0.6)},
-                    {'type':'DOUBLE', 'name':'distance_tZone_3_', 'value':'999999'},
-                    {'type':'DOUBLE', 'name':'distance_RPu_0_', 'value': str(R2 * (1 - measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_XPu_0_', 'value': str(X2 * (1 - measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_RPu_1_', 'value': str(R2 * (1 - measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_XPu_1_', 'value': str(X2 * (1 - measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_RPu_2_', 'value': str(R3 * (1 - measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * (1 - measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_RPu_3_', 'value': str(R3 * (1 - measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_XPu_3_', 'value': str(X3 * (1 - measurement_max_error))},
-                    {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(blinder_angle)},
-                    {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(blinder_reach)},
-                    {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime', 'value': str(CB_time + CB_max_error)},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_0_', 'value': 'true'},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_1_', 'value': 'true'},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_2_', 'value': 'true'},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_3_', 'value': 'true'},
-                ]
-            else:
-                par_attribs = [
-                    {'type':'INT', 'name':'distance_LineSide', 'value':str(side)},
-                    {'type':'DOUBLE', 'name':'distance_tZone_0_', 'value':'999999'},
-                    {'type':'DOUBLE', 'name':'distance_tZone_1_', 'value':str(0.3)},
-                    {'type':'DOUBLE', 'name':'distance_tZone_2_', 'value':str(0.6)},
-                    {'type':'DOUBLE', 'name':'distance_tZone_3_', 'value':'999999'},
-                    {'type':'DOUBLE', 'name':'distance_RPu_0_', 'value': str(R1 * rand_measurement_ratio)},
-                    {'type':'DOUBLE', 'name':'distance_XPu_0_', 'value': str(X1 * rand_measurement_ratio)},
-                    {'type':'DOUBLE', 'name':'distance_RPu_1_', 'value': str(R2 * rand_measurement_ratio)},
-                    {'type':'DOUBLE', 'name':'distance_XPu_1_', 'value': str(X2 * rand_measurement_ratio)},
-                    {'type':'DOUBLE', 'name':'distance_RPu_2_', 'value': str(R3 * rand_measurement_ratio)},
-                    {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * rand_measurement_ratio)},
-                    {'type':'DOUBLE', 'name':'distance_RPu_3_', 'value': str(R4 * rand_measurement_ratio)},
-                    {'type':'DOUBLE', 'name':'distance_XPu_3_', 'value': str(X4 * rand_measurement_ratio)},
-                    {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(blinder_angle)},
-                    {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(blinder_reach)},
-                    {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime', 'value': str(CB_time + rand_CB)},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_0_', 'value': 'true'},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_1_', 'value': 'true'},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_2_', 'value': 'true'},
-                    {'type':'BOOL', 'name':'distance_TrippingZone_3_', 'value': 'true'},
-                ]
-            for par_attrib in par_attribs:
-                etree.SubElement(dist_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
+        else:
+            par_attribs = [
+                {'type':'INT', 'name':'distance_LineSide', 'value':str(side)},
+                {'type':'DOUBLE', 'name':'distance_tZone_0_', 'value':'999999'},
+                {'type':'DOUBLE', 'name':'distance_tZone_1_', 'value':str(0.3)},
+                {'type':'DOUBLE', 'name':'distance_tZone_2_', 'value':str(0.6)},
+                {'type':'DOUBLE', 'name':'distance_tZone_3_', 'value':'999999'},
+                {'type':'DOUBLE', 'name':'distance_RPu_0_', 'value': str(R1 * rand_measurement_ratio)},
+                {'type':'DOUBLE', 'name':'distance_XPu_0_', 'value': str(X1 * rand_measurement_ratio)},
+                {'type':'DOUBLE', 'name':'distance_RPu_1_', 'value': str(R2 * rand_measurement_ratio)},
+                {'type':'DOUBLE', 'name':'distance_XPu_1_', 'value': str(X2 * rand_measurement_ratio)},
+                {'type':'DOUBLE', 'name':'distance_RPu_2_', 'value': str(R3 * rand_measurement_ratio)},
+                {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * rand_measurement_ratio)},
+                {'type':'DOUBLE', 'name':'distance_RPu_3_', 'value': str(R4 * rand_measurement_ratio)},
+                {'type':'DOUBLE', 'name':'distance_XPu_3_', 'value': str(X4 * rand_measurement_ratio)},
+                {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(blinder_angle)},
+                {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(blinder_reach)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_0_', 'value': str(CB_time + rand_CB)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_1_', 'value': str(CB_time + rand_CB)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_2_', 'value': str(CB_time + rand_CB)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_3_', 'value': str(CB_time + rand_CB)},
+                {'type':'BOOL', 'name':'distance_TrippingZone_0_', 'value': 'false'},
+                {'type':'BOOL', 'name':'distance_TrippingZone_1_', 'value': 'true'},
+                {'type':'BOOL', 'name':'distance_TrippingZone_2_', 'value': 'true'},
+                {'type':'BOOL', 'name':'distance_TrippingZone_3_', 'value': 'false'},
+            ]
+        for par_attrib in par_attribs:
+            etree.SubElement(dist_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
 
 
 def add_protections(dyd_root, par_root, iidm_file, seed):
-    special = False  # TODO: use indicator and find a better name
-
+    special = False
+    if seed == 0:
+        special = True
 
     CB_time = 0.08
     CB_max_error = 0.01  # +/- 10ms
@@ -332,6 +311,8 @@ def add_protections(dyd_root, par_root, iidm_file, seed):
     for gen_id in gens.index:
         if gens.at[gen_id, 'energy_source'] == 'SOLAR' or gens.at[gen_id, 'energy_source'] == 'WIND':
             continue  # Protection only for synchronous machines
+        if not gens.at[gen_id, 'connected']:
+            continue
         # Over-/under-speed protection
         add_gen_speed_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error)
         # Under-voltage protection

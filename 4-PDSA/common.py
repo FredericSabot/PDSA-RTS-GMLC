@@ -24,9 +24,8 @@ REUSE_RESULTS = True  # If true, don't run simulations if there is already an 'o
 # TODO: read outputdir from .jobs instead of assuming it is 'outputs'
 # TODO: delete previous simulations outputs if REUSE_RESULTS = False (with confirmation prompt, only for case CASE)
 
-MIN_NUMBER_RUN_N_1 = 50
-MIN_NUMBER_RUN_N_2 = 10
-NB_RUNS_PER_INDICATOR_EVALUATION = 10
+MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED = 5 # 5, low for first tests
+NB_RUNS_PER_INDICATOR_EVALUATION = 100  # Note: more or less runs migth be done per indicator evaluation due to rounding and capping
 
 # Contingency parameters
 T_INIT = 5

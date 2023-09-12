@@ -28,13 +28,14 @@ def get_job_results(working_dir):
     convergence_issue = False
     max_line_number = 20
     line_number = 0
-    for line in reversed(list(open(log_file))):  # from https://stackoverflow.com/a/2301792, note that it might read the whole file instead of just the end, but it should be ok
-        if '| ERROR |' in line:
-            convergence_issue = True
-            break
-        line_number += 1
-        if line_number > max_line_number:  # Don't search through the whole file (error is either at the very end of the file, or at the end before execution statistics)
-            break
+    if os.path.exists(log_file):  # Log file might not be created if it is empty
+        for line in reversed(list(open(log_file))):  # Read file from the end, from https://stackoverflow.com/a/2301792, note that it might read the whole file instead of just the end, but it should be ok
+            if '| ERROR |' in line:
+                convergence_issue = True
+                break
+            line_number += 1
+            if line_number > max_line_number:  # Don't search through the whole file (error is either at the very end of the file, or at the end before execution statistics)
+                break
 
     # Read timeline
     timeline_file = os.path.join(working_dir, 'outputs', 'timeLine', 'timeline.log')
@@ -49,7 +50,7 @@ def get_job_results(working_dir):
         events = f.readlines()
         for event in events:
             (time, model, event_description) = event.strip().split(' | ')
-            event = TimeLineEvent(time, model, event_description)
+            event = TimeLineEvent(float(time), model, event_description)
 
             if model in disconnected_models:
                 continue  # Disregard spurious events for models that are already disconnected
@@ -105,9 +106,9 @@ def get_job_results(working_dir):
             UFLS_ratio += -0.05
 
         elif timeline_event.event_description == 'LOAD : disconnecting':
-            if 'Dummy' in model:
+            if 'Dummy' in timeline_event.model:
                 continue
-            disconnected_load += loads.at[model, 'p0']
+            disconnected_load += loads.at[timeline_event.model, 'p0']
         else:
             pass
 
@@ -116,7 +117,7 @@ def get_job_results(working_dir):
     load_shedding = (total_load - remaining_load) / total_load * 100
 
     if convergence_issue:
-        load_shedding = 100.1  # Mark it as 100.1% load shedding to not affect averages, but still see there is a numerical issue
+        load_shedding += 0.1  # Convergence issues are a bit too frequent for stable cases, so hide them  # Mark it as 100.1% load shedding to not affect averages, but still see there is a numerical issue
 
 
     ###############################################
@@ -161,8 +162,77 @@ def get_job_results(working_dir):
     return Results(load_shedding)
 
 
+def get_job_results_special(working_dir):
+    timeline_file = os.path.join(working_dir, 'outputs', 'timeLine', 'timeline.log')
+
+    trip_timeline: list[TimeLineEvent]
+    trip_timeline = []
+    disconnected_models = []
+    with open(os.path.join(timeline_file), 'r') as f:
+        events = f.readlines()
+        for event in events:
+            (time, model, event_description) = event.strip().split(' | ')
+            event = TimeLineEvent(float(time), model, event_description)
+
+            if model in disconnected_models:
+                continue  # Disregard spurious events for protections that already tripped
+
+            if 'trip' in event.event_description:
+                trip_timeline.append(event)
+
+    slow_trip_timeline = [timeline_event for timeline_event in trip_timeline if 'tripped zone 2' in timeline_event.event_description or 'tripped zone 3' in timeline_event.event_description]
+    fast_trip_timeline = [timeline_event for timeline_event in trip_timeline if 'tripped zone 1' in timeline_event.event_description or 'tripped zone 4' in timeline_event.event_description]
+
+    for timeline_event in fast_trip_timeline:
+        if timeline_event.event_description == 'Distance protection tripped zone 1':  # Translate fast timeline events into slow equivalents for easier matching
+            timeline_event.event_description = 'Distance protection tripped zone 2'
+        if timeline_event.event_description == 'Distance protection tripped zone 4':
+            timeline_event.event_description = 'Distance protection tripped zone 3'
+
+    same_order = True
+    index = 0
+    for slow_timeline_event in slow_trip_timeline:
+        time = float(slow_timeline_event.time)
+        for following_timeline_event in slow_trip_timeline[index+1:]:
+            for fast_timeline_event in fast_trip_timeline:
+                if timeline_events_match(fast_timeline_event, following_timeline_event):
+                    fast_time = float(fast_timeline_event.time)
+                    if fast_time + 0.07 < time:  # check if they can occur before the considered event (with more than min CB time difference)
+                        same_order = False
+                    break
+        index += 1
+
+    missing_events = False
+    for fast_timeline_event in fast_trip_timeline:
+        found = False
+        for slow_timeline_event in slow_trip_timeline:
+            if timeline_events_match(fast_timeline_event, slow_timeline_event):
+                found = True
+                break
+        if not found:
+            missing_events = True
+            break
+    # Search event in slow that is not in fast (not possible if both are derived from a single simulation, and probably rare even if computed from two separate simulations)
+    for slow_timeline_event in slow_trip_timeline:
+        found = False
+        for fast_timeline_event in fast_trip_timeline:
+            if timeline_events_match(fast_timeline_event, slow_timeline_event):
+                found = True
+                break
+        if not found:
+            missing_events = True
+            break
+
+    return not same_order, missing_events
+
 @dataclass
 class TimeLineEvent:
     time: float
     model: str
     event_description: str
+
+def timeline_events_match(timeline_event_1: TimeLineEvent, timeline_event_2: TimeLineEvent) -> bool:
+    if timeline_event_1.model == timeline_event_2.model and timeline_event_1.event_description == timeline_event_2.event_description:
+        return True
+    else:
+        return False
