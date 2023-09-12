@@ -7,7 +7,7 @@ output_dir = case + '_week_output_N_1'
 if case == 'january':
     start = "01-01-2020"
 elif case == 'july':
-    start = "07-10-2020"  # US date system
+    start = "07-01-2020"  # US date system
 else:
     raise NotImplementedError()
 
@@ -21,7 +21,7 @@ Prescient().simulate(
                                                         # for SCED look-ahead periods.
     output_directory = output_dir, # Where to write the output data
     start_date = start, # Date to start the simulation on, must be within the range of the data.
-    num_days = 7, # Number of days to simulate, including the start date. All days must be in the data.
+    num_days = 30, # Number of days to simulate, including the start date. All days must be in the data.
     sced_horizon = 4, # Number of look-ahead periods (in sced_frequency_minutes) in the real-time SCED
     ruc_mipgap = 0.01, # mipgap for the day-ahead unit commitment
     symbolic_solver_labels = True, # Whether to use symbol names derived from the model when interfacing with the solver.

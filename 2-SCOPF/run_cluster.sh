@@ -1,7 +1,7 @@
 #!/bin/bash
 # Submission script for Lemaitre3
 #SBATCH --job-name=PSCACOPF
-#SBATCH --array=0-4
+#SBATCH --array=0-719
 #SBATCH --time=00:30:00 # hh:mm:ss
 #
 #SBATCH --ntasks=1
