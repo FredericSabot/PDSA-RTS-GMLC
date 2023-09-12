@@ -72,3 +72,17 @@ python -m pip install pypowsybl
 [GAMS](https://www.gams.com/download/) and GAMS Python bindings. Note that depending on the GAMS version, different installation procedures are sugggested for the python bindings, e.g. [link](https://www.gams.com/36/docs/API_PY_TUTORIAL.html) or [link](https://www.gams.com/43/docs/API_PY_GETTING_STARTED.html).
 
 Tested with Python 3.9 and GAMS 36. Note that older versions of GAMS might not support recent versions of Python and that Pypowsybl requires Python >= 3.7
+
+## DynData
+
+```
+python -m pip install pypowsybl lxml
+```
+
+## PDSA
+
+```
+python -m pip install pypowsybl lxml logger mpi4py natsort
+```
+
+Install [dynawo](https://dynawo.github.io/) and set DYNAWO_PATH in 4-PDSA/common.py accordingly
