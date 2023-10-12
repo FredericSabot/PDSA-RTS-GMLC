@@ -398,11 +398,13 @@ class JobQueue:
 
         mean_per_static_id = np.array([contingency_results.get_average_load_shedding_per_static_id(static_id) for static_id in static_ids])
         mean = np.mean(mean_per_static_id)
-        variance_per_static_id = np.array([contingency_results.get_variance_per_static_id_no_error(static_id) for static_id in static_ids])
         std_dev = sqrt(np.var(mean_per_static_id))  # TODO: add sqrt(N/(N-1)) factor and handle div by 0 in this case
 
-        indicator_1 = contingency.frequency * sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N)
-        indicator_2 = contingency.frequency * (100 - mean) / N
+        indicator_1 = contingency.frequency * sqrt(std_dev**2) / sqrt(N) #  + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N)
+        if contingency.frequency > OUTAGE_RATE_PER_KM * 1:
+            indicator_2 = contingency.frequency * (100 - mean) / N
+        else:
+            indicator_2 = contingency.frequency * (100 - mean) / N
         return indicator_1, indicator_2
 
     def get_distances_from_statistical_accuracy(self, contingency: Contingency):
