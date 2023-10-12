@@ -19,7 +19,9 @@ print('Running PSCACOPF for case', case, 'hour:', hour)
 if case == 'january':
     init_date = datetime.datetime(2020, 1, 1)
 elif case == 'july':
-    init_date = datetime.datetime(2020, 7, 10)
+    init_date = datetime.datetime(2020, 7, 1)
+elif case == 'year':
+    init_date = datetime.datetime(2020, 1, 1)
 else:
     raise NotImplementedError('Case not yet considered')
 
@@ -188,7 +190,7 @@ demand_bus = np.concatenate((demand_bus[0], demand_bus[1], demand_bus[2]))
 print('\nPSCDCOPF')
 dcopf_path = os.path.join('a-PSCDCOPF', str(hour))
 Path(dcopf_path).mkdir(parents=True, exist_ok=True)
-ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), dcopf_path))  #, debug=gams.DebugLevel.Verbose)
+ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), dcopf_path), debug=gams.DebugLevel.Off)
 db_preDC = ws.add_database()
 
 def addGamsSet(db, name, description, lst):
@@ -339,7 +341,7 @@ B_branch_ToTo = branch_ToTo.imag
 
 acopf_path = os.path.join('b-ACOPF', str(hour))
 Path(acopf_path).mkdir(parents=True, exist_ok=True)
-ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), acopf_path))  #, debug=gams.DebugLevel.Verbose)
+ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), acopf_path), debug=gams.DebugLevel.Off)
 db_preAC = ws.add_database()
 
 i_thermal = addGamsSet(db_preAC, 'i_thermal', 'thermal generators', range(1, N_thermal_gens + 1))
@@ -646,7 +648,7 @@ while True:
 
     pscacopf_path = os.path.join('c-PSCACOPF', str(hour))
     Path(pscacopf_path).mkdir(parents=True, exist_ok=True)
-    ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), pscacopf_path))  #, debug=gams.DebugLevel.ShowLog)
+    ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), pscacopf_path), debug=gams.DebugLevel.Off)
     db_prePSCAC = ws.add_database()
     shutil.copy(os.path.join('c-PSCACOPF', 'ipopt.opt'), pscacopf_path)
 

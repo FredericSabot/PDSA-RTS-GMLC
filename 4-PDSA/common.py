@@ -17,9 +17,9 @@ DYNAWO_PATH = '/home/fsabot/Desktop/dynawo_new/myEnvDynawo.sh'
 # DYNAWO_PATH = '/home/ulb/beams_energy/fsabot/dynawo/dynawo.sh'
 DYNAWO_NAMESPACE = 'http://www.rte-france.com/dynawo'
 
-RANDOMISE_DYN_DATA = False
+RANDOMISE_DYN_DATA = True
 NETWORK_NAME = 'RTS'
-CASE = 'january'
+CASE = 'year'
 
 REUSE_RESULTS = True  # If true, don't run simulations if there is already an 'outputs' directory in the working dir of a given job
 # TODO: read outputdir from .jobs instead of assuming it is 'outputs'

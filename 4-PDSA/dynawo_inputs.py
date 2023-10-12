@@ -31,6 +31,11 @@ def write_job_files(job : job.Job):
         motor_share = 0.3
     elif CASE == 'july':
         motor_share = 0.5
+    elif CASE == 'year':
+        if int(job.static_id) > 3600 and int(job.static_id) < 6480:  # Around June to September
+            motor_share = 0.5
+        else:
+            motor_share = 0.3
     else:
         raise NotImplementedError('')
 
