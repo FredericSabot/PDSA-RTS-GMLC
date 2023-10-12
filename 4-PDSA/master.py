@@ -262,7 +262,7 @@ class JobQueue:
             for contingency, nb_runs in zip(contingencies_to_run, nb_runs_per_contingency):
 
                 nb_static_ids = len(self.simulations_launched[contingency.id].static_ids)
-                nb_runs = max(nb_runs, ceil(0.5 * nb_static_ids))  # Derivatives might not be very accurate if we run many job compared to what has already be done + avoid overcommiting to a single contingency
+                nb_runs = min(nb_runs, ceil(0.5 * nb_static_ids))  # Derivatives might not be very accurate if we run many job compared to what has already be done + avoid overcommiting to a single contingency
 
                 contingency_results = self.simulation_results[contingency.id]
                 global_derivative, derivative_per_static_id = self.get_statistical_indicator_derivatives(contingency)
