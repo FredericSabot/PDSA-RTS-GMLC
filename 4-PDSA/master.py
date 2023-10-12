@@ -292,7 +292,7 @@ class JobQueue:
                     jobs.append(job)
 
                 for i in range(len(run_static_ids)):
-                    static_sample = run_static_ids[i] # Not self.static_samples_per_contingency[contingency.id][i] as they are not in the same order
+                    static_sample = self.simulations_launched[contingency.id].static_ids[i]  # Not self.static_samples_per_contingency[contingency.id][i] as they are not necessarily in the same order
                     for j in range(dynamic_allocations[i]):
                         job = self.create_job(contingency, static_sample)
                         self.simulations_launched[contingency.id].add_job(job)
