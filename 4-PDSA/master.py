@@ -442,7 +442,7 @@ class JobQueue:
                 der_2 = 0
             else:
                 N_per_static_id[i] += 1
-                der_1 = contingency.frequency * (SE - sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N))
+                der_1 = contingency.frequency * (SE - (sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N)))
                 N_per_static_id[i] -= 1
                 der_2 = 0
             derivative_1_per_static_id.append(der_1)
