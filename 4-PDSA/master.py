@@ -179,7 +179,10 @@ class JobQueue:
                 for i in range(min_nb_static_seeds):
                     static_sample = self.static_samples_per_contingency[contingency.id][i]
 
-                    job = SpecialJob(static_sample, 0, contingency)
+                    if DOUBLE_MC_LOOP:
+                        job = SpecialJob(static_sample, 0, contingency)
+                    else:
+                        job = self.create_job(contingency, static_sample)
                     self.simulations_launched[contingency.id].add_job(job)
                     jobs.append(job)
 
@@ -204,13 +207,14 @@ class JobQueue:
                     contingencies_waiting.append(contingency)
                     logger.logger.log(logger.logging.TRACE, 'Contingency {} waiting for first static seed runs'.format(contingency.id))
                 else:
-                    for static_id in self.simulation_results[contingency.id].static_ids[:min_nb_static_seeds]:
-                        nb_completed_runs = len(self.simulation_results[contingency.id].jobs[static_id])
-                        special_job = self.simulation_results[contingency.id].jobs[static_id][0]
-                        if (special_job.variable_order or special_job.missing_events) and nb_completed_runs < MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED:
-                            contingencies_waiting.append(contingency)
-                            logger.logger.info('Contingency {} waiting for first dynamic seed runs'.format(contingency.id))
-                            continue
+                    if DOUBLE_MC_LOOP:
+                        for static_id in self.simulation_results[contingency.id].static_ids[:min_nb_static_seeds]:
+                            nb_completed_runs = len(self.simulation_results[contingency.id].jobs[static_id])
+                            special_job = self.simulation_results[contingency.id].jobs[static_id][0]
+                            if (special_job.variable_order or special_job.missing_events) and nb_completed_runs < MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED:
+                                contingencies_waiting.append(contingency)
+                                logger.logger.info('Contingency {} waiting for first dynamic seed runs'.format(contingency.id))
+                                continue
 
                 if self.is_statistical_accuracy_reached(contingency):
                     continue
@@ -287,7 +291,10 @@ class JobQueue:
                         break
 
                     static_sample = self.static_samples_per_contingency[contingency.id][nb_static_ids + i]
-                    job = SpecialJob(static_sample, 0, contingency)
+                    if DOUBLE_MC_LOOP:
+                        job = SpecialJob(static_sample, 0, contingency)
+                    else:
+                        job = self.create_job(contingency, static_sample)
                     self.simulations_launched[contingency.id].add_job(job)
                     jobs.append(job)
 
@@ -316,13 +323,17 @@ class JobQueue:
         for contingency in self.contingencies:
             contingency_results = self.simulation_results[contingency.id]
             mean = contingency_results.get_average_load_shedding()
+            max_shedding = contingency_results.get_maximum_load_shedding()
             N = sum([len(contingency_results.jobs[static_id]) for static_id in contingency_results.static_ids])
+            N_static = len(contingency_results.static_ids)
             indicator_1, indicator_2 = self.get_statistical_indicators(contingency)
             contingency_attrib = {'id': contingency.id,
                                   'frequency': str(contingency.frequency),
                                   'mean_load_shed': str(mean),
+                                  'max_load_shed': str(max_shedding),
                                   'risk': str(contingency.frequency * mean),
                                   'N': str(N),
+                                  'N_static': str(N_static),
                                   'ind_1': str(indicator_1),
                                   'ind_2': str(indicator_2)}
             contingency_element = etree.SubElement(root, 'Contingency', contingency_attrib)
@@ -331,21 +342,24 @@ class JobQueue:
                 mean = contingency_results.get_average_load_shedding_per_static_id(static_id)
                 variance = contingency_results.get_variance_per_static_id_allow_error(static_id, value_on_error=np.nan)
                 N = len(contingency_results.jobs[static_id])
-                special_job = contingency_results.jobs[static_id][0]
                 static_id_attrib = {'static_id': static_id,
                                     'mean_load_shed': str(mean),
                                     'risk': str(mean * contingency.frequency),
                                     'std_dev': str(sqrt(variance)),
-                                    'variable_order': str(special_job.variable_order),
-                                    'missing_events': str(special_job.missing_events),
                                     'N': str(N)}
+                if DOUBLE_MC_LOOP:
+                    special_job = contingency_results.jobs[static_id][0]
+                    static_id_attrib['variable_order'] = str(special_job.variable_order)
+                    static_id_attrib['missing_events'] = str(special_job.missing_events)
+
+                job = contingency_results.jobs[static_id][0]
                 static_id_element = etree.SubElement(contingency_element, 'StaticId', static_id_attrib)
 
                 for job in contingency_results.jobs[static_id]:
                     job_attrib = {'dyn_id': str(job.dynamic_seed),
                                 'simulation_time': '{:.2f}'.format(job.elapsed_time),
                                 'timeout': str(job.timed_out)}
-                    if job.completed:
+                    if job.completed or job.timed_out:
                         job_attrib['load_shedding'] = '{:.2f}'.format(job.results.load_shedding)
                     etree.SubElement(static_id_element, 'Job', job_attrib)
 
@@ -388,10 +402,11 @@ class JobQueue:
         contingency_results = self.simulation_results[contingency.id]
         static_ids = contingency_results.static_ids.copy()
 
-        for static_id in static_ids.copy():
-            special_job = contingency_results.jobs[static_id][0]
-            if (special_job.variable_order or special_job.missing_events) and len(contingency_results.jobs[static_id]) < MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED:
-                static_ids.remove(static_id)  # A static id is considered to be not yet run if if does not yet have MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED already finished (avoids div by 0)
+        if DOUBLE_MC_LOOP:
+            for static_id in static_ids.copy():
+                special_job = contingency_results.jobs[static_id][0]
+                if (special_job.variable_order or special_job.missing_events) and len(contingency_results.jobs[static_id]) < MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED:
+                    static_ids.remove(static_id)  # A static id is considered to be not yet run if if does not yet have MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED already finished (avoids div by 0)
 
         N_per_static_id = np.array([len(contingency_results.jobs[static_id]) for static_id in static_ids])
         N = len(static_ids)
@@ -422,14 +437,13 @@ class JobQueue:
 
         mean_per_static_id = np.array([contingency_results.get_average_load_shedding_per_static_id(static_id) for static_id in static_ids])
         mean = np.mean(mean_per_static_id)
-        variance_per_static_id = np.array([contingency_results.get_variance_per_static_id_allow_error(static_id, value_on_error=0) for static_id in static_ids])
         std_dev = sqrt(np.var(mean_per_static_id))  # TODO: add sqrt(N/(N-1)) factor and handle div by 0 in this case
 
         # Compute N and N_per_static_id from simulations "launched" not completed, this lowers priority of contingencies that have jobs currently running
         static_ids = contingency_launched_jobs.static_ids
         N = len(static_ids)
+        variance_per_static_id = np.array([contingency_results.get_variance_per_static_id_allow_error(static_id, value_on_error=0) for static_id in static_ids])
         N_per_static_id = [len(contingency_launched_jobs.dynamic_seeds[static_id]) for static_id in static_ids]
-        N_per_static_id = N_per_static_id[:len(contingency_results.static_ids)]
         N_per_static_id = np.array(N_per_static_id)
 
         global_derivative_1 = contingency.frequency * sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) * (1/sqrt(N) - 1/sqrt(N+1))
@@ -513,6 +527,8 @@ class ContingencyResults:
         Since N should be at most 1000, and the variance at most two order of magnitudes below the average (and not
         both at the same time), numerical stability should not be an issue
         """
+        if not DOUBLE_MC_LOOP:
+            return 0
         if isinstance(self.jobs[static_id][0], SpecialJob):
             if not (self.jobs[static_id][0].variable_order or self.jobs[static_id][0].missing_events):
                 return 0
@@ -528,6 +544,10 @@ class ContingencyResults:
         return variance
 
     def get_variance_per_static_id_allow_error(self, static_id, value_on_error):
+        if not DOUBLE_MC_LOOP:
+            return 0
+        if static_id not in self.jobs:
+            return value_on_error
         if isinstance(self.jobs[static_id][0], SpecialJob):
             if not (self.jobs[static_id][0].variable_order or self.jobs[static_id][0].missing_events):
                 return 0
@@ -546,6 +566,15 @@ class ContingencyResults:
     def get_average_load_shedding(self):
         average_load_shedding_per_static_id = [self.get_average_load_shedding_per_static_id(static_id) for static_id in self.static_ids]
         return np.mean(average_load_shedding_per_static_id)  # For now, all static_id have the same weigth
+
+    def get_maximum_load_shedding(self):
+        average_load_shedding_per_static_id = [self.get_average_load_shedding_per_static_id(static_id) for static_id in self.static_ids]
+        max = 0
+        for load_shedding in average_load_shedding_per_static_id:
+            if load_shedding > max and load_shedding <= 100:  # Disregard non convergence cases
+                max = load_shedding
+        return max
+
 
     # TODO: ctrl+h static_id -> static_seed, or reverse (because of the way they are generated), same for static_files ?
 
