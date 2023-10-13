@@ -10,7 +10,7 @@ It consists in:
 3. Scripts to add dynamic data to the RTS in [dynawo](https://dynawo.github.io/) format. These data have been checked to lead to a N-1 secure system (considering all possible line faults occuring at either end of the line and being cleared in 100ms by opening the line) for the cases january at hours 0 (min load), 13 (peak PV) and 17 (peak load), and july at hours 0 (min load) and 15 (peak load).
 4. Scripts to perform the PDSA. Results are writen to AnalysisOutput.xml. Results can be visualised using software that shows XML files in grid view, such as Ximple ([http://www.ximple.cz/](http://www.ximple.cz/), Windows only) as shown below.
 
-![AnalysisExample]](https://github.com/FredericSabot/PDSA-RTS-GMLC/blob/master/AnalysisOutputExample.png)
+![AnalysisExample](AnalysisOutputExample.png)
 
 # Usage
 
