@@ -42,8 +42,10 @@ def get_job_results(working_dir):
 
     timeline = []
     trip_timeline = []
+    """
+    # unused
     distance_arming_timeline = []
-    distance_disarming_timeline = []
+    distance_disarming_timeline = [] """
     generator_disconnection_timeline = []
     disconnected_models = []
     with open(os.path.join(timeline_file), 'r') as f:
@@ -57,15 +59,17 @@ def get_job_results(working_dir):
 
             timeline.append(event)
 
-            if 'trip' in event.event_description:  # Does not include UFLS (might need update if other protections are added)
+            if 'trip' in event.event_description:
                 trip_timeline.append(event)
                 disconnected_models.append(event.model)
+            if 'UFLS step' in event.event_description and 'activated' in event.event_description:
+                trip_timeline.append(event)
 
-            if 'Distance protection zone' in event.event_description:
+            """ if 'Distance protection zone' in event.event_description:
                 if 'disarming' in event.event_description:
                     distance_disarming_timeline.append(event)  # TODO: now consider the fact that when a zone trips, the others disarm (still used?)
                 elif 'arming' in event.event_description:  # elif -> does not include disarmings
-                    distance_arming_timeline.append(event)
+                    distance_arming_timeline.append(event) """
 
             if 'GENERATOR : disconnecting' in event.event_description:
                 generator_disconnection_timeline.append(event)
@@ -117,7 +121,10 @@ def get_job_results(working_dir):
     load_shedding = (total_load - remaining_load) / total_load * 100
 
     if convergence_issue:
-        load_shedding += 0.1  # Convergence issues are a bit too frequent for stable cases, so hide them  # Mark it as 100.1% load shedding to not affect averages, but still see there is a numerical issue
+        if load_shedding < 20:
+            load_shedding += 0.1  # Convergence issues are a bit too frequent for stable cases, so hide them  # TODO: fix convergence issues instead
+        else:
+            load_shedding = 100.1  # Mark it as 100.1% load shedding to not affect averages, but still see there is a numerical issue
 
 
     ###############################################
@@ -159,7 +166,7 @@ def get_job_results(working_dir):
 
     # TODO: check for low voltages using the new final values API (load_terminal_V_re, and _im -> compute abs)
 
-    return Results(load_shedding)
+    return Results(load_shedding, trip_timeline)
 
 
 def get_job_results_special(working_dir):
@@ -171,7 +178,12 @@ def get_job_results_special(working_dir):
     with open(os.path.join(timeline_file), 'r') as f:
         events = f.readlines()
         for event in events:
-            (time, model, event_description) = event.strip().split(' | ')
+            try:
+                (time, model, event_description) = event.strip().split(' | ')
+            except ValueError as e:
+                print(working_dir)
+                print(event)
+                raise e
             event = TimeLineEvent(float(time), model, event_description)
 
             if model in disconnected_models:
@@ -230,6 +242,9 @@ class TimeLineEvent:
     time: float
     model: str
     event_description: str
+
+    def __repr__(self) -> str:
+        return CSV_SEPARATOR.join([str(self.time), self.model, self.event_description])
 
 def timeline_events_match(timeline_event_1: TimeLineEvent, timeline_event_2: TimeLineEvent) -> bool:
     if timeline_event_1.model == timeline_event_2.model and timeline_event_1.event_description == timeline_event_2.event_description:

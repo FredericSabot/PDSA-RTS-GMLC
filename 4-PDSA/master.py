@@ -353,6 +353,17 @@ class JobQueue:
                     static_id_attrib['missing_events'] = str(special_job.missing_events)
 
                 job = contingency_results.jobs[static_id][0]
+                trip_timeline = job.results.trip_timeline
+                # Remove 'fake' trips from trip_timeline
+                trip_timeline = [timeline_event for timeline_event in trip_timeline if 'tripped zone 1' not in timeline_event.event_description or 'tripped zone 4' not in timeline_event.event_description]
+                index = 0
+                # Write first 3 elements to trip
+                for timeline_event in trip_timeline:
+                    static_id_attrib['trip_{}'.format(index)] = timeline_event.model
+                    index += 1
+                    if index >= 3:
+                        break
+
                 static_id_element = etree.SubElement(contingency_element, 'StaticId', static_id_attrib)
 
                 for job in contingency_results.jobs[static_id]:
@@ -361,6 +372,14 @@ class JobQueue:
                                 'timeout': str(job.timed_out)}
                     if job.completed or job.timed_out:
                         job_attrib['load_shedding'] = '{:.2f}'.format(job.results.load_shedding)
+                    # Write first 3 elements to trip
+                    trip_timeline = job.results.trip_timeline
+                    index = 0
+                    for timeline_event in trip_timeline:
+                        job_attrib['trip_{}'.format(index)] = timeline_event.model
+                        index += 1
+                        if index >= 3:
+                            break
                     etree.SubElement(static_id_element, 'Job', job_attrib)
 
         with open('AnalysisOutput.xml', 'wb') as doc:

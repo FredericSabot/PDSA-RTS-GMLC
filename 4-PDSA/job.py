@@ -34,7 +34,7 @@ class Job:
     def timeout(self):
         self.timed_out = True
         self.elapsed_time = JOB_TIMEOUT_S
-        self.results = Results(100.2)
+        self.results = Results(100.2, [])
         shutil.rmtree(self.working_dir, ignore_errors=True)
         Path(self.working_dir).mkdir(exist_ok=True)
         self.save_results()
@@ -57,7 +57,7 @@ class Job:
                 self.elapsed_time = float(save[1])
                 self.timed_out = save[2] == 'True'
                 if self.completed or self.timed_out:
-                    self.results = Results.load_from_str(*save[3:])
+                    self.results = Results.load_from_str(CSV_SEPARATOR.join(save[3:]))
             except IndexError:
                 logger.logger.warn("Could not load save file {}".format(save_file))
                 self.call_dynawo()
@@ -155,7 +155,7 @@ class SpecialJob(Job):
                 if self.completed or self.timed_out:
                     self.variable_order = save[3] == 'True'
                     self.missing_events = save[4] == 'True'
-                    self.results = Results.load_from_str(*save[5:])
+                    self.results = Results.load_from_str(CSV_SEPARATOR.join(save[5:]))
             except IndexError:
                 logger.logger.warn("Could not load special save file {}, rerunning job".format(save_file))
                 self.call_dynawo()

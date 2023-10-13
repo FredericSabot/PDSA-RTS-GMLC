@@ -1,6 +1,7 @@
 from job import Job, SpecialJob
 import sys
 from contingencies import Contingency
+import dynawo_inputs
 
 def write_jobs_files(args):
     static_id = int(sys.argv[1])
@@ -15,7 +16,7 @@ def write_jobs_files(args):
                 job = SpecialJob(static_id, dynamic_seed, contingency)
             else:
                 job = Job(static_id, dynamic_seed, contingency)
-            job.write_job_files()
+            dynawo_inputs.write_job_files(job)
             return
     for contingency in contingencies:
         print(contingency.id)
