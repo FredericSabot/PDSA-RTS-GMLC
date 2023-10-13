@@ -8,7 +8,9 @@ It consists in:
 1. A market model/unit commitment model based on [Prescient](https://github.com/grid-parity-exchange/Prescient). Prescient iterates between day-ahead and hourly dispatch. A (DC) nodal market (considering N-1 limits) is used here.
 2. A preventive security constained AC optimal power flow (PSCACOPF) to refine individual hourly dispatches
 3. Scripts to add dynamic data to the RTS in [dynawo](https://dynawo.github.io/) format. These data have been checked to lead to a N-1 secure system (considering all possible line faults occuring at either end of the line and being cleared in 100ms by opening the line) for the cases january at hours 0 (min load), 13 (peak PV) and 17 (peak load), and july at hours 0 (min load) and 15 (peak load).
-4. Scripts for PDSA (TODO add description) Note: results are visualised using Ximple (Windows only)
+4. Scripts to perform the PDSA. Results are writen to AnalysisOutput.xml. Results can be visualised using software that shows XML files in grid view, such as Ximple ([http://www.ximple.cz/](http://www.ximple.cz/), Windows only) as shown below.
+
+![AnalysisExample]](https://github.com/FredericSabot/PDSA-RTS-GMLC/blob/master/AnalysisOutputExample.png)
 
 # Usage
 
@@ -99,4 +101,4 @@ python -m pip install pypowsybl lxml
 python -m pip install pypowsybl lxml logger mpi4py natsort
 ```
 
-Install [dynawo](https://dynawo.github.io/) and set DYNAWO_PATH in 4-PDSA/common.py accordingly
+Install [dynawo](https://dynawo.github.io/) and set DYNAWO_PATH in 4-PDSA/common.py accordingly. Currently, the dynamic models used are only available on my fork of dynawo on the branch [27_test](https://github.com/FredericSabot/dynawo/tree/27_test). You can compile it from source, or I can make release on demand.
