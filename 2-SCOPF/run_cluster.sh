@@ -26,4 +26,4 @@ time -p python PSCACOPF.py $ID $case
 # Delete temporary files
 rm -r a-PSCDCOPF/$ID/
 rm -r b-ACOPF/$ID/
-rm -r c-PSADCOPF/$ID/
+rm -r c-PSADCOPF/$ID/ &> /dev/null  # Folder does not necessarily exist
