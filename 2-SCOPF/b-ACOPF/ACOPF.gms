@@ -19,7 +19,7 @@ parameter Epsilon;
 Epsilon = 1e-4;
 
 parameter Kg;
-Kg = 10;
+Kg = 0.1;
 
 *GENERATOR DATA
 
@@ -34,6 +34,7 @@ parameter P_thermal_0(i_thermal) initial thermal outputs;
 parameter P_hydro_0(i_hydro) initial hydro outputs;
 parameter P_pv_0(i_pv) initial pv outputs;
 parameter P_wind_0(i_wind) initial wind outputs;
+parameter Ppf_0(i_branch) initial line active power flows;
 
 parameter thermal_min(i_thermal) thermal generator minimum generation;
 parameter thermal_max(i_thermal) thermal generator maximum generation;
@@ -70,7 +71,7 @@ parameter demandQ(i_bus) reactive load at bus s;
 
 
 $gdxin PreACOPF
-$load i_thermal i_hydro i_pv i_rtpv i_wind i_syncon i_bus i_branch thermal_map hydro_map pv_map rtpv_map wind_map syncon_map thermal_min thermal_max hydro_max pv_max rtpv_max wind_max P_thermal_0 P_hydro_0 P_pv_0 P_wind_0 thermal_Qmin thermal_Qmax hydro_Qmin hydro_Qmax syncon_Qmin syncon_Qmax wind_Qmin wind_Qmax demand demandQ G B Gff Gft Bff Bft branch_map branch_max_N
+$load i_thermal i_hydro i_pv i_rtpv i_wind i_syncon i_bus i_branch thermal_map hydro_map pv_map rtpv_map wind_map syncon_map thermal_min thermal_max hydro_max pv_max rtpv_max wind_max P_thermal_0 P_hydro_0 P_pv_0 P_wind_0 Ppf_0 thermal_Qmin thermal_Qmax hydro_Qmin hydro_Qmax syncon_Qmin syncon_Qmax wind_Qmin wind_Qmax demand demandQ G B Gff Gft Bff Bft branch_map branch_max_N
 $gdxin
 
 ***************************************************************
@@ -145,6 +146,7 @@ P_thermal.l(i_thermal) = P_thermal_0(i_thermal);
 P_hydro.l(i_hydro) = P_hydro_0(i_hydro);
 P_pv.l(i_pv) = P_pv_0(i_pv);
 P_wind.l(i_wind) = P_wind_0(i_wind);
+Ppf.l(i_branch) = Ppf_0(i_branch);
 
 *needed for running twice through the same set in a single equation
 alias(i_bus, jb);

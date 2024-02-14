@@ -271,6 +271,7 @@ P_DC_thermal = {rec.keys[0]:rec.level for rec in db_postDC["P_thermal"]}
 P_DC_hydro = {rec.keys[0]:rec.level for rec in db_postDC["P_hydro"]}
 P_DC_pv = {rec.keys[0]:rec.level for rec in db_postDC["P_pv"]}
 P_DC_wind = {rec.keys[0]:rec.level for rec in db_postDC["P_wind"]}
+P_DC_pf = {rec.keys[0]:rec.level for rec in db_postDC["pf0"]}
 on_DC = {rec.keys[0]:rec.level for rec in db_postDC["on"]}
 
 cost = db_postDC["total_cost"].first_record().level
@@ -404,6 +405,7 @@ addGamsParams(db_preAC, 'P_thermal_0', 'Initial thermal outputs', [i_thermal], l
 addGamsParams(db_preAC, 'P_hydro_0', 'Initial hydro outputs', [i_hydro], list(P_DC_hydro.values()))
 addGamsParams(db_preAC, 'P_pv_0', 'Initial pv outputs', [i_pv], list(P_DC_pv.values()))
 addGamsParams(db_preAC, 'P_wind_0', 'Initial wind outputs', [i_wind], list(P_DC_wind.values()))
+addGamsParams(db_preAC, 'Ppf_0', 'Initial line active power flows', [i_branch], list(P_DC_pf.values()))
 
 db_preAC.export('PreACOPF.gdx')
 t = ws.add_job_from_file('../ACOPF.gms')
