@@ -518,7 +518,7 @@ class ContingencyLaunched:
 class ContingencyResults:
     def __init__(self):
         self.static_ids = []
-        self.jobs: dict[int, list(Job)]
+        self.jobs: dict[int, list[Job]]
         self.jobs = {}
         self.sum_load_shedding = {}
         self.sum_load_shedding_squared = {}
