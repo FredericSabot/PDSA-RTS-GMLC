@@ -1,8 +1,8 @@
 #!/bin/bash
 # Submission script for Lemaitre3
 #SBATCH --job-name=PSCACOPF
-#SBATCH --array=0-719
-#SBATCH --time=00:30:00 # hh:mm:ss
+#SBATCH --array=0-999
+#SBATCH --time=00:10:00 # hh:mm:ss
 #
 #SBATCH --ntasks=1
 #SBATCH --mem-per-cpu=1000 # megabytes
@@ -16,6 +16,14 @@ module load Python/3.9
 
 cd PDSA-RTS-GMLC/2-SCOPF
 
-case="january"
-echo 'Running case' $case $SLURM_ARRAY_TASK_ID
-time -p python PSCACOPF.py $SLURM_ARRAY_TASK_ID $case
+# Used to have IDs larger than the max job array size (default 1001, but 8735 hours in a year)
+ID=`expr $SLURM_ARRAY_TASK_ID + 1000`
+
+case="year"
+echo 'Running case' $case $ID
+time -p python PSCACOPF.py $ID $case
+
+# Delete temporary files
+rm -r a-PSCDCOPF/$ID/
+rm -r b-ACOPF/$ID/
+rm -r c-PSADCOPF/$ID/
