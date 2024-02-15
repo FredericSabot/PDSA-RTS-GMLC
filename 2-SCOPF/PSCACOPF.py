@@ -374,6 +374,14 @@ hydro_Qmin = np.array(hydro_gens['QMin MVAR']) / baseMVA
 hydro_Qmax = np.array(hydro_gens['QMax MVAR']) / baseMVA
 syncon_Qmin = np.array(syncon_gens['QMin MVAR']) / baseMVA
 syncon_Qmax = np.array(syncon_gens['QMax MVAR']) / baseMVA
+pv_connected = []
+for P_pv in P_DC_pv.values():
+    if P_pv > 0:
+        pv_connected.append(1)
+    else:
+        pv_connected.append(0)
+pv_Qmin = np.array(pv_gens['QMin MVAR']) / baseMVA * np.array(pv_connected)
+pv_Qmax = np.array(pv_gens['QMax MVAR']) / baseMVA * np.array(pv_connected)
 wind_Qmin = np.array(wind_gens['QMin MVAR']) / baseMVA
 wind_Qmax = np.array(wind_gens['QMax MVAR']) / baseMVA
 addGamsParams(db_preAC, 'thermal_Qmin', 'thermal generator minimum reactive generation', [i_thermal], thermal_Qmin)
@@ -382,6 +390,8 @@ addGamsParams(db_preAC, 'hydro_Qmin', 'hydro generator minimum reactive generati
 addGamsParams(db_preAC, 'hydro_Qmax', 'hydro generator maximum reactive generation', [i_hydro], hydro_Qmax)
 addGamsParams(db_preAC, 'syncon_Qmin', 'syncon generator minimum reactive generation', [i_syncon], syncon_Qmin)
 addGamsParams(db_preAC, 'syncon_Qmax', 'syncon generator maximum reactive generation', [i_syncon], syncon_Qmax)
+addGamsParams(db_preAC, 'pv_Qmin', 'pv generator minimum reactive generation', [i_pv], pv_Qmin)
+addGamsParams(db_preAC, 'pv_Qmax', 'pv generator maximum reactive generation', [i_pv], pv_Qmax)
 addGamsParams(db_preAC, 'wind_Qmin', 'wind generator minimum reactive generation', [i_wind], wind_Qmin)
 addGamsParams(db_preAC, 'wind_Qmax', 'wind generator maximum reactive generation', [i_wind], wind_Qmax)
 
@@ -425,6 +435,7 @@ P_AC_wind = {rec.keys[0]:rec.level for rec in db_postAC["P_wind"]}
 Q_AC_thermal = {rec.keys[0]:rec.level for rec in db_postAC["Q_thermal"]}
 Q_AC_hydro = {rec.keys[0]:rec.level for rec in db_postAC["Q_hydro"]}
 Q_AC_syncon = {rec.keys[0]:rec.level for rec in db_postAC["Q_syncon"]}
+Q_AC_pv = {rec.keys[0]:rec.level for rec in db_postAC["Q_pv"]}
 Q_AC_wind = {rec.keys[0]:rec.level for rec in db_postAC["Q_wind"]}
 
 V_AC = {rec.keys[0]:rec.level for rec in db_postAC["V"]}
@@ -463,25 +474,27 @@ network.update_generators(id=wind_gens['GEN UID'],
                           max_p=wind_max * baseMVA)
 network.update_generators(id=pv_gens['GEN UID'],
                           target_p=np.array(list(P_AC_pv.values())) * baseMVA,
+                          target_q=np.array(list(Q_AC_pv.values())) * baseMVA,
                           max_p=pv_max * baseMVA,
-                          voltage_regulator_on=[False] * N_pv_gens)
+                          voltage_regulator_on=[True] * N_pv_gens)
 network.update_generators(id=rtpv_gens['GEN UID'],
                           target_p=rtpv_max * baseMVA,
                           max_p=rtpv_max * baseMVA,
                           voltage_regulator_on=[False] * N_rtpv_gens)
 network.update_generators(id=syncon_gens['GEN UID'], target_q=np.array(list(Q_AC_syncon.values())) * baseMVA)
 
-for i in range(N_gens):
-    bus_id = gens['Bus ID'][i]
-    index = buses['Bus ID'].index(bus_id)
-    V = list(V_AC.values())[index] * buses['BaseKV'][index]
-    network.update_generators(id=gens['GEN UID'][i], target_v=V)
 
 load_ids = ['L-'+str(int(buses['Bus ID'][i])) for i in range(N_buses)]
 network.update_loads(id=load_ids, p0=demand_bus * baseMVA, q0=demand_bus_Q * baseMVA)
 
 critical_contingencies = []  # Contingencies that lead to issues and have to be included in the PSCACOPF (iteratively added to the problem)
 while True:
+    for i in range(N_gens):
+        bus_id = gens['Bus ID'][i]
+        index = buses['Bus ID'].index(bus_id)
+        V = list(V_AC.values())[index] * buses['BaseKV'][index]
+        network.update_generators(id=gens['GEN UID'][i], target_v=V)
+
     print(pp.loadflow.run_ac(network))
     P1 = np.zeros(N_branches)
     Q1 = np.zeros(N_branches)
@@ -509,6 +522,7 @@ while True:
     Q_thermal_cont = np.zeros((N_thermal_gens, N_branches))
     Q_hydro_cont = np.zeros((N_hydro_gens, N_branches))
     Q_syncon_cont = np.zeros((N_syncon_gens, N_branches))
+    Q_pv_cont = np.zeros((N_pv_gens, N_branches))
     Q_wind_cont = np.zeros((N_wind_gens, N_branches))
     V_cont = np.zeros((N_buses, N_branches))
     theta_cont = np.zeros((N_buses, N_branches))
@@ -558,6 +572,11 @@ while True:
                         q_bus_tot += -gen_results['q'][syncon_gens['GEN UID'][g]] / baseMVA
                         q_bus_min += syncon_Qmin[g]
                         q_bus_max += syncon_Qmax[g]
+                for g in range(N_pv_gens):
+                    if pv_gens['Bus ID'][g] == buses['Bus ID'][i]:
+                        q_bus_tot += -gen_results['q'][pv_gens['GEN UID'][g]] / baseMVA
+                        q_bus_min += pv_Qmin[g]
+                        q_bus_max += pv_Qmax[g]
                 for g in range(N_wind_gens):
                     if wind_gens['Bus ID'][g] == buses['Bus ID'][i]:
                         q_bus_tot += -gen_results['q'][wind_gens['GEN UID'][g]] / baseMVA
@@ -604,6 +623,8 @@ while True:
             Q_hydro_cont[i][j] = -gen_results['q'][hydro_gens['GEN UID'][i]] / baseMVA
         for i in range(N_syncon_gens):
             Q_syncon_cont[i][j] = -gen_results['q'][syncon_gens['GEN UID'][i]] / baseMVA
+        for i in range(N_pv_gens):
+            Q_pv_cont[i][j] = -gen_results['q'][pv_gens['GEN UID'][i]] / baseMVA
         for i in range(N_wind_gens):
             Q_wind_cont[i][j] = -gen_results['q'][wind_gens['GEN UID'][i]] / baseMVA
 
@@ -624,6 +645,7 @@ while True:
     np.nan_to_num(Q_thermal_cont, copy=False)
     np.nan_to_num(Q_hydro_cont, copy=False)
     np.nan_to_num(Q_syncon_cont, copy=False)
+    np.nan_to_num(Q_pv_cont, copy=False)
     np.nan_to_num(Q_wind_cont, copy=False)
 
     # Check contingencies that lead to issues with the current dispatch
@@ -645,7 +667,10 @@ while True:
     for j in current_critical_contingencies:
         if j not in critical_contingencies:
             critical_contingencies.append(j)
+            break  # Only add one contingency at a time to the OPF problem
 
+    print()
+    print()
     print('Running PSCACOPF for contingencies of lines: ', [branches['UID'][i] for i in critical_contingencies])
 
     pscacopf_path = os.path.join('c-PSCACOPF', str(hour))
@@ -685,6 +710,8 @@ while True:
     addGamsParams(db_prePSCAC, 'hydro_Qmax', 'hydro generator maximum reactive generation', [i_hydro], hydro_Qmax)
     addGamsParams(db_prePSCAC, 'syncon_Qmin', 'syncon generator minimum reactive generation', [i_syncon], syncon_Qmin)
     addGamsParams(db_prePSCAC, 'syncon_Qmax', 'syncon generator maximum reactive generation', [i_syncon], syncon_Qmax)
+    addGamsParams(db_prePSCAC, 'pv_Qmin', 'pv generator minimum reactive generation', [i_pv], pv_Qmin)
+    addGamsParams(db_prePSCAC, 'pv_Qmax', 'pv generator maximum reactive generation', [i_pv], pv_Qmax)
     addGamsParams(db_prePSCAC, 'wind_Qmin', 'wind generator minimum reactive generation', [i_wind], wind_Qmin)
     addGamsParams(db_prePSCAC, 'wind_Qmax', 'wind generator maximum reactive generation', [i_wind], wind_Qmax)
 
@@ -711,11 +738,18 @@ while True:
     addGamsParams(db_prePSCAC, 'Q_thermal_0', 'Initial thermal reactive outputs', [i_thermal], list(Q_AC_thermal.values()))
     addGamsParams(db_prePSCAC, 'Q_hydro_0', 'Initial hydro reactive outputs', [i_hydro], list(Q_AC_hydro.values()))
     addGamsParams(db_prePSCAC, 'Q_syncon_0', 'Initial syncon reactive outputs', [i_syncon], list(Q_AC_syncon.values()))
+    addGamsParams(db_prePSCAC, 'Q_pv_0', 'Initial pv reactive outputs', [i_pv], list(Q_AC_pv.values()))
     addGamsParams(db_prePSCAC, 'Q_wind_0', 'Initial wind reactive outputs', [i_wind], list(Q_AC_wind.values()))
     addGamsParams(db_prePSCAC, 'Q_thermal_ck_0', 'thermal reactive outputs after contingency i', [i_thermal, i_contingency], Q_thermal_cont[:, critical_contingencies])
     addGamsParams(db_prePSCAC, 'Q_hydro_ck_0', 'hydro reactive outputs after contingency i', [i_hydro, i_contingency], Q_hydro_cont[:, critical_contingencies])
     addGamsParams(db_prePSCAC, 'Q_syncon_ck_0', 'syncon reactive outputs after contingency i', [i_syncon, i_contingency], Q_syncon_cont[:, critical_contingencies])
+    addGamsParams(db_prePSCAC, 'Q_pv_ck_0', 'pv reactive outputs after contingency i', [i_pv, i_contingency], Q_pv_cont[:, critical_contingencies])
     addGamsParams(db_prePSCAC, 'Q_wind_ck_0', 'wind reactive outputs after contingency i', [i_wind, i_contingency], Q_wind_cont[:, critical_contingencies])
+
+    addGamsParams(db_prePSCAC, 'P_thermal_dc', 'thermal output in DC solution (used as reference)', [i_thermal], list(P_DC_thermal.values()))
+    addGamsParams(db_prePSCAC, 'P_hydro_dc', 'hydro output in DC solution (used as reference)', [i_hydro], list(P_DC_hydro.values()))
+    addGamsParams(db_prePSCAC, 'P_pv_dc', 'pv output in DC solution (used as reference)', [i_pv], list(P_DC_pv.values()))
+    addGamsParams(db_prePSCAC, 'P_wind_dc', 'wind output in DC solution (used as reference)', [i_wind], list(P_DC_wind.values()))
 
     addGamsParams(db_prePSCAC, 'V_0', 'Initial voltages', [i_bus], list(V_AC.values()))
     addGamsParams(db_prePSCAC, 'theta_0', 'Initial angles', [i_bus], list(theta_AC.values()))
@@ -742,18 +776,19 @@ while True:
     if solve_status != 1 and solve_status != 2 and solve_status != 7:
         raise RuntimeError('PSCACOPF: no solution found, error code:', solve_status)
 
-    P_PSCAC_thermal = {rec.keys[0]:rec.level for rec in db_postPSCAC["P_thermal"]}
-    P_PSCAC_hydro = {rec.keys[0]:rec.level for rec in db_postPSCAC["P_hydro"]}
-    P_PSCAC_pv = {rec.keys[0]:rec.level for rec in db_postPSCAC["P_pv"]}
-    P_PSCAC_wind = {rec.keys[0]:rec.level for rec in db_postPSCAC["P_wind"]}
+    P_AC_thermal = {rec.keys[0]:rec.level for rec in db_postPSCAC["P_thermal"]}
+    P_AC_hydro = {rec.keys[0]:rec.level for rec in db_postPSCAC["P_hydro"]}
+    P_AC_pv = {rec.keys[0]:rec.level for rec in db_postPSCAC["P_pv"]}
+    P_AC_wind = {rec.keys[0]:rec.level for rec in db_postPSCAC["P_wind"]}
 
-    Q_PSCAC_thermal = {rec.keys[0]:rec.level for rec in db_postPSCAC["Q_thermal"]}
-    Q_PSCAC_hydro = {rec.keys[0]:rec.level for rec in db_postPSCAC["Q_hydro"]}
-    Q_PSCAC_syncon = {rec.keys[0]:rec.level for rec in db_postPSCAC["Q_syncon"]}
-    Q_PSCAC_wind = {rec.keys[0]:rec.level for rec in db_postPSCAC["Q_wind"]}
+    Q_AC_thermal = {rec.keys[0]:rec.level for rec in db_postPSCAC["Q_thermal"]}
+    Q_AC_hydro = {rec.keys[0]:rec.level for rec in db_postPSCAC["Q_hydro"]}
+    Q_AC_syncon = {rec.keys[0]:rec.level for rec in db_postPSCAC["Q_syncon"]}
+    Q_AC_pv = {rec.keys[0]:rec.level for rec in db_postPSCAC["Q_pv"]}
+    Q_AC_wind = {rec.keys[0]:rec.level for rec in db_postPSCAC["Q_wind"]}
 
-    V_PSCAC = {rec.keys[0]:rec.level for rec in db_postPSCAC["V"]}
-    theta_PSCAC = {rec.keys[0]:rec.level for rec in db_postPSCAC["theta"]}
+    V_AC = {rec.keys[0]:rec.level for rec in db_postPSCAC["V"]}
+    theta_AC = {rec.keys[0]:rec.level for rec in db_postPSCAC["theta"]}
 
     deviation = db_postPSCAC["deviation"].first_record().level
 
@@ -782,16 +817,18 @@ while True:
 
     # Send dispatch to Powsybl
     network.update_generators(id=thermal_gens['GEN UID'],
-                              target_p=np.array(list(P_PSCAC_thermal.values())) * baseMVA,
-                              target_q=np.array(list(Q_PSCAC_thermal.values())) * baseMVA)
+                              target_p=np.array(list(P_AC_thermal.values())) * baseMVA,
+                              target_q=np.array(list(Q_AC_thermal.values())) * baseMVA)
     network.update_generators(id=hydro_gens['GEN UID'],
-                              target_p=np.array(list(P_PSCAC_hydro.values())) * baseMVA,
-                              target_q=np.array(list(Q_PSCAC_hydro.values())) * baseMVA)
+                              target_p=np.array(list(P_AC_hydro.values())) * baseMVA,
+                              target_q=np.array(list(Q_AC_hydro.values())) * baseMVA)
     network.update_generators(id=wind_gens['GEN UID'],
-                              target_p=np.array(list(P_PSCAC_wind.values())) * baseMVA,
-                              target_q=np.array(list(Q_PSCAC_wind.values())) * baseMVA)
-    network.update_generators(id=pv_gens['GEN UID'], target_p=np.array(list(P_PSCAC_pv.values())) * baseMVA)
-    network.update_generators(id=syncon_gens['GEN UID'], target_q=np.array(list(Q_PSCAC_syncon.values())) * baseMVA)
+                              target_p=np.array(list(P_AC_wind.values())) * baseMVA,
+                              target_q=np.array(list(Q_AC_wind.values())) * baseMVA)
+    network.update_generators(id=pv_gens['GEN UID'],
+                              target_p=np.array(list(P_AC_pv.values())) * baseMVA,
+                              target_q=np.array(list(Q_AC_pv.values())) * baseMVA)
+    network.update_generators(id=syncon_gens['GEN UID'], target_q=np.array(list(Q_AC_syncon.values())) * baseMVA)
 
     # Disconnect PV generators at night
     for i in range(N_pv_gens):
@@ -802,7 +839,7 @@ while True:
     for i in range(N_gens):
         bus_id = gens['Bus ID'][i]
         index = buses['Bus ID'].index(bus_id)
-        V = list(V_PSCAC.values())[index] * buses['BaseKV'][index]
+        V = list(V_AC.values())[index] * buses['BaseKV'][index]
         network.update_generators(id=gens['GEN UID'][i], target_v=V)
 # end while
 

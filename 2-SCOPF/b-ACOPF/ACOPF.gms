@@ -49,6 +49,8 @@ parameter hydro_Qmin(i_hydro) hydro generator minimum reactive generation;
 parameter hydro_Qmax(i_hydro) hydro generator maximum reactive generation;
 parameter syncon_Qmin(i_syncon) syncon generator minimum reactive generation;
 parameter syncon_Qmax(i_syncon) syncon generator maximum reactive generation;
+parameter pv_Qmin(i_pv) pv generator minimum reactive generation;
+parameter pv_Qmax(i_pv) pv generator maximum reactive generation;
 parameter wind_Qmin(i_wind) wind generator minimum reactive generation;
 parameter wind_Qmax(i_wind) wind generator maximum reactive generation;
 
@@ -71,7 +73,7 @@ parameter demandQ(i_bus) reactive load at bus s;
 
 
 $gdxin PreACOPF
-$load i_thermal i_hydro i_pv i_rtpv i_wind i_syncon i_bus i_branch thermal_map hydro_map pv_map rtpv_map wind_map syncon_map thermal_min thermal_max hydro_max pv_max rtpv_max wind_max P_thermal_0 P_hydro_0 P_pv_0 P_wind_0 Ppf_0 thermal_Qmin thermal_Qmax hydro_Qmin hydro_Qmax syncon_Qmin syncon_Qmax wind_Qmin wind_Qmax demand demandQ G B Gff Gft Bff Bft branch_map branch_max_N
+$load i_thermal i_hydro i_pv i_rtpv i_wind i_syncon i_bus i_branch thermal_map hydro_map pv_map rtpv_map wind_map syncon_map thermal_min thermal_max hydro_max pv_max rtpv_max wind_max P_thermal_0 P_hydro_0 P_pv_0 P_wind_0 Ppf_0 thermal_Qmin thermal_Qmax hydro_Qmin hydro_Qmax syncon_Qmin syncon_Qmax pv_Qmin pv_Qmax wind_Qmin wind_Qmax demand demandQ G B Gff Gft Bff Bft branch_map branch_max_N
 $gdxin
 
 ***************************************************************
@@ -89,7 +91,8 @@ positive variable P_wind(i_wind) wind generator outputs
 variable Q_thermal(i_thermal) reactive thermal generator outputs
 variable Q_hydro(i_hydro) reactive hydro generator outputs
 variable Q_syncon(i_syncon) reactive SC outputs
-variable Q_wind(i_wind) reactive SC outputs
+variable Q_pv(i_pv) reactive PV outputs
+variable Q_wind(i_wind) reactive wind outputs
 
 variable V(i_bus) bus voltage amplitude
 variable theta(i_bus) bus voltage angles
@@ -118,8 +121,10 @@ Qg_hydro_min(i_hydro) minimum hydro generator reactive output
 Qg_hydro_max(i_hydro) maximum hydro generator reactive output
 Qg_syncon_min(i_syncon) minimum SC generator reactive output
 Qg_syncon_max(i_syncon) maximum SC generator reactive output
-Qg_wind_min(i_wind) minimum SC generator reactive output
-Qg_wind_max(i_wind) maximum SC generator reactive output
+Qg_pv_min(i_pv) minimum pv generator reactive output
+Qg_pv_max(i_pv) maximum pv generator reactive output
+Qg_wind_min(i_wind) minimum wind generator reactive output
+Qg_wind_max(i_wind) maximum wind generator reactive output
 P_balance(i_bus) active power balance for each bus
 Q_balance(i_bus) active power balance for each bus
 Voltage_min(i_bus) voltage minimum limit
@@ -157,16 +162,16 @@ alias(i_bus, jb);
 ***************************************************************
 
 dev..
-deviation =e= sum(i_thermal, power(P_thermal(i_thermal) - P_thermal_0(i_thermal), 2)) + sum(i_hydro, power(P_hydro(i_hydro) - P_hydro_0(i_hydro), 2)) + sum(i_pv, power(P_pv(i_pv) - P_pv_0(i_pv), 2)) + sum(i_wind, power(P_wind(i_wind) - P_wind_0(i_wind), 2))  + Kg * sum(i_thermal, power(Q_thermal(i_thermal) - (thermal_Qmax(i_thermal) + thermal_Qmin(i_thermal))/2, 2) / power(thermal_Qmax(i_thermal) - thermal_Qmin(i_thermal) + Epsilon, 2)) + Kg * sum(i_hydro, power(Q_hydro(i_hydro) - (hydro_Qmax(i_hydro) + hydro_Qmin(i_hydro))/2, 2) / power(hydro_Qmax(i_hydro) - hydro_Qmin(i_hydro) + Epsilon, 2)) + Kg * sum(i_syncon, power(Q_syncon(i_syncon) - (syncon_Qmax(i_syncon) + syncon_Qmin(i_syncon))/2, 2) / power(syncon_Qmax(i_syncon) - syncon_Qmin(i_syncon) + Epsilon, 2)) + Kg * sum(i_wind, power(Q_wind(i_wind) - (wind_Qmax(i_wind) + wind_Qmin(i_wind))/2, 2) / power(wind_Qmax(i_wind) - wind_Qmin(i_wind) + Epsilon, 2));
-* sum(i_thermal, power(P_thermal(i_thermal) - P_thermal_0(i_thermal), 2))
-* + sum(i_hydro, power(P_hydro(i_hydro) - P_hydro_0(i_hydro), 2))
-* + sum(i_pv, power(P_pv(i_pv) - P_pv_0(i_pv), 2))
-* + sum(i_wind, power(P_wind(i_wind) - P_wind_0(i_wind), 2))
-*
-* + Kg * sum(i_thermal, power(Q_thermal(i_thermal) - (Q_thermal_max(i_thermal) + Q_thermal_min(i_thermal))/2, 2) / power(Q_thermal_max(i_thermal) - Q_thermal_min(i_thermal) + Epsilon, 2))
-* + Kg * sum(i_hydro, power(Q_hydro(i_hydro) - (Q_hydro_max(i_hydro) + Q_hydro_min(i_hydro))/2, 2) / power(Q_hydro_max(i_hydro) - Q_hydro_min(i_hydro) + Epsilon, 2))
-* + Kg * sum(i_syncon, power(Q_syncon(i_syncon) - (Q_syncon_max(i_syncon) + Q_syncon_min(i_syncon))/2, 2) / power(Q_syncon_max(i_syncon) - Q_syncon_min(i_syncon) + Epsilon, 2))
-* + Kg * sum(i_wind, power(Q_wind(i_wind) - (Q_wind_max(i_wind) + Q_wind_min(i_wind))/2, 2) / power(Q_wind_max(i_wind) - Q_wind_min(i_wind) + Epsilon, 2))
+deviation =e= sum(i_thermal, power(P_thermal(i_thermal) - P_thermal_0(i_thermal), 2))
++ sum(i_hydro, power(P_hydro(i_hydro) - P_hydro_0(i_hydro), 2))
++ sum(i_pv, power(P_pv(i_pv) - P_pv_0(i_pv), 2))
++ sum(i_wind, power(P_wind(i_wind) - P_wind_0(i_wind), 2))
++ Kg * sum(i_thermal, power(Q_thermal(i_thermal) - (thermal_Qmax(i_thermal) + thermal_Qmin(i_thermal))/2, 2) / power(thermal_Qmax(i_thermal) - thermal_Qmin(i_thermal) + Epsilon, 2))
++ Kg * sum(i_hydro, power(Q_hydro(i_hydro) - (hydro_Qmax(i_hydro) + hydro_Qmin(i_hydro))/2, 2) / power(hydro_Qmax(i_hydro) - hydro_Qmin(i_hydro) + Epsilon, 2))
++ Kg * sum(i_syncon, power(Q_syncon(i_syncon) - (syncon_Qmax(i_syncon) + syncon_Qmin(i_syncon))/2, 2) / power(syncon_Qmax(i_syncon) - syncon_Qmin(i_syncon) + Epsilon, 2))
++ Kg * sum(i_pv, power(Q_pv(i_pv) - (pv_Qmax(i_pv) + pv_Qmin(i_pv))/2, 2) / power(pv_Qmax(i_pv) - pv_Qmin(i_pv) + Epsilon, 2))
++ Kg * sum(i_wind, power(Q_wind(i_wind) - (wind_Qmax(i_wind) + wind_Qmin(i_wind))/2, 2) / power(wind_Qmax(i_wind) - wind_Qmin(i_wind) + Epsilon, 2));
+
 
 Pg_thermal_min(i_thermal)..
 P_thermal(i_thermal) =g= thermal_min(i_thermal);
@@ -204,6 +209,12 @@ Q_syncon(i_syncon) =g= syncon_Qmin(i_syncon);
 Qg_syncon_max(i_syncon)..
 Q_syncon(i_syncon) =l= syncon_Qmax(i_syncon);
 
+Qg_pv_min(i_pv)..
+Q_pv(i_pv) =g= pv_Qmin(i_pv);
+
+Qg_pv_max(i_pv)..
+Q_pv(i_pv) =l= pv_Qmax(i_pv);
+
 Qg_wind_min(i_wind)..
 Q_wind(i_wind) =g= wind_Qmin(i_wind);
 
@@ -216,7 +227,7 @@ sum(i_thermal$(thermal_map(i_thermal, i_bus)), P_thermal(i_thermal)) + sum(i_hyd
 V(i_bus) * sum(jb,V(jb) * (G(i_bus,jb) * cos(theta(i_bus)-theta(jb)) + B(i_bus,jb) * sin(theta(i_bus)-theta(jb))));
 
 Q_balance(i_bus)..
-sum(i_thermal$(thermal_map(i_thermal,i_bus)),Q_thermal(i_thermal)) + sum(i_hydro$(hydro_map(i_hydro,i_bus)),Q_hydro(i_hydro)) + sum(i_syncon$(syncon_map(i_syncon,i_bus)),Q_syncon(i_syncon)) + sum(i_wind$(wind_map(i_wind,i_bus)),Q_wind(i_wind)) - demandQ(i_bus)
+sum(i_thermal$(thermal_map(i_thermal,i_bus)),Q_thermal(i_thermal)) + sum(i_hydro$(hydro_map(i_hydro,i_bus)),Q_hydro(i_hydro)) + sum(i_syncon$(syncon_map(i_syncon,i_bus)),Q_syncon(i_syncon)) + sum(i_pv$(pv_map(i_pv,i_bus)),Q_pv(i_pv)) + sum(i_wind$(wind_map(i_wind,i_bus)),Q_wind(i_wind)) - demandQ(i_bus)
 =e=
 V(i_bus) * sum(jb,V(jb) * (G(i_bus,jb) * sin(theta(i_bus)-theta(jb)) - B(i_bus,jb) * cos(theta(i_bus)-theta(jb))));
 
@@ -257,4 +268,4 @@ solve test using nlp minimizing deviation;
 scalar sol;
 sol = test.modelstat;
 
-execute_unload 'PostACOPF' deviation, P_thermal, Q_thermal, P_hydro, Q_hydro, P_pv, P_wind, Q_wind, Q_syncon, V, theta, pf, sol;
+execute_unload 'PostACOPF' deviation, P_thermal, Q_thermal, P_hydro, Q_hydro, P_pv, P_wind, Q_wind, Q_syncon, Q_pv, V, theta, pf, sol;
