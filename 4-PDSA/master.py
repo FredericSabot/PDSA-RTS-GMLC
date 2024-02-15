@@ -326,16 +326,16 @@ class JobQueue:
             max_shedding = contingency_results.get_maximum_load_shedding()
             N = sum([len(contingency_results.jobs[static_id]) for static_id in contingency_results.static_ids])
             N_static = len(contingency_results.static_ids)
-            indicator_1, indicator_2 = self.get_statistical_indicators(contingency)
+            indicators = self.get_statistical_indicators(contingency)
             contingency_attrib = {'id': contingency.id,
                                   'frequency': str(contingency.frequency),
                                   'mean_load_shed': str(mean),
                                   'max_load_shed': str(max_shedding),
                                   'risk': str(contingency.frequency * mean),
                                   'N': str(N),
-                                  'N_static': str(N_static),
-                                  'ind_1': str(indicator_1),
-                                  'ind_2': str(indicator_2)}
+                                  'N_static': str(N_static)}
+            for i, indicator in enumerate(indicators):
+                contingency_attrib['ind_{}'.format(i+1)] = indicator
             contingency_element = etree.SubElement(root, 'Contingency', contingency_attrib)
 
             for static_id in contingency_results.static_ids:
@@ -397,16 +397,13 @@ class JobQueue:
         return min_nb_static_seeds
 
     def is_statistical_accuracy_reached(self, contingency: Contingency) -> bool:
-        indicator_1, indicator_2 = self.get_statistical_indicators(contingency)
+        indicators = self.get_statistical_indicators(contingency)
 
         accuracy_reached = True
-        if indicator_1 > 0.01 * self.total_risk:
-            accuracy_reached = False
-            logger.logger.info("Contingency {}: statistical indicator 1 not satisfied: {} > {}".format(contingency.id, indicator_1, 0.01 * self.total_risk))
-
-        if indicator_2 > 0.01 * self.total_risk:
-            accuracy_reached = False
-            logger.logger.info("Contingency {}: statistical indicator 2 not satisfied: {} > {}".format(contingency.id, indicator_2, 0.01 * self.total_risk))
+        for i, indicator in enumerate(indicators):
+            if indicator > 0.01 * self.total_risk:
+                accuracy_reached = False
+                logger.logger.info("Contingency {}: statistical indicator {} not satisfied: {} > {}".format(contingency.id, i+1, indicator, 0.01 * self.total_risk))
 
         if accuracy_reached:
             logger.logger.info("Contingency {}: statistical accuracy reached".format(contingency.id))
@@ -416,6 +413,7 @@ class JobQueue:
             # accuracy_reached = True
 
         return accuracy_reached
+
 
     def get_statistical_indicators(self, contingency: Contingency):
         contingency_results = self.simulation_results[contingency.id]
@@ -434,12 +432,18 @@ class JobQueue:
         mean = np.mean(mean_per_static_id)
         std_dev = sqrt(np.var(mean_per_static_id))  # TODO: add sqrt(N/(N-1)) factor and handle div by 0 in this case
 
-        indicator_1 = contingency.frequency * sqrt(std_dev**2) / sqrt(N) #  + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N)
-        if contingency.frequency > OUTAGE_RATE_PER_KM * 1:
-            indicator_2 = contingency.frequency * (100 - mean) / N
-        else:
-            indicator_2 = contingency.frequency * (100 - mean) / N
-        return indicator_1, indicator_2
+        # SE from sample variance
+        indicator_1 = contingency.frequency * sqrt(std_dev**2 / N)
+
+        # SE of risk from unobserved samples with 99% confidence
+        p = 1 - 0.01**(1/N)
+        b = max((100-mean)**2, (mean-0)**2)
+        indicator_2 = contingency.frequency * sqrt(p*b/N)
+
+        # Total SE
+        indicator_3 = sqrt(indicator_1**2 + indicator_2**2)
+
+        return indicator_1, indicator_2, indicator_3
 
     def get_distances_from_statistical_accuracy(self, contingency: Contingency):
         return [indicator - 0.01 * self.total_risk for indicator in self.get_statistical_indicators(contingency)]
