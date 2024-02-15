@@ -53,7 +53,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
             load_attrib = {'id': 'Dummy_' +  loadID, 'lib': 'LoadAlphaBeta', 'parFile': name + '.par', 'parId': 'DummyLoad', 'staticId': loadID}
             loadID = 'Dummy_' + loadID
         else:
-            load_attrib = {'id': loadID, 'lib': 'LoadAlphaBetaMotor', 'parFile': name + '.par', 'parId': 'GenericLoadAlphaBetaMotor', 'staticId': loadID}
+            load_attrib = {'id': loadID, 'lib': 'LoadAlphaBetaMotorSimplified', 'parFile': name + '.par', 'parId': 'GenericLoadAlphaBetaMotor', 'staticId': loadID}
         load = etree.SubElement(dyd_root, etree.QName(namespace, 'blackBoxModel'), load_attrib)
 
         etree.SubElement(load, etree.QName(namespace, 'macroStaticRef'), {'id': 'LOAD'})
@@ -68,14 +68,14 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
         {'type': 'DOUBLE', 'name': 'load_beta', 'value': '2'},
         {'type': 'DOUBLE', 'name': 'load_Alpha', 'value': '2.0'},
         {'type': 'DOUBLE', 'name': 'load_Beta', 'value': '2.0'},
-        {'type': 'DOUBLE', 'name': 'load_ActiveMotorShare', 'value': str(motor_share)},
-        {'type': 'DOUBLE', 'name': 'load_RrPu', 'value': '0.02'},
-        {'type': 'DOUBLE', 'name': 'load_RsPu', 'value': '0.02'},
-        {'type': 'DOUBLE', 'name': 'load_XmPu', 'value': '4.0'},
-        {'type': 'DOUBLE', 'name': 'load_XrPu', 'value': '0.1'},
-        {'type': 'DOUBLE', 'name': 'load_XsPu', 'value': '0.1'},
-        {'type': 'DOUBLE', 'name': 'load_H', 'value': '1.5'},
-        {'type': 'DOUBLE', 'name': 'load_torqueExponent', 'value': '0'},
+        {'type': 'DOUBLE', 'name': 'load_ActiveMotorShare_0_', 'value': str(motor_share)},
+        {'type': 'DOUBLE', 'name': 'load_RrPu_0_', 'value': '0.02'},
+        {'type': 'DOUBLE', 'name': 'load_RsPu_0_', 'value': '0.02'},
+        {'type': 'DOUBLE', 'name': 'load_XmPu_0_', 'value': '4.0'},
+        {'type': 'DOUBLE', 'name': 'load_XrPu_0_', 'value': '0.1'},
+        {'type': 'DOUBLE', 'name': 'load_XsPu_0_', 'value': '0.1'},
+        {'type': 'DOUBLE', 'name': 'load_H_0_', 'value': '1.5'},
+        {'type': 'DOUBLE', 'name': 'load_torqueExponent_0_', 'value': '0'},
     ]
     for par_attrib in par_attribs:
         etree.SubElement(motor_par_set, etree.QName(namespace, 'par'), par_attrib)
