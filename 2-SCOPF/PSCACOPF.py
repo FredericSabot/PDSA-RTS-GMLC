@@ -483,6 +483,11 @@ network.update_generators(id=rtpv_gens['GEN UID'],
                           voltage_regulator_on=[False] * N_rtpv_gens)
 network.update_generators(id=syncon_gens['GEN UID'], target_q=np.array(list(Q_AC_syncon.values())) * baseMVA)
 
+# Disconnect PV generators at night
+for i in range(N_pv_gens):
+    network.update_generators(id=pv_gens['GEN UID'][i], connected = pv_max[i] > 0)
+for i in range(N_rtpv_gens):
+    network.update_generators(id=rtpv_gens['GEN UID'][i], connected = rtpv_max[i] > 0)
 
 load_ids = ['L-'+str(int(buses['Bus ID'][i])) for i in range(N_buses)]
 network.update_loads(id=load_ids, p0=demand_bus * baseMVA, q0=demand_bus_Q * baseMVA)
@@ -830,12 +835,6 @@ while True:
                               target_q=np.array(list(Q_AC_pv.values())) * baseMVA)
     network.update_generators(id=syncon_gens['GEN UID'], target_q=np.array(list(Q_AC_syncon.values())) * baseMVA)
 
-    # Disconnect PV generators at night
-    for i in range(N_pv_gens):
-        network.update_generators(id=pv_gens['GEN UID'][i], connected = pv_max[i] > 0)
-    for i in range(N_rtpv_gens):
-        network.update_generators(id=rtpv_gens['GEN UID'][i], connected = rtpv_max[i] > 0)
-
     for i in range(N_gens):
         bus_id = gens['Bus ID'][i]
         index = buses['Bus ID'].index(bus_id)
@@ -896,23 +895,24 @@ if sol.distributed_active_power > 100 or sol.slack_bus_active_power_mismatch > 1
 # Balance reactive power production in buses with multiple generator (Powsybl puts same power everywhere, use pro rata capacity instead)
 bus_results = network.get_buses()
 gen_results = network.get_generators()
+connected_gen_results = gen_results.loc[gen_results['connected'] == True]
 for bus_id in bus_results.index:
     gen_ids = []
-    for gen_id in gen_results.index:
-        if gen_results.loc[gen_id, 'bus_id'] == bus_id:
+    for gen_id in connected_gen_results.index:
+        if connected_gen_results.loc[gen_id, 'bus_id'] == bus_id:
             gen_ids.append(gen_id)
     total_max_q = 0
     total_min_q = 0
     total_q = 0
     for gen_id in gen_ids:
-        total_max_q += gen_results.loc[gen_id, 'max_q']
-        total_min_q += gen_results.loc[gen_id, 'min_q']
-        total_q += -gen_results.loc[gen_id, 'q']
+        total_max_q += connected_gen_results.loc[gen_id, 'max_q']
+        total_min_q += connected_gen_results.loc[gen_id, 'min_q']
+        total_q += -connected_gen_results.loc[gen_id, 'q']
     if total_min_q == total_max_q:
         continue
     ratio = (total_q - total_min_q) / (total_max_q - total_min_q)
     for gen_id in gen_ids:
-        Q = gen_results.loc[gen_id, 'min_q'] + ratio * (gen_results.loc[gen_id, 'max_q'] - gen_results.loc[gen_id, 'min_q'])
+        Q = connected_gen_results.loc[gen_id, 'min_q'] + ratio * (connected_gen_results.loc[gen_id, 'max_q'] - connected_gen_results.loc[gen_id, 'min_q'])
         network.update_generators(id=gen_id, target_q=Q)
 
 # Write final dispatch
