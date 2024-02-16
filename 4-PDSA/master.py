@@ -335,7 +335,7 @@ class JobQueue:
                                   'N': str(N),
                                   'N_static': str(N_static)}
             for i, indicator in enumerate(indicators):
-                contingency_attrib['ind_{}'.format(i+1)] = indicator
+                contingency_attrib['ind_{}'.format(i+1)] = str(indicator)
             contingency_element = etree.SubElement(root, 'Contingency', contingency_attrib)
 
             for static_id in contingency_results.static_ids:
@@ -425,12 +425,15 @@ class JobQueue:
                 if (special_job.variable_order or special_job.missing_events) and len(contingency_results.jobs[static_id]) < MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED:
                     static_ids.remove(static_id)  # A static id is considered to be not yet run if if does not yet have MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED already finished (avoids div by 0)
 
-        N_per_static_id = np.array([len(contingency_results.jobs[static_id]) for static_id in static_ids])
         N = len(static_ids)
 
         mean_per_static_id = np.array([contingency_results.get_average_load_shedding_per_static_id(static_id) for static_id in static_ids])
         mean = np.mean(mean_per_static_id)
         std_dev = sqrt(np.var(mean_per_static_id))  # TODO: add sqrt(N/(N-1)) factor and handle div by 0 in this case
+
+        if N == 0:
+            N += 1
+            logger.logger.warn('Division by 0')
 
         # SE from sample variance
         indicator_1 = contingency.frequency * sqrt(std_dev**2 / N)
@@ -470,24 +473,34 @@ class JobQueue:
         N_per_static_id = np.array(N_per_static_id)
 
         global_derivative_1 = contingency.frequency * sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) * (1/sqrt(N) - 1/sqrt(N+1))
-        global_derivative_2 = contingency.frequency * ((100 - mean) / N - (100 - mean) / (N + 1))
+
+        p = 1 - 0.01**(1/N)
+        p2 = 1 - 0.01**(1/(N+1))
+        b = max((100-mean)**2, (mean-0)**2)
+        global_derivative_2 = contingency.frequency * (sqrt(p*b/N) - sqrt(p2*b/(N+1)))
+
+        global_derivative_3 = global_derivative_1 + global_derivative_2
 
         derivative_1_per_static_id = []
         derivative_2_per_static_id = []
+        derivative_3_per_static_id = []
         SE = sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N)
         for i in range(len(contingency_results.static_ids)):
             if std_dev == 0:
                 der_1 = 0
                 der_2 = 0
+                der_3 = 0
             else:
                 N_per_static_id[i] += 1
                 der_1 = contingency.frequency * (SE - (sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N)))
                 N_per_static_id[i] -= 1
                 der_2 = 0
+                der_3 = der_1 + der_2
             derivative_1_per_static_id.append(der_1)
             derivative_2_per_static_id.append(der_2)
+            derivative_3_per_static_id.append(der_3)
 
-        return (global_derivative_1, global_derivative_2), (derivative_1_per_static_id, derivative_2_per_static_id)
+        return (global_derivative_1, global_derivative_2, global_derivative_3), (derivative_1_per_static_id, derivative_2_per_static_id, derivative_3_per_static_id)
 
 
     @staticmethod
