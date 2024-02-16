@@ -101,4 +101,4 @@ python -m pip install pypowsybl lxml
 python -m pip install pypowsybl lxml logger mpi4py natsort
 ```
 
-Install [dynawo](https://dynawo.github.io/) and set DYNAWO_PATH in 4-PDSA/common.py accordingly. Currently, the dynamic models used are only available on my fork of dynawo on the branch [27_test](https://github.com/FredericSabot/dynawo/tree/27_test). You can compile it from source, or I can make release on demand.
+Install [dynawo](https://dynawo.github.io/) and set DYNAWO_PATH in 4-PDSA/common.py accordingly. Currently, the dynamic models used are only available on my fork of dynawo on the branch [30_RTQ2024](https://github.com/FredericSabot/dynawo/tree/30_RTS2024). You can compile it from source, or I can make release on demand.
