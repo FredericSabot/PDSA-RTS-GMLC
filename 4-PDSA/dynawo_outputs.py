@@ -121,10 +121,7 @@ def get_job_results(working_dir):
     load_shedding = (total_load - remaining_load) / total_load * 100
 
     if convergence_issue:
-        if load_shedding < 20:
-            load_shedding += 0.1  # Convergence issues are a bit too frequent for stable cases, so hide them  # TODO: fix convergence issues instead
-        else:
-            load_shedding = 100.1  # Mark it as 100.1% load shedding to not affect averages, but still see there is a numerical issue
+        load_shedding = 100.1  # Mark it as 100.1% load shedding to not affect averages, but still see there is a numerical issue
 
 
     ###############################################
