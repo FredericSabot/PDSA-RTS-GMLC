@@ -86,6 +86,10 @@ class Job:
             timed_out = True
 
         if 'Error' in str(stderr) or timed_out:  # Simulation failed, so retry with another solver
+            # Delete output files of failed attempt
+            output_dir = os.path.join(self.working_dir, 'outputs')
+            shutil.rmtree(output_dir)
+            # Retry with another solver
             cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '_alt_solver.jobs')]
             logger.logger.log(logger.logging.TRACE, 'Launching job %s with alternative solver' % self)
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
