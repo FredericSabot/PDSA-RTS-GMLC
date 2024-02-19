@@ -488,14 +488,12 @@ class JobQueue:
         for i in range(len(contingency_results.static_ids)):
             if std_dev == 0:
                 der_1 = 0
-                der_2 = 0
-                der_3 = 0
             else:
                 N_per_static_id[i] += 1
                 der_1 = contingency.frequency * (SE - (sqrt(std_dev**2 + np.mean(variance_per_static_id / N_per_static_id)) / sqrt(N)))
                 N_per_static_id[i] -= 1
-                der_2 = 0
-                der_3 = der_1 + der_2
+            der_2 = 0
+            der_3 = der_1 + der_2
             derivative_1_per_static_id.append(der_1)
             derivative_2_per_static_id.append(der_2)
             derivative_3_per_static_id.append(der_3)
@@ -607,8 +605,8 @@ class ContingencyResults:
         average_load_shedding_per_static_id = [self.get_average_load_shedding_per_static_id(static_id) for static_id in self.static_ids]
         max = 0
         for load_shedding in average_load_shedding_per_static_id:
-            if load_shedding > max and load_shedding <= 100:  # Disregard non convergence cases
-                max = load_shedding
+            # if load_shedding > max and load_shedding <= 100:  # Disregard non convergence cases
+            max = load_shedding
         return max
 
 
