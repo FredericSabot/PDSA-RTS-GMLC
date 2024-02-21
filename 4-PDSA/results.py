@@ -10,14 +10,3 @@ class Results:
 
     def __repr__(self) -> str:
         return CSV_SEPARATOR.join([str(self.load_shedding)] + [str(timeline_event) for timeline_event in self.trip_timeline])
-
-    @staticmethod
-    def load_from_str(string: str):
-        inputs = string.split(CSV_SEPARATOR)
-        load_shedding = float(inputs.pop(0))
-        trip_timeline = []
-        while len(inputs) >= 3:
-            time, model, event_description, *inputs = inputs
-            trip_timeline.append(dynawo_outputs.TimeLineEvent(float(time), model, event_description))
-
-        return Results(load_shedding, trip_timeline)

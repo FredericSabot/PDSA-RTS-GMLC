@@ -28,46 +28,15 @@ class Job:
         self.results = get_job_results(self.working_dir)
         self.completed = True
         shutil.rmtree(self.working_dir, ignore_errors=True)
-        Path(self.working_dir).mkdir(exist_ok=True)
-        self.save_results()
 
     def timeout(self):
         self.timed_out = True
         self.elapsed_time = JOB_TIMEOUT_S
         self.results = Results(100.2, [])
         shutil.rmtree(self.working_dir, ignore_errors=True)
-        Path(self.working_dir).mkdir(exist_ok=True)
-        self.save_results()
-
-    def save_results(self):
-        if not self.completed and not self.timed_out:
-            raise RuntimeError('Job should be launched before saving its results')
-
-        with open(os.path.join(self.working_dir, 'job.results'), 'w') as file:
-            if self.completed or self.timed_out:
-                file.write(CSV_SEPARATOR.join([str(item) for item in [self.completed, self.elapsed_time, self.timed_out, self.results]]))
-            else:
-                file.write(CSV_SEPARATOR.join([str(item) for item in [self.completed, self.elapsed_time, self.timed_out]]))
-
-    def load_results(self, save_file):
-        with open(save_file, 'r') as file:
-            save = file.readline().split(CSV_SEPARATOR)
-            try:
-                self.completed = save[0] == 'True'
-                self.elapsed_time = float(save[1])
-                self.timed_out = save[2] == 'True'
-                if self.completed or self.timed_out:
-                    self.results = Results.load_from_str(CSV_SEPARATOR.join(save[3:]))
-            except IndexError:
-                logger.logger.warn("Could not load save file {}".format(save_file))
-                self.call_dynawo()
 
     def run(self):
-        save_file = os.path.join(self.working_dir, 'job.results')
-        if REUSE_RESULTS and os.path.exists(save_file):
-            self.load_results(save_file)
-        else:
-            self.call_dynawo()
+        self.call_dynawo()
 
     def call_dynawo(self):
         t0 = time.time()
@@ -138,31 +107,6 @@ class SpecialJob(Job):
     def timeout(self):
         self.variable_order, self.missing_events = False, False  # No timeline, so cannot check
         return super().timeout()
-
-    def save_results(self):
-        if not self.completed and not self.timed_out:
-            raise RuntimeError('Job should be launched before saving its results')
-
-        with open(os.path.join(self.working_dir, 'job.results'), 'w') as file:
-            if self.completed or self.timed_out:
-                file.write(CSV_SEPARATOR.join([str(item) for item in [self.completed, self.elapsed_time, self.timed_out, self.variable_order, self.missing_events, self.results]]))
-            else:
-                file.write(CSV_SEPARATOR.join([str(item) for item in [self.completed, self.elapsed_time, self.timed_out]]))
-
-    def load_results(self, save_file):
-        with open(save_file, 'r') as file:
-            save = file.readline().split(CSV_SEPARATOR)
-            try:
-                self.completed = save[0] == 'True'
-                self.elapsed_time = float(save[1])
-                self.timed_out = save[2] == 'True'
-                if self.completed or self.timed_out:
-                    self.variable_order = save[3] == 'True'
-                    self.missing_events = save[4] == 'True'
-                    self.results = Results.load_from_str(CSV_SEPARATOR.join(save[5:]))
-            except IndexError:
-                logger.logger.warn("Could not load special save file {}, rerunning job".format(save_file))
-                self.call_dynawo()
 
 
 @dataclass

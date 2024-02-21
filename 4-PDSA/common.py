@@ -13,22 +13,20 @@ class INIT_EVENT_CATEGORIES(Enum):
 
 JOB_TIMEOUT_S = 300  # Timeout for a single job in seconds
 
-DYNAWO_PATH = '/home/fsabot/Desktop/dynawo_new/myEnvDynawo.sh'
-# DYNAWO_PATH = '/home/ulb/beams_energy/fsabot/dynawo/dynawo.sh'
+# DYNAWO_PATH = '/home/fsabot/Desktop/dynawo_new/myEnvDynawo.sh'
+DYNAWO_PATH = '/home/ulb/beams_energy/fsabot/dynawo/dynawo.sh'
 DYNAWO_NAMESPACE = 'http://www.rte-france.com/dynawo'
 
 RANDOMISE_DYN_DATA = True
 NETWORK_NAME = 'RTS'
 CASE = 'year'
 
-REUSE_RESULTS = True  # If true, don't run simulations if there is already an 'outputs' directory in the working dir of a given job
-# TODO: read outputdir from .jobs instead of assuming it is 'outputs'
-# TODO: delete previous simulations outputs if REUSE_RESULTS = False (with confirmation prompt, only for case CASE)
+REUSE_RESULTS = True  # If true, don't rerun cases already simulated, note that setting this to False does not delete old versions of saved_results.pickle and saved_results_bak.pickle
 
 MIN_NUMBER_STATIC_SEED_N_1 = 20
 MIN_NUMBER_STATIC_SEED_N_2 = 10
 MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED = 5 # 5, low for first tests
-NB_RUNS_PER_INDICATOR_EVALUATION = 100  # Note: slightly less runs migth be done per indicator evaluation due to capping
+NB_RUNS_PER_INDICATOR_EVALUATION = 1000  # Note: slightly less runs migth be done per indicator evaluation due to capping
 DOUBLE_MC_LOOP = True
 
 # Contingency parameters

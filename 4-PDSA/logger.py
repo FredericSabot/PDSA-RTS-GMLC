@@ -5,7 +5,7 @@ from mpi4py import MPI
 logging.TRACE = logging.DEBUG - 5
 logger = logging.getLogger()
 
-logger.setLevel(logging.DEBUG)  # CRITICAL, ERROR, WARNING, INFO, DEBUG, TRACE, NOTSET
+logger.setLevel(logging.INFO)  # CRITICAL, ERROR, WARNING, INFO, DEBUG, TRACE, NOTSET
 
 formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
 # Remove default handler

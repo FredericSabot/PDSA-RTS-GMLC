@@ -12,6 +12,8 @@ from lxml import etree
 import numpy as np
 from natsort import natsorted
 import time
+import pickle
+import shutil
 
 class Master:
     def __init__(self, slaves):
@@ -38,29 +40,7 @@ class Master:
         n_iter = 0
         try:
             while True:
-                status = MPI.Status()
-                self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-                slave = status.Get_source()
-                tag = status.Get_tag()
-
-                if tag == MPI_TAGS.READY.value:
-                    job = jobs_to_run.pop(0)
-                    self.comm.recv(source=slave, tag=MPI_TAGS.READY.value, status=status)
-
-                    logger.logger.log(logger.logging.TRACE, 'Master: sending input job {} to slave {}'.format(job, slave))
-                    self.comm.send(obj=job, dest=slave, tag=MPI_TAGS.START.value)
-
-                elif tag == MPI_TAGS.DONE.value:
-                    # Read data
-                    slave = status.Get_source()
-                    job = self.comm.recv(source=slave, tag=MPI_TAGS.DONE.value)
-                    logger.logger.log(logger.logging.TRACE, 'Master: slave {} returned {}'.format(slave, job))
-                    self.job_queue.store_completed_job(job)
-
-                else:
-                    raise NotImplementedError("Unexpected tag:", tag)
-
-                if len(jobs_to_run) == 0:
+                if len(jobs_to_run) == 0:  # No more jobs in queue, so repopulate it with get_next_jobs()
                     if init:
                         logger.logger.info('Launched all NB_MIN_RUNS jobs')
                         init = False
@@ -80,10 +60,41 @@ class Master:
                     if len(jobs_to_run) == 0:  # No more jobs to run and not waiting for data
                         break  # Note that the master is directly stopped when statistical indicators are satisfied even if some slaves are still running
 
+                status = MPI.Status()
+                self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+                slave = status.Get_source()
+                tag = status.Get_tag()
+
+                if tag == MPI_TAGS.READY.value:
+                    job = jobs_to_run.pop(0)
+                    if REUSE_RESULTS:
+                        if job.contingency.id in self.job_queue.saved_results:
+                            if job.static_id in self.job_queue.saved_results[job.contingency.id]:
+                                if job.dynamic_seed in self.job_queue.saved_results[job.contingency.id][job.static_id]:
+                                    self.job_queue.store_completed_job(job, exists=True)
+                                    continue
+
+                    self.comm.recv(source=slave, tag=MPI_TAGS.READY.value, status=status)
+
+                    logger.logger.log(logger.logging.TRACE, 'Master: sending input job {} to slave {}'.format(job, slave))
+                    self.comm.send(obj=job, dest=slave, tag=MPI_TAGS.START.value)
+
+                elif tag == MPI_TAGS.DONE.value:
+                    # Read data
+                    slave = status.Get_source()
+                    job = self.comm.recv(source=slave, tag=MPI_TAGS.DONE.value)
+                    logger.logger.log(logger.logging.TRACE, 'Master: slave {} returned {}'.format(slave, job))
+                    self.job_queue.store_completed_job(job)
+
+                else:
+                    raise NotImplementedError("Unexpected tag:", tag)
+
             self.job_queue.write_analysis_output()
+            self.job_queue.write_saved_results()
             self.terminate_slaves()
         except KeyboardInterrupt:
             self.job_queue.write_analysis_output(err=True)
+            self.job_queue.write_saved_results()
 
     def terminate_slaves(self):
         for s in self.slaves:
@@ -134,11 +145,44 @@ class JobQueue:
         self.priority_queue: list[Job]
         self.priority_queue = []
 
+        self.saved_results_path = 'saved_results.pickle'
+        self.saved_results_backup_path = 'saved_results_bak.pickle'
+        self.load_saved_results()
+
+    def load_saved_results(self):
+        self.saved_results: dict[dict[dict[Job]]]
+        if os.path.exists(self.saved_results_path):
+            with open(self.saved_results_path, 'rb') as file:
+                try:
+                    self.saved_results = pickle.load(file)
+                except pickle.UnpicklingError:
+                    with open(self.saved_results_backup_path, 'rb') as backup_file:
+                        self.saved_results = pickle.load(backup_file)
+        else:
+            self.saved_results = {}
+
+    def write_saved_results(self):
+        t0 = time.time()
+        # Pickle to a temp file to guarantee one correct version always exists if the program is interrupted
+        with open(self.saved_results_backup_path, 'wb') as file:
+            pickle.dump(self.saved_results, file, protocol=pickle.HIGHEST_PROTOCOL)
+        shutil.copyfile(self.saved_results_backup_path, self.saved_results_path)
+        delta_t = time.time() - t0
+        logger.logger.info('Write saved results completed in {}s'.format(delta_t))
+
+
     def add_job_to_priority_queue(self, job: Job):
         self.priority_queue.append(job)
         self.simulations_launched[job.contingency.id].add_job(job)
 
-    def store_completed_job(self, job: Job):
+    def store_completed_job(self, job: Job, exists=False):
+        if not exists:
+            self.saved_results.setdefault(job.contingency.id, {})
+            self.saved_results[job.contingency.id].setdefault(job.static_id, {})
+            self.saved_results[job.contingency.id][job.static_id][job.dynamic_seed] = job
+        else:
+            job = self.saved_results[job.contingency.id][job.static_id][job.dynamic_seed]
+
         self.simulation_results[job.contingency.id].add_job(job)
         self.risk_per_contingency[job.contingency.id] = self.simulation_results[job.contingency.id].get_average_load_shedding() * job.contingency.frequency
         self.total_risk = sum(self.risk_per_contingency.values())
@@ -155,7 +199,7 @@ class JobQueue:
         return Job(static_id, dynamic_seed, contingency)
 
 
-    def get_next_jobs(self, init: bool) -> list[Job]:
+    def get_next_jobs(self, init: bool) -> tuple[list[Job], bool]:
         t0 = time.time()
         jobs = []
         nb_priority_jobs = len(self.priority_queue)
@@ -190,7 +234,9 @@ class JobQueue:
             return jobs, wait_for_data
 
         else:
-            self.write_analysis_output(err=True)  # TODO: make signal handling work with SLURM and remove this (but, it is quite fast anyway)
+            self.write_analysis_output(err=True)  # TODO: make signal handling work with SLURM and remove this (but, it is relatively fast anyway)
+            self.write_saved_results()  # TODO: same
+
             # Run simulations until requested statistical accuracy is reached
             contingencies_to_run = []
             contingencies_waiting = []  # Wait for the NB_MIN_RUNS of each contingency to be done before evaluating statistical indicators
@@ -237,9 +283,9 @@ class JobQueue:
                 wait_for_data = True
                 return [], wait_for_data
 
-            logger.logger.info("##############################################")
-            logger.logger.info("# Contingency weigths")
-            logger.logger.info("##############################################")
+            logger.logger.debug("##############################################")
+            logger.logger.debug("# Contingency weigths")
+            logger.logger.debug("##############################################")
             weigths = []
             limiting_indicators = {}
             for contingency in contingencies_to_run:
@@ -257,7 +303,7 @@ class JobQueue:
                 limiting_indicator = np.argmax(distances_from_statistical_accuracy)
                 weigth = max(distances_from_statistical_accuracy)
                 assert weigth > 0  # Distance should be positive as only contingencies that have not converged yet are considered at this stage
-                logger.logger.info('Contingency {}: {}'.format(contingency.id, weigth))
+                logger.logger.debug('Contingency {}: {}'.format(contingency.id, weigth))
                 weigths.append(weigth)
                 limiting_indicators[contingency.id] = limiting_indicator
 
