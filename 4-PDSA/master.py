@@ -649,11 +649,7 @@ class ContingencyResults:
 
     def get_maximum_load_shedding(self):
         average_load_shedding_per_static_id = [self.get_average_load_shedding_per_static_id(static_id) for static_id in self.static_ids]
-        max = 0
-        for load_shedding in average_load_shedding_per_static_id:
-            # if load_shedding > max and load_shedding <= 100:  # Disregard non convergence cases
-            max = load_shedding
-        return max
+        return max(average_load_shedding_per_static_id)
 
 
     # TODO: ctrl+h static_id -> static_seed, or reverse (because of the way they are generated), same for static_files ?
