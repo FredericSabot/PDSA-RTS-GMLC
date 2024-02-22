@@ -13,6 +13,7 @@
 
 module purge
 module load Python/3.9
+module load SciPy-bundle
 
 cd PDSA-RTS-GMLC/2-SCOPF
 
