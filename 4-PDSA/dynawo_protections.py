@@ -223,10 +223,10 @@ def add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, li
         blinder_angle = 45 * (pi/180)  # 45 instead of 30 due to high reactive flows in some lines (mainly interconnections I believe)
 
         if adj_lines_X == [0]: # No adjacent lines
-            X3 = 99  # Zone 2 and zone 3 would be identical -> remove zone 3
-            R3 = 99
-            X4 = 99
-            R4 = 99
+            X3 = 0  # Zone 2 and zone 3 would be identical -> remove zone 3
+            R3 = 0
+            X4 = 0
+            R4 = 0
 
         if RANDOMISE_DYN_DATA:
             rand_measurement_ratio = 1 + random.uniform(-measurement_max_error, measurement_max_error)
