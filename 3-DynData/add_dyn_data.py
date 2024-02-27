@@ -113,11 +113,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
         if (unit_group == 'PV' or unit_group == 'RTPV') and gens.at[genID, 'max_p'] == 0:  # Turn of PV at night (and dawn and morning)
             continue
 
-        GFM_units = ['122_WIND_1']
-
-        if genID in GFM_units:
-            lib = 'GridFormingConverterDroopControl'
-        elif unit_group == 'PV' or unit_group == 'RTPV':
+        if unit_group == 'PV' or unit_group == 'RTPV':
             lib = 'GenericIBG'
             synchronous = False
         elif unit_group == 'Wind':
@@ -141,11 +137,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
             etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'GEN'})
             etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'GEN-CONNECTOR'})
         else:
-            if genID in GFM_units:
-                etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'GFM'})
-                etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'GFMToNode'})
-                etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': 'OMEGA_REF', 'id2': genID, 'connector': 'OmegaRefToGFM', 'index1': str(omega_index)})
-            elif unit_group == 'PV' or unit_group == 'RTPV' or unit_group == 'Wind':
+            if unit_group == 'PV' or unit_group == 'RTPV' or unit_group == 'Wind':
                 etree.SubElement(dyd_root, etree.QName(namespace, 'connect'), {'id1': genID, 'var1': 'ibg_omegaRefPu', 'id2': 'OMEGA_REF', 'var2': 'omegaRef_0_value'})
                 etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'PV'})
                 etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'PV-CONNECTOR'})
@@ -494,45 +486,8 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
             omega_index += 1
 
         else:  # Not synchronous (PV, wind, RTPV)
-            SNom = gens_csv['PMax MW'][i]
-            if genID in GFM_units:
-                par_attribs = [  # Values from Dynawo example
-                    {'type': 'DOUBLE', 'name': 'converter_Cdc','value': '0.01'},
-                    {'type': 'DOUBLE', 'name': 'converter_RFilter','value': '0.005'},
-                    {'type': 'DOUBLE', 'name': 'converter_LFilter','value': '0.15'},
-                    {'type': 'DOUBLE', 'name': 'converter_CFilter','value': '0.066'},
-                    {'type': 'DOUBLE', 'name': 'converter_RTransformer','value': '0.01'},
-                    {'type': 'DOUBLE', 'name': 'converter_LTransformer','value': '0.2'},
-                    {'type': 'DOUBLE', 'name': 'control_KpVI','value': '0.67'},
-                    {'type': 'DOUBLE', 'name': 'control_XRratio','value': '5'},
-                    {'type': 'DOUBLE', 'name': 'control_Kpc','value': '0.7388'},
-                    {'type': 'DOUBLE', 'name': 'control_Kic','value': '1.19'},
-                    {'type': 'DOUBLE', 'name': 'control_Kpv','value': '0.52'},
-                    {'type': 'DOUBLE', 'name': 'control_Kiv','value': '1.161022'},
-                    {'type': 'DOUBLE', 'name': 'control_Mq','value': '0.000'},
-                    {'type': 'DOUBLE', 'name': 'control_Wf','value': '60'},
-                    {'type': 'DOUBLE', 'name': 'control_Mp','value': '0.02'},
-                    {'type': 'DOUBLE', 'name': 'control_Wff','value': '16.66'},
-                    {'type': 'DOUBLE', 'name': 'control_Kff','value': '0.0'},
-                    {'type': 'DOUBLE', 'name': 'control_RFilter','value': '0.005'},
-                    {'type': 'DOUBLE', 'name': 'control_LFilter','value': '0.15'},
-                    {'type': 'DOUBLE', 'name': 'control_CFilter','value': '0.066'},
-                    {'type': 'DOUBLE', 'name': 'control_Kpdc','value': '50'},
-                    {'type': 'DOUBLE', 'name': 'control_IMaxVI','value': '1.2'},
-                    {'type': 'DOUBLE', 'name': 'converter_SNom', 'value': str(SNom)}
-                ]
-
-                references = [
-                    {'name': 'converter_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
-                    # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
-                    {'name': 'converter_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
-                    {'name': 'converter_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
-                    {'name': 'converter_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
-                ]
-                etree.SubElement(omega_par_set, etree.QName(namespace, 'par'), {'type': 'DOUBLE', 'name': 'weight_gen_' + str(omega_index), 'value': str(max(p_max, q_max))})
-                omega_index += 1
-
-            elif unit_group == 'Wind':
+            if unit_group == 'Wind':
+                SNom = gens_csv['PMax MW'][i]
                 par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis
                     {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.2'},
                     {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
@@ -561,6 +516,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                     {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
+                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_', 'value': '3'},
                     {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
                     {'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'ibg_tf', 'value': '0.1'},
@@ -575,6 +531,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                 ]
 
             elif unit_group == 'PV':
+                SNom = gens_csv['PMax MW'][i]
                 par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis
                     {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
