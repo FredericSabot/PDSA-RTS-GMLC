@@ -365,6 +365,10 @@ class JobQueue:
         root.set('total_computation_time', str(total_computation_time))
 
         for contingency in self.contingencies:
+            min_shc = 999
+            voltage_stable = True
+            min_CCT = 999
+            transient_stable = True
             contingency_results = self.simulation_results[contingency.id]
             mean = contingency_results.get_average_load_shedding()
             max_shedding = contingency_results.get_maximum_load_shedding()
@@ -416,6 +420,20 @@ class JobQueue:
                                 'timeout': str(job.timed_out)}
                     if job.completed or job.timed_out:
                         job_attrib['load_shedding'] = '{:.2f}'.format(job.results.load_shedding)
+                        job_attrib['voltage_stable'] = str(job.voltage_stable)
+                        job_attrib['transient_stable'] = str(job.transient_stable)
+                        job_attrib['shc_ratio'] = str(job.shc_ratio)
+                        job_attrib['CCT'] = str(job.cct)
+
+                        if not job.voltage_stable:
+                            voltage_stable = False
+                        if not job.transient_stable:
+                            transient_stable = False
+                        if job.cct < min_CCT:
+                            min_CCT = job.cct
+                        if job.shc_ratio < min_shc:
+                            min_shc = job.shc_ratio
+
                     # Write first 3 elements to trip
                     trip_timeline = job.results.trip_timeline
                     index = 0
@@ -425,6 +443,11 @@ class JobQueue:
                         if index >= 3:
                             break
                     etree.SubElement(static_id_element, 'Job', job_attrib)
+
+            contingency_attrib['voltage_stable'] = str(voltage_stable)
+            contingency_attrib['transient_stable'] = str(transient_stable)
+            contingency_attrib['shc_ratio'] = str(min_shc)
+            contingency_attrib['CCT'] = str(min_CCT)
 
         with open('AnalysisOutput.xml', 'wb') as doc:
             doc.write(etree.tostring(root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))

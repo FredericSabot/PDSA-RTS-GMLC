@@ -22,12 +22,16 @@ NETWORK_NAME = 'RTS'
 CASE = 'year'
 
 REUSE_RESULTS = True  # If true, don't rerun cases already simulated, note that setting this to False does not delete old versions of saved_results.pickle and saved_results_bak.pickle
+BYPASS_SCREENING = True
 
-MIN_NUMBER_STATIC_SEED_N_1 = 20
+MIN_NUMBER_STATIC_SEED_N_1 = 10
 MIN_NUMBER_STATIC_SEED_N_2 = 10
-MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED = 5 # 5, low for first tests
+MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED = 5
 NB_RUNS_PER_INDICATOR_EVALUATION = 1000  # Note: slightly less runs migth be done per indicator evaluation due to capping
 DOUBLE_MC_LOOP = True
+
+BASEMVA = 100
+BASEFREQUENCY = 60
 
 # Contingency parameters
 T_INIT = 5

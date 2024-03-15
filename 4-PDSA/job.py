@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from contingencies import Contingency
+import contingencies
 from common import *
 from itertools import count
 import os
@@ -11,6 +12,8 @@ from dynawo_outputs import get_job_results, get_job_results_special
 from results import Results
 import logger
 import shutil
+import screening
+import pypowsybl as pp
 
 class Job:
     _ids = count(0)
@@ -29,9 +32,22 @@ class Job:
         self.completed = True
         shutil.rmtree(self.working_dir, ignore_errors=True)
 
+    def skip(self):
+        self.elapsed_time = 1
+        self.results = Results(0, [])
+        self.completed = True
 
     def run(self):
-        self.call_dynawo()
+        network_path = os.path.join('../2-SCOPF/d-Final-dispatch', CASE, str(self.static_id) + '.iidm')
+        network = pp.network.load(network_path)
+        disconnected_elements = [event.element for event in self.contingency.init_events if not isinstance(event, contingencies.InitFault)]
+        self.voltage_stable, self.shc_ratio = screening.voltage_screening(network, disconnected_elements)
+        self.transient_stable, self.cct = screening.transient_screening(network, self.contingency.clearing_time, self.contingency.fault_location, disconnected_elements)
+
+        if not self.voltage_stable or not self.transient_stable or BYPASS_SCREENING:
+            self.call_dynawo()
+        else:
+            self.skip()
 
     def call_dynawo(self):
         t0 = time.time()
@@ -101,6 +117,9 @@ class SpecialJob(Job):
         self.variable_order, self.missing_events = get_job_results_special(self.working_dir)
         super().complete(elapsed_time)
 
+    def skip(self):
+        self.variable_order, self.missing_events = False, False
+        super().skip()
 
 
 @dataclass

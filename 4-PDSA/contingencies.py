@@ -66,6 +66,8 @@ class Contingency:
     id: str
     frequency: float
     init_events: list[InitEvent]
+    clearing_time: float
+    fault_location: str = None
 
     """
     To limit the number of contingencies, double(/triple/...) lines are only counted once, but the associated contingencies
@@ -94,7 +96,7 @@ class Contingency:
 
     @staticmethod
     def create_base_contingency():
-        return [Contingency('Base', OUTAGE_RATE_PER_KM, [])]  # Contingency with no events, use a low frequency to avoid running it too often
+        return [Contingency('Base', OUTAGE_RATE_PER_KM, [], 0)]  # Contingency with no events, use a low frequency to avoid running it too often
 
     @staticmethod
     def create_N_1_contingencies(with_lines = True, with_generators = False):
@@ -123,7 +125,8 @@ class Contingency:
                                             fault_id=fault_id, r=R_FAULT, x=X_FAULT))
                     init_events.append(InitEvent(time_start=T_CLEARING, category=INIT_EVENT_CATEGORIES.LINE_DISC, element=line_id))
 
-                    contingencies.append(Contingency(contingency_id, frequency, init_events))
+                    fault_location = lines.at[line_id, 'bus{}_id'.format(end)]
+                    contingencies.append(Contingency(contingency_id, frequency, init_events, T_CLEARING - T_INIT, fault_location))
 
         if with_generators:
             raise NotImplementedError('The code below most likely works, but automatic merging of generator contingencies has not been implemented (and identical generators might not always be connected at the same time)')
@@ -226,7 +229,8 @@ class Contingency:
                                                      element=bus_id, fault_id=replacement_fault_id,
                                                      r=r_replacement_fault, x=x_replacement_fault))
 
-                        contingencies.append(Contingency(contingency_id, frequency, init_events))
+                        fault_location = lines.at[line_id, 'bus{}_id'.format(fault_side)]
+                        contingencies.append(Contingency(contingency_id, frequency, init_events, T_BACKUP - T_INIT, fault_location))
 
         contingencies = Contingency.merge_identical_contingencies(contingencies)
         return contingencies
