@@ -12,7 +12,7 @@
     <dyn:outputs directory="outputs">
       <dyn:timeline exportMode="TXT" filter="true"/>
       <!-- <dyn:curves inputFile="RTS.crv" exportMode="CSV"/> -->
-      <dyn:finalStateValues inputFile="RTS.fsv"/>
+      <dyn:finalStateValues inputFile="RTS.fsv" exportMode="CSV"/>
       <dyn:logs>
         <dyn:appender tag="" file="dynawo.log" lvlFilter="ERROR"/>
       </dyn:logs>
