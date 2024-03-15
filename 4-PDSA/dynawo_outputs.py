@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from lxml import etree
 import pypowsybl as pp
 import os
+import csv
 
 """ def isSameModel(model1, model2):
     ""
@@ -26,11 +27,14 @@ def get_job_results(working_dir):
 
     # Search the end of the log file for | ERROR | to see if a convergence issue occured
     convergence_issue = False
+    timeout = False
     max_line_number = 20
     line_number = 0
     if os.path.exists(log_file):  # Log file might not be created if it is empty
         for line in reversed(list(open(log_file))):  # Read file from the end, from https://stackoverflow.com/a/2301792, note that it might read the whole file instead of just the end, but it should be ok
             if '| ERROR |' in line:
+                if 'simulation interrupted by external signal' in line:
+                    timeout = True
                 convergence_issue = True
                 break
             line_number += 1
@@ -122,6 +126,23 @@ def get_job_results(working_dir):
 
     if convergence_issue:
         load_shedding = 100.1  # Mark it as 100.1% load shedding to not affect averages, but still see there is a numerical issue
+    if timeout:
+        load_shedding = 100.2
+
+    final_value_file = os.path.join(working_dir, 'outputs', 'finalStateValues', 'finalStateValues.csv')
+    full_blackout = True
+    with open(final_value_file, 'r') as file:
+        reader = csv.reader(file, delimiter=';')
+        next(reader)  # Skip header
+        for row in reader:
+            model = row[0]
+            variable = row[1]
+            value = float(row[2])
+            if model == 'NETWORK' and 'Upu_value' in variable:
+                if value > 0.5:
+                    full_blackout = False
+    if full_blackout:
+        load_shedding = 100
 
 
     ###############################################

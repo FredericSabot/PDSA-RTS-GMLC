@@ -180,8 +180,6 @@ class JobQueue:
             self.saved_results.setdefault(job.contingency.id, {})
             self.saved_results[job.contingency.id].setdefault(job.static_id, {})
             self.saved_results[job.contingency.id][job.static_id][job.dynamic_seed] = job
-        else:
-            job = self.saved_results[job.contingency.id][job.static_id][job.dynamic_seed]
 
         self.simulation_results[job.contingency.id].add_job(job)
         self.risk_per_contingency[job.contingency.id] = self.simulation_results[job.contingency.id].get_average_load_shedding() * job.contingency.frequency

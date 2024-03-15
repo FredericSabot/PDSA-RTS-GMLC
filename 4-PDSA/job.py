@@ -4,13 +4,13 @@ from common import *
 from itertools import count
 import os
 import subprocess
+import signal
 import time
 import dynawo_inputs
 from dynawo_outputs import get_job_results, get_job_results_special
 from results import Results
 import logger
 import shutil
-from pathlib import Path
 
 class Job:
     _ids = count(0)
@@ -29,11 +29,6 @@ class Job:
         self.completed = True
         shutil.rmtree(self.working_dir, ignore_errors=True)
 
-    def timeout(self):
-        self.timed_out = True
-        self.elapsed_time = JOB_TIMEOUT_S
-        self.results = Results(100.2, [])
-        shutil.rmtree(self.working_dir, ignore_errors=True)
 
     def run(self):
         self.call_dynawo()
@@ -51,13 +46,15 @@ class Job:
             _, stderr = proc.communicate(timeout=JOB_TIMEOUT_S)
         except subprocess.TimeoutExpired:
             stderr = ''
+            proc.send_signal(signal.SIGINT)
+            time.sleep(5)
             proc.kill()
             timed_out = True
 
         if 'Error' in str(stderr) or timed_out:  # Simulation failed, so retry with another solver
             # Delete output files of failed attempt
             output_dir = os.path.join(self.working_dir, 'outputs')
-            shutil.rmtree(output_dir)
+            shutil.rmtree(output_dir, ignore_errors=True)
             # Retry with another solver
             cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '_alt_solver.jobs')]
             logger.logger.log(logger.logging.TRACE, 'Launching job %s with alternative solver' % self)
@@ -66,9 +63,9 @@ class Job:
             try:
                 proc.communicate(timeout=JOB_TIMEOUT_S)
             except subprocess.TimeoutExpired:
+                proc.send_signal(signal.SIGINT)
+                time.sleep(5)
                 proc.kill()
-                self.timeout()
-                return
 
         delta_t = time.time() - t0
         self.complete(delta_t)
@@ -104,9 +101,6 @@ class SpecialJob(Job):
         self.variable_order, self.missing_events = get_job_results_special(self.working_dir)
         super().complete(elapsed_time)
 
-    def timeout(self):
-        self.variable_order, self.missing_events = False, False  # No timeline, so cannot check
-        return super().timeout()
 
 
 @dataclass
