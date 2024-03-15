@@ -74,31 +74,99 @@
   <curve model="NETWORK" variable="B-324_Upu_value"/>
   <curve model="NETWORK" variable="B-325_Upu_value"/>
 
-
   <curve model="NETWORK" variable="B-101_phi_value"/>
+  <curve model="NETWORK" variable="B-102_phi_value"/>
+  <curve model="NETWORK" variable="B-103_phi_value"/>
+  <curve model="NETWORK" variable="B-104_phi_value"/>
+  <curve model="NETWORK" variable="B-105_phi_value"/>
+  <curve model="NETWORK" variable="B-106_phi_value"/>
+  <curve model="NETWORK" variable="B-107_phi_value"/>
+  <curve model="NETWORK" variable="B-108_phi_value"/>
+  <curve model="NETWORK" variable="B-109_phi_value"/>
+  <curve model="NETWORK" variable="B-110_phi_value"/>
+  <curve model="NETWORK" variable="B-111_phi_value"/>
+  <curve model="NETWORK" variable="B-112_phi_value"/>
+  <curve model="NETWORK" variable="B-113_phi_value"/>
+  <curve model="NETWORK" variable="B-114_phi_value"/>
+  <curve model="NETWORK" variable="B-115_phi_value"/>
+  <curve model="NETWORK" variable="B-116_phi_value"/>
+  <curve model="NETWORK" variable="B-117_phi_value"/>
+  <curve model="NETWORK" variable="B-118_phi_value"/>
+  <curve model="NETWORK" variable="B-119_phi_value"/>
+  <curve model="NETWORK" variable="B-120_phi_value"/>
+  <curve model="NETWORK" variable="B-121_phi_value"/>
+  <curve model="NETWORK" variable="B-122_phi_value"/>
+  <curve model="NETWORK" variable="B-123_phi_value"/>
+  <curve model="NETWORK" variable="B-124_phi_value"/>
   <curve model="NETWORK" variable="B-201_phi_value"/>
+  <curve model="NETWORK" variable="B-202_phi_value"/>
+  <curve model="NETWORK" variable="B-203_phi_value"/>
+  <curve model="NETWORK" variable="B-204_phi_value"/>
+  <curve model="NETWORK" variable="B-205_phi_value"/>
+  <curve model="NETWORK" variable="B-206_phi_value"/>
+  <curve model="NETWORK" variable="B-207_phi_value"/>
+  <curve model="NETWORK" variable="B-208_phi_value"/>
+  <curve model="NETWORK" variable="B-209_phi_value"/>
+  <curve model="NETWORK" variable="B-210_phi_value"/>
+  <curve model="NETWORK" variable="B-211_phi_value"/>
+  <curve model="NETWORK" variable="B-212_phi_value"/>
+  <curve model="NETWORK" variable="B-213_phi_value"/>
+  <curve model="NETWORK" variable="B-214_phi_value"/>
+  <curve model="NETWORK" variable="B-215_phi_value"/>
+  <curve model="NETWORK" variable="B-216_phi_value"/>
+  <curve model="NETWORK" variable="B-217_phi_value"/>
+  <curve model="NETWORK" variable="B-218_phi_value"/>
+  <curve model="NETWORK" variable="B-219_phi_value"/>
+  <curve model="NETWORK" variable="B-220_phi_value"/>
+  <curve model="NETWORK" variable="B-221_phi_value"/>
+  <curve model="NETWORK" variable="B-222_phi_value"/>
+  <curve model="NETWORK" variable="B-223_phi_value"/>
+  <curve model="NETWORK" variable="B-224_phi_value"/>
   <curve model="NETWORK" variable="B-301_phi_value"/>
-  <curve model="NETWORK" variable="B-122_phipu_value"/>
-  <curve model="NETWORK" variable="B-303_phipu_value"/>
-  <curve model="NETWORK" variable="B-309_phipu_value"/>
+  <curve model="NETWORK" variable="B-302_phi_value"/>
+  <curve model="NETWORK" variable="B-303_phi_value"/>
+  <curve model="NETWORK" variable="B-304_phi_value"/>
+  <curve model="NETWORK" variable="B-305_phi_value"/>
+  <curve model="NETWORK" variable="B-306_phi_value"/>
+  <curve model="NETWORK" variable="B-307_phi_value"/>
+  <curve model="NETWORK" variable="B-308_phi_value"/>
+  <curve model="NETWORK" variable="B-309_phi_value"/>
+  <curve model="NETWORK" variable="B-310_phi_value"/>
+  <curve model="NETWORK" variable="B-311_phi_value"/>
+  <curve model="NETWORK" variable="B-312_phi_value"/>
+  <curve model="NETWORK" variable="B-313_phi_value"/>
+  <curve model="NETWORK" variable="B-314_phi_value"/>
+  <curve model="NETWORK" variable="B-315_phi_value"/>
+  <curve model="NETWORK" variable="B-316_phi_value"/>
+  <curve model="NETWORK" variable="B-317_phi_value"/>
+  <curve model="NETWORK" variable="B-318_phi_value"/>
+  <curve model="NETWORK" variable="B-319_phi_value"/>
+  <curve model="NETWORK" variable="B-320_phi_value"/>
+  <curve model="NETWORK" variable="B-321_phi_value"/>
+  <curve model="NETWORK" variable="B-322_phi_value"/>
+  <curve model="NETWORK" variable="B-323_phi_value"/>
+  <curve model="NETWORK" variable="B-324_phi_value"/>
+  <curve model="NETWORK" variable="B-325_phi_value"/>
 
-  <curve model="WIND_122" variable="ibg_injector_PInjPu"/>
-  <curve model="WIND_122" variable="ibg_injector_QInjPu"/>
-  <curve model="WIND_122" variable="WTG4B_SNom"/>
-  <curve model="WIND_122" variable="WTG4B_injector_terminal_i_re"/>
-  <curve model="WIND_122" variable="WTG4B_injector_terminal_i_im"/>
-  <curve model="WIND_122" variable="WTG4B_wecc_reec_idCmdPu"/>
-  <curve model="WIND_122" variable="WTG4B_wecc_reec_iqCmdPu"/>
-  <curve model="WIND_122" variable="WTG4B_wecc_reec_variableLimiter_u"/>
-  <curve model="WIND_122" variable="WTG4B_wecc_reec_variableLimiter1_u"/>
-  <curve model="WIND_122" variable="WTG4B_wecc_reec_variableLimiter_limit1"/>
-  <curve model="WIND_122" variable="ibg_iPLimiter_u"/>
-  <curve model="WIND_122" variable="ibg_iPLimiter_y"/>
-  <curve model="WIND_122" variable="ibg_iQLimiter_u"/>
-  <curve model="WIND_122" variable="ibg_iQLimiter_y"/>
-  <curve model="WIND_122" variable="ibg_PLLFreeze_phi"/>
-  <curve model="WIND_122" variable="ibg_feedback_u1"/>
-  <curve model="WIND_122" variable="ibg_feedback_y"/>
+
+
+  <curve model="122_WIND_1" variable="ibg_injector_PInjPu"/>
+  <curve model="122_WIND_1" variable="ibg_injector_QInjPu"/>
+  <curve model="122_WIND_1" variable="WTG4B_SNom"/>
+  <curve model="122_WIND_1" variable="WTG4B_injector_terminal_i_re"/>
+  <curve model="122_WIND_1" variable="WTG4B_injector_terminal_i_im"/>
+  <curve model="122_WIND_1" variable="WTG4B_wecc_reec_idCmdPu"/>
+  <curve model="122_WIND_1" variable="WTG4B_wecc_reec_iqCmdPu"/>
+  <curve model="122_WIND_1" variable="WTG4B_wecc_reec_variableLimiter_u"/>
+  <curve model="122_WIND_1" variable="WTG4B_wecc_reec_variableLimiter1_u"/>
+  <curve model="122_WIND_1" variable="WTG4B_wecc_reec_variableLimiter_limit1"/>
+  <curve model="122_WIND_1" variable="ibg_iPLimiter_u"/>
+  <curve model="122_WIND_1" variable="ibg_iPLimiter_y"/>
+  <curve model="122_WIND_1" variable="ibg_iQLimiter_u"/>
+  <curve model="122_WIND_1" variable="ibg_iQLimiter_y"/>
+  <curve model="122_WIND_1" variable="ibg_PLLFreeze_phi"/>
+  <curve model="122_WIND_1" variable="ibg_feedback_u1"/>
+  <curve model="122_WIND_1" variable="ibg_feedback_y"/>
 
 
 
