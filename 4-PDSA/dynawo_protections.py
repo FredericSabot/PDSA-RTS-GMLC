@@ -100,7 +100,7 @@ def add_gen_OOS_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error, an
     etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), oos_attrib)
 
     connect_attribs = [
-        {'id1': protection_id, 'var1': 'lossOfSynchronismProtection_thetaMonitored',  'id2': gen_id, 'var2': 'generator_theta'},
+        {'id1': protection_id, 'var1': 'lossOfSynchronismProtection_thetaMonitored',  'id2': gen_id, 'var2': 'generator_thetaInternal_value'},
         {'id1': protection_id, 'var1': 'lossOfSynchronismProtection_switchOffSignal', 'id2': gen_id, 'var2': 'generator_switchOffSignal2'}
     ]
     for connect_attrib in connect_attribs:
