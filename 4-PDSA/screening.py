@@ -438,6 +438,9 @@ def critical_angle_OMIB(OMIB_dur: OMIBData, OMIB_post: OMIBData):
     delta_return = delta_0
     delta_m = delta + delta_step
 
+    if delta >= delta_max:
+        return 1, 'always_unstable', delta_0, delta_max
+
     while delta < delta_max:
         A_dur = OMIB_area(OMIB_dur, delta_0, delta)
         while delta_m <= delta_max:
@@ -449,13 +452,15 @@ def critical_angle_OMIB(OMIB_dur: OMIBData, OMIB_post: OMIBData):
             delta_m += delta_step
 
         if delta_m > delta_max:
-            if delta == delta_0:  # delta instead of delta_crit as it is not necessarily initialised
+            if delta == delta_0:
                 tflag = 'always_unstable'
+                delta_crit = delta_0
                 delta_return = direction * delta_0
                 break
             Pe, Pm = OMIB_power(OMIB_post, delta_return)
             if Pm <= Pe:
                 tflag = 'potentially_stable'
+                delta_crit = direction * delta
                 delta_return = direction * delta_return
                 break
 

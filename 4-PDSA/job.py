@@ -38,6 +38,7 @@ class Job:
         self.completed = True
 
     def run(self):
+        logger.logger.log(logger.logging.TRACE, 'Launching job %s' % self)
         network_path = os.path.join('../2-SCOPF/d-Final-dispatch', CASE, str(self.static_id) + '.iidm')
         network = pp.network.load(network_path)
         disconnected_elements = [event.element for event in self.contingency.init_events if not isinstance(event, contingencies.InitFault)]
@@ -54,7 +55,6 @@ class Job:
 
         dynawo_inputs.write_job_files(self)
         cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '.jobs')]
-        logger.logger.log(logger.logging.TRACE, 'Launching job %s' % self)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         timed_out = False
