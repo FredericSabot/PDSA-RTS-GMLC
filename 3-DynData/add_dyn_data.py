@@ -501,11 +501,11 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                     {'type': 'DOUBLE', 'name': 'ibg_Tm', 'value': '0.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_IpSlewMaxPu', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'ibg_IqSlewMaxPu', 'value': '5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0.2'},  # Slightly more strict for wind than PV (big units)
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '1.5'},
+                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0.14'},  # LVRT from ENA EREC G99
+                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.14'},
+                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '2.2'},
                     {'type': 'DOUBLE', 'name': 'ibg_ULVRTMinPu', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0.5'},
+                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0'},
                     {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.85'},
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaMaxPu', 'value': '1.05'},
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaDeadBandPu', 'value': '1.01'},
@@ -513,7 +513,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                     {'type': 'DOUBLE', 'name': 'ibg_tFilterOmega', 'value': '0.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
                     {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.2'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.1'},
+                    {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_', 'value': '3'},
@@ -545,11 +545,11 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                     {'type': 'DOUBLE', 'name': 'ibg_Tm', 'value': '0.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_IpSlewMaxPu', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'ibg_IqSlewMaxPu', 'value': '5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0.15'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '1.5'},
+                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0.15'},  # LVRT from ENA EREC G99
+                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.15'},
+                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '2.2'},
                     {'type': 'DOUBLE', 'name': 'ibg_ULVRTMinPu', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0.5'},
+                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0'},
                     {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.85'},
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaMaxPu', 'value': '1.05'},
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaDeadBandPu', 'value': '1.01'},
@@ -630,7 +630,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
     # return dyd_root, par_root  # Unecessary since they are mutable
 
 if __name__ == '__main__':
-    input_file = 'RTS.iidm'
+    input_file = '../RTS-Data/RTS.iidm'
     network = pp.network.load(input_file)
 
     name = 'RTS'
