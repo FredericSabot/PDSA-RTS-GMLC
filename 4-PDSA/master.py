@@ -71,8 +71,10 @@ class Master:
                         if job.contingency.id in self.job_queue.saved_results:
                             if job.static_id in self.job_queue.saved_results[job.contingency.id]:
                                 if job.dynamic_seed in self.job_queue.saved_results[job.contingency.id][job.static_id]:
-                                    self.job_queue.store_completed_job(job, exists=True)
-                                    continue
+                                    if self.job_queue.saved_results[job.contingency.id][job.static_id][job.dynamic_seed].completed:
+                                        job = self.job_queue.saved_results[job.contingency.id][job.static_id][job.dynamic_seed]
+                                        self.job_queue.store_completed_job(job, exists=True)
+                                        continue
 
                     self.comm.recv(source=slave, tag=MPI_TAGS.READY.value, status=status)
 
