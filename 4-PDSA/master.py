@@ -666,11 +666,17 @@ class ContingencyResults:
 
     def get_average_load_shedding(self):
         average_load_shedding_per_static_id = [self.get_average_load_shedding_per_static_id(static_id) for static_id in self.static_ids]
-        return np.mean(average_load_shedding_per_static_id)  # For now, all static_id have the same weigth
+        if len(average_load_shedding_per_static_id) > 0:
+            return np.mean(average_load_shedding_per_static_id)
+        else:
+            return 0
 
     def get_maximum_load_shedding(self):
         average_load_shedding_per_static_id = [self.get_average_load_shedding_per_static_id(static_id) for static_id in self.static_ids]
-        return max(average_load_shedding_per_static_id)
+        if len(average_load_shedding_per_static_id) > 0:
+            return max(average_load_shedding_per_static_id)
+        else:
+            return 0
 
 
     # TODO: ctrl+h static_id -> static_seed, or reverse (because of the way they are generated), same for static_files ?
