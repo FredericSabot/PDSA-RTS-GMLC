@@ -446,10 +446,10 @@ class JobQueue:
                             break
                     etree.SubElement(static_id_element, 'Job', job_attrib)
 
-            contingency_attrib['voltage_stable'] = str(voltage_stable)
-            contingency_attrib['transient_stable'] = str(transient_stable)
-            contingency_attrib['shc_ratio'] = str(min_shc)
-            contingency_attrib['CCT'] = str(min_CCT)
+            contingency_element.set('voltage_stable', str(voltage_stable))
+            contingency_element.set('transient_stable', str(transient_stable))
+            contingency_element.set('shc_ratio', str(min_shc))
+            contingency_element.set('CCT', str(min_CCT))
 
         with open('AnalysisOutput.xml', 'wb') as doc:
             doc.write(etree.tostring(root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
