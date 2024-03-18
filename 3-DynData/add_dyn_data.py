@@ -594,7 +594,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                     {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '1.5'},
                     {'type': 'DOUBLE', 'name': 'ibg_ULVRTMinPu', 'value': '0'},
                     {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.9'},
+                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.85'},  # Original: 0.9
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaMaxPu', 'value': '1.05'},
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaDeadBandPu', 'value': '1.05'},
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaMinPu', 'value': '0.95'},
