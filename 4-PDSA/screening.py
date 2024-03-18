@@ -524,7 +524,7 @@ def transient_screening(n: pp.network.Network, clearing_time, fault_location, di
         return True, 999
 
     CCT = extended_equal_area_criterion(n, fault_location, disconnected_elements)[0]
-    return clearing_time < 0.8 * CCT, CCT
+    return clearing_time < CCT - 0.05, CCT
 
 
 if __name__ == '__main__':
