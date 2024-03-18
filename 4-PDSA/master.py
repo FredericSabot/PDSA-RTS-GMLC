@@ -389,6 +389,10 @@ class JobQueue:
             contingency_element = etree.SubElement(root, 'Contingency', contingency_attrib)
 
             for static_id in contingency_results.static_ids:
+                static_id_min_shc = 999
+                static_id_voltage_stable = True
+                static_id_min_CCT = 999
+                static_id_transient_stable = True
                 mean = contingency_results.get_average_load_shedding_per_static_id(static_id)
                 variance = contingency_results.get_variance_per_static_id_allow_error(static_id, value_on_error=np.nan)
                 N = len(contingency_results.jobs[static_id])
@@ -422,19 +426,20 @@ class JobQueue:
                                 'timeout': str(job.timed_out)}
                     if job.completed or job.timed_out:
                         job_attrib['load_shedding'] = '{:.2f}'.format(job.results.load_shedding)
-                        job_attrib['voltage_stable'] = str(job.voltage_stable)
-                        job_attrib['transient_stable'] = str(job.transient_stable)
-                        job_attrib['shc_ratio'] = str(job.shc_ratio)
-                        job_attrib['CCT'] = str(job.cct)
-
                         if not job.voltage_stable:
                             voltage_stable = False
+                            static_id_voltage_stable = False
                         if not job.transient_stable:
                             transient_stable = False
+                            static_id_transient_stable = False
                         if job.cct < min_CCT:
                             min_CCT = job.cct
+                        if job.cct < static_id_min_CCT:
+                            static_id_min_CCT = job.cct
                         if job.shc_ratio < min_shc:
                             min_shc = job.shc_ratio
+                        if job.shc_ratio < static_id_min_shc:
+                            static_id_min_shc = job.shc_ratio
 
                     # Write first 3 elements to trip
                     trip_timeline = job.results.trip_timeline
@@ -446,6 +451,10 @@ class JobQueue:
                             break
                     etree.SubElement(static_id_element, 'Job', job_attrib)
 
+                static_id_element.set('voltage_stable', str(static_id_voltage_stable))
+                static_id_element.set('transient_stable', str(static_id_transient_stable))
+                static_id_element.set('shc_ratio', str(static_id_min_shc))
+                static_id_element.set('CCT', str(static_id_min_CCT))
             contingency_element.set('voltage_stable', str(voltage_stable))
             contingency_element.set('transient_stable', str(transient_stable))
             contingency_element.set('shc_ratio', str(min_shc))
