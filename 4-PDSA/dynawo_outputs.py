@@ -34,7 +34,7 @@ def get_job_results(working_dir):
         for line in reversed(list(open(log_file))):  # Read file from the end, from https://stackoverflow.com/a/2301792, note that it might read the whole file instead of just the end, but it should be ok
             if '| ERROR |' in line:
                 if 'simulation interrupted by external signal' in line:
-                    timeout = True
+                    timeout = True  # Note: this can also occur when the whole job is stopped (e.g. SLURM time limit reached)
                 convergence_issue = True
                 break
             line_number += 1

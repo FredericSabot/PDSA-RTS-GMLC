@@ -73,8 +73,9 @@ class Master:
                                 if job.dynamic_seed in self.job_queue.saved_results[job.contingency.id][job.static_id]:
                                     if self.job_queue.saved_results[job.contingency.id][job.static_id][job.dynamic_seed].completed:
                                         job = self.job_queue.saved_results[job.contingency.id][job.static_id][job.dynamic_seed]
-                                        self.job_queue.store_completed_job(job, exists=True)
-                                        continue
+                                        if job.results.load_shedding == 100.2:  # Rerun timeouts and cancelled jobs
+                                            self.job_queue.store_completed_job(job, exists=True)
+                                            continue
 
                     self.comm.recv(source=slave, tag=MPI_TAGS.READY.value, status=status)
 
