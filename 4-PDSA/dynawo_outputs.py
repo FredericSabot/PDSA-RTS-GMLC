@@ -6,6 +6,7 @@ from lxml import etree
 import pypowsybl as pp
 import os
 import csv
+import logger
 
 """ def isSameModel(model1, model2):
     ""
@@ -30,16 +31,23 @@ def get_job_results(working_dir):
     timeout = False
     max_line_number = 20
     line_number = 0
-    if os.path.exists(log_file):  # Log file might not be created if it is empty
+    t_end = 0
+    if os.path.exists(log_file):  # Log file might not be created if it is empty (if log level set to error only)
         for line in reversed(list(open(log_file))):  # Read file from the end, from https://stackoverflow.com/a/2301792, note that it might read the whole file instead of just the end, but it should be ok
             if '| ERROR |' in line:
                 if 'simulation interrupted by external signal' in line:
                     timeout = True  # Note: this can also occur when the whole job is stopped (e.g. SLURM time limit reached)
                 convergence_issue = True
+            line_split = line.split(' | ')
+            if len(line_split) > 3:
+                t_end = float(line_split[2])
                 break
             line_number += 1
             if line_number > max_line_number:  # Don't search through the whole file (error is either at the very end of the file, or at the end before execution statistics)
                 break
+
+    if t_end == 0:
+        logger.logger.warn("t_end could not be found (log file not found or incomplete) or simulation crashed at launch")
 
     # Read timeline
     timeline_file = os.path.join(working_dir, 'outputs', 'timeLine', 'timeline.log')
@@ -125,7 +133,12 @@ def get_job_results(working_dir):
     load_shedding = (total_load - remaining_load) / total_load * 100
 
     if convergence_issue:
-        load_shedding = 100.1  # Mark it as 100.1% load shedding to not affect averages, but still see there is a numerical issue
+        if t_end >= T_END - 0.01:  # Disregard simplified solver failure at last time step
+            pass
+        elif t_end < T_BACKUP + 0.1:  # Disregard non-convergence issues during the fault, TODO: fix them
+            pass
+        else:
+            load_shedding = 100.1  # Mark it as 100.1% load shedding to not affect averages, but still see there is a numerical issue
     if timeout:
         load_shedding = 100.2
 

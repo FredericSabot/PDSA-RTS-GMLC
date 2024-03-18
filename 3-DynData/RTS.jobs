@@ -14,7 +14,7 @@
       <!-- <dyn:curves inputFile="RTS.crv" exportMode="CSV"/> -->
       <dyn:finalStateValues inputFile="RTS.fsv" exportMode="CSV"/>
       <dyn:logs>
-        <dyn:appender tag="" file="dynawo.log" lvlFilter="ERROR"/>
+        <dyn:appender tag="" file="dynawo.log" lvlFilter="INFO"/>
       </dyn:logs>
     </dyn:outputs>
   </dyn:job>
