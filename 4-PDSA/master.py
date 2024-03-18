@@ -220,8 +220,7 @@ class JobQueue:
             # Run an arbitrary number of simulations to start up the algorithm (allow to have a first estimate of the total
             # risk and sampled variances)
             for contingency in self.contingencies:
-                min_nb_static_seeds = JobQueue.get_minimum_number_of_static_seeds(contingency)
-                for i in range(min_nb_static_seeds):
+                for i in range(MIN_NUMBER_STATIC_SEED):
                     static_sample = self.static_samples_per_contingency[contingency.id][i]
 
                     if DOUBLE_MC_LOOP:
@@ -249,13 +248,12 @@ class JobQueue:
                     continue
 
                 # Check if all initial runs have been completed
-                min_nb_static_seeds = JobQueue.get_minimum_number_of_static_seeds(contingency)
-                if len(self.simulation_results[contingency.id].static_ids) < min_nb_static_seeds:
+                if len(self.simulation_results[contingency.id].static_ids) < MIN_NUMBER_STATIC_SEED:
                     contingencies_waiting.append(contingency)
                     logger.logger.log(logger.logging.TRACE, 'Contingency {} waiting for first static seed runs'.format(contingency.id))
                 else:
                     if DOUBLE_MC_LOOP:
-                        for static_id in self.simulation_results[contingency.id].static_ids[:min_nb_static_seeds]:
+                        for static_id in self.simulation_results[contingency.id].static_ids[:MIN_NUMBER_STATIC_SEED]:
                             nb_completed_runs = len(self.simulation_results[contingency.id].jobs[static_id])
                             special_job = self.simulation_results[contingency.id].jobs[static_id][0]
                             if (special_job.variable_order or special_job.missing_events) and nb_completed_runs < MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED:
@@ -466,14 +464,6 @@ class JobQueue:
         delta_t = time.time() - t0
         logger.logger.info('Write analysis output completed in {}s'.format(delta_t))
 
-
-    @staticmethod
-    def get_minimum_number_of_static_seeds(contingency: Contingency):
-        if contingency.frequency > OUTAGE_RATE_PER_KM * 1:  # Most likely a N-1 contingency
-            min_nb_static_seeds = MIN_NUMBER_STATIC_SEED_N_1
-        else:  # Most likely a N-2 contingency
-            min_nb_static_seeds = MIN_NUMBER_STATIC_SEED_N_2
-        return min_nb_static_seeds
 
     def is_statistical_accuracy_reached(self, contingency: Contingency) -> bool:
         indicators = self.get_statistical_indicators(contingency)

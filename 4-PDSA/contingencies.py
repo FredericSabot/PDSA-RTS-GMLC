@@ -99,7 +99,7 @@ class Contingency:
         return [Contingency('Base', OUTAGE_RATE_PER_KM, [], 0)]  # Contingency with no events, use a low frequency to avoid running it too often
 
     @staticmethod
-    def create_N_1_contingencies(with_lines = True, with_generators = False):
+    def create_N_1_contingencies(with_lines = True, with_generators = False, with_normal_clearing = True, with_delayed_clearing = True):
         contingencies = []
         # Read network
         n = pp.network.load('../RTS-Data/RTS.iidm')
@@ -120,13 +120,23 @@ class Contingency:
                     contingency_id = line_id + '_end{}'.format(end)
                     fault_id = 'FAULT_' + bus_id
 
-                    init_events = []
-                    init_events.append(InitFault(time_start=T_INIT, time_end=T_CLEARING, category=INIT_EVENT_CATEGORIES.BUS_FAULT, element=bus_id,
-                                            fault_id=fault_id, r=R_FAULT, x=X_FAULT))
-                    init_events.append(InitEvent(time_start=T_CLEARING, category=INIT_EVENT_CATEGORIES.LINE_DISC, element=line_id))
+                    if with_normal_clearing:
+                        init_events = []
+                        init_events.append(InitFault(time_start=T_INIT, time_end=T_CLEARING, category=INIT_EVENT_CATEGORIES.BUS_FAULT, element=bus_id,
+                                                fault_id=fault_id, r=R_FAULT, x=X_FAULT))
+                        init_events.append(InitEvent(time_start=T_CLEARING, category=INIT_EVENT_CATEGORIES.LINE_DISC, element=line_id))
 
-                    fault_location = lines.at[line_id, 'bus{}_id'.format(end)]
-                    contingencies.append(Contingency(contingency_id, frequency, init_events, T_CLEARING - T_INIT, fault_location))
+                        fault_location = lines.at[line_id, 'bus{}_id'.format(end)]
+                        contingencies.append(Contingency(contingency_id, frequency, init_events, T_CLEARING - T_INIT, fault_location))
+
+                    if with_delayed_clearing:
+                        init_events = []
+                        init_events.append(InitFault(time_start=T_INIT, time_end=T_BACKUP, category=INIT_EVENT_CATEGORIES.BUS_FAULT, element=bus_id,
+                                                fault_id=fault_id, r=R_FAULT, x=X_FAULT))
+                        init_events.append(InitEvent(time_start=T_BACKUP, category=INIT_EVENT_CATEGORIES.LINE_DISC, element=line_id))
+
+                        fault_location = lines.at[line_id, 'bus{}_id'.format(end)]
+                        contingencies.append(Contingency(contingency_id + '_DELAYED', frequency * DELAYED_CLEARING_RATE, init_events, T_BACKUP - T_INIT, fault_location))
 
         if with_generators:
             raise NotImplementedError('The code below most likely works, but automatic merging of generator contingencies has not been implemented (and identical generators might not always be connected at the same time)')
