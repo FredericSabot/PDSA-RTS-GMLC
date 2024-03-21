@@ -63,7 +63,7 @@ class Job:
         except subprocess.TimeoutExpired:
             stderr = ''
             proc.send_signal(signal.SIGINT)
-            time.sleep(5)
+            time.sleep(10)  # Give time to interupt and create output files
             proc.kill()
             timed_out = True
 
@@ -80,7 +80,7 @@ class Job:
                 proc.communicate(timeout=JOB_TIMEOUT_S)
             except subprocess.TimeoutExpired:
                 proc.send_signal(signal.SIGINT)
-                time.sleep(5)
+                time.sleep(10)
                 proc.kill()
 
         delta_t = time.time() - t0

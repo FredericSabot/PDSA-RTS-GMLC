@@ -60,6 +60,9 @@ def get_job_results(working_dir):
     distance_disarming_timeline = [] """
     generator_disconnection_timeline = []
     disconnected_models = []
+    if not os.path.exists(timeline_file):  # Might not be created if timeouts
+        return Results(100.2, trip_timeline)
+
     with open(os.path.join(timeline_file), 'r') as f:
         events = f.readlines()
         for event in events:
@@ -194,9 +197,6 @@ def get_job_results(working_dir):
     elif len(generator_disconnection_timeline) > len(connected_machines):
         raise RuntimeError('Working_dir {}: missing generators in "connected_machines", or some generators were reconnected during the simulation'.format(working_dir))
 
-
-    # TODO: check for low voltages using the new final values API (load_terminal_V_re, and _im -> compute abs)
-
     return Results(load_shedding, trip_timeline)
 
 
@@ -206,6 +206,9 @@ def get_job_results_special(working_dir):
     trip_timeline: list[TimeLineEvent]
     trip_timeline = []
     disconnected_models = []
+    if not os.path.exists(timeline_file):  # Might not be created if timeouts
+        return False, False
+
     with open(os.path.join(timeline_file), 'r') as f:
         events = f.readlines()
         for event in events:
