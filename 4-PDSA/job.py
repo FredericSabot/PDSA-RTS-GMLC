@@ -45,7 +45,29 @@ class Job:
         self.voltage_stable, self.shc_ratio = screening.voltage_screening(network, disconnected_elements)
         self.transient_stable, self.cct = screening.transient_screening(network, self.contingency.clearing_time, self.contingency.fault_location, disconnected_elements)
 
-        if not self.voltage_stable or not self.transient_stable or BYPASS_SCREENING:
+        if self.contingency.clearing_time > 0.15:
+            # Generators near the fault are likely to trip, so also perform screening assuming they trip
+            gens = network.get_generators()
+            for gen_id in gens.index:
+                if not gens.at[gen_id, 'connected']:
+                    continue
+                if gen_id in disconnected_elements:
+                    continue
+
+                if gens.at[gen_id, 'bus_id'] == self.contingency.fault_location:
+                    disconnected_elements.append(gen_id)
+
+            voltage_stable, shc_ratio = screening.voltage_screening(network, disconnected_elements)
+            transient_stable, cct = screening.transient_screening(network, self.contingency.clearing_time, self.contingency.fault_location, disconnected_elements)
+
+            self.voltage_stable = self.voltage_stable and voltage_stable
+            self.transient_stable = self.transient_stable and transient_stable
+            self.shc_ratio = min(self.shc_ratio, shc_ratio)
+            self.cct = min(self.cct, cct)
+
+        self.frequency_stable, self.RoCoF, self.power_loss_over_reserve = screening.frequency_screening(network, disconnected_elements)
+
+        if not self.voltage_stable or not self.transient_stable or not self.frequency_stable or BYPASS_SCREENING:
             self.call_dynawo()
         else:
             self.skip()

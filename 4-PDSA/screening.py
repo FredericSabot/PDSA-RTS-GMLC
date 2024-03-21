@@ -227,7 +227,10 @@ def voltage_screening(n: pp.network.Network, disconnected_elements = []):
     buses = n.get_buses()
     loads = n.get_loads()
 
-    Z = np.linalg.inv(get_admittance_matrix(n, disconnected_elements, inverter_model='None', generator_model='VoltageSource', with_loads=False))
+    try:
+        Z = np.linalg.inv(get_admittance_matrix(n, disconnected_elements, inverter_model='None', generator_model='VoltageSource', with_loads=False))
+    except np.linalg.LinAlgError:  # Matrix can be singular, typically if an isolated part of the grid has no load nor generators
+        return False, 0
     min_shc_ratio = 1e9
 
     for load_id in loads.index:
@@ -261,12 +264,16 @@ def extended_equal_area_criterion(n: pp.network.Network, fault_location, disconn
     b = list(range(N_buses))
     g = list(range(N_buses, Y_pre.shape[0]))
     # @ is numpy's matrix multiplication operator
-    Y_pre_red = Y_pre[g,:][:,g] - Y_pre[g,:][:,b] @ np.linalg.inv(Y_pre[b,:][:,b]) @ Y_pre[b,:][:,g]
-    Y_dur_red = Y_dur[g,:][:,g] - Y_dur[g,:][:,b] @ np.linalg.inv(Y_dur[b,:][:,b]) @ Y_dur[b,:][:,g]
-    g = list(range(N_buses, Y_post.shape[0]))
-    Y_post_red = Y_post[g,:][:,g] - Y_post[g,:][:,b] @ np.linalg.inv(Y_post[b,:][:,b]) @ Y_post[b,:][:,g]
+    try:
+        Y_pre_red = Y_pre[g,:][:,g] - Y_pre[g,:][:,b] @ np.linalg.inv(Y_pre[b,:][:,b]) @ Y_pre[b,:][:,g]
+        Y_dur_red = Y_dur[g,:][:,g] - Y_dur[g,:][:,b] @ np.linalg.inv(Y_dur[b,:][:,b]) @ Y_dur[b,:][:,g]
+        g = list(range(N_buses, Y_post.shape[0]))
+        Y_post_red = Y_post[g,:][:,g] - Y_post[g,:][:,b] @ np.linalg.inv(Y_post[b,:][:,b]) @ Y_post[b,:][:,g]
+    except np.linalg.LinAlgError:
+        return 0, [], [], 0, 0, 0
 
     S = get_generator_data(n, disconnected_elements=[])
+    S_post = get_generator_data(n, disconnected_elements)
     delta_theta = angle_deviation_estimation(S, Y_dur_red)
     critical_groups = critical_group_identification(S, delta_theta)
     # print(critical_groups)
@@ -289,9 +296,24 @@ def extended_equal_area_criterion(n: pp.network.Network, fault_location, disconn
         CCs.append(CC)
         NCs.append(NC)
 
+        CC_post = []
+        NC_post = []
+        for i in range(len(S_post)):
+            if S_post[i].name in critical_group:
+                CC_post.append(i)
+            else:
+                NC_post.append(i)
+        if len(CC_post) == 0 or len(NC_post) == 0:
+            CCTs.append(999)
+            delta_crits.append(0)
+            w_crits.append(0)
+            t_returns.append(999)
+            continue
+
+
         OMIB_pre, _ = omib_equivalent(S, CC, NC, Y_pre_red)
         OMIB_dur, M_dur = omib_equivalent(S, CC, NC, Y_dur_red)
-        OMIB_post, M_post = omib_equivalent(S, CC, NC, Y_post_red)
+        OMIB_post, M_post = omib_equivalent(S_post, CC_post, NC_post, Y_post_red)
 
         delta_0 = np.arcsin((OMIB_pre.Pm - OMIB_pre.Pc) / OMIB_pre.Pmax) + OMIB_pre.angle_shift
 
@@ -527,9 +549,46 @@ def transient_screening(n: pp.network.Network, clearing_time, fault_location, di
     return clearing_time < CCT - 0.05, CCT
 
 
+def frequency_screening(n: pp.network.Network, disconnected_elements):
+    gens = n.get_generators()
+    par_root = etree.parse('../3-DynData/{}.par'.format(NETWORK_NAME)).getroot()
+    power_loss = 0
+    total_inertia = 0
+    reserves = 0
+
+    for gen_id in gens.index:
+        if not gens.at[gen_id, 'connected']:
+            continue
+
+        if gen_id in disconnected_elements:
+            power_loss += -gens.at[gen_id, 'p']
+        else:
+            p = -gens.at[gen_id, 'p']
+            p_max = gens.at[gen_id, 'max_p']
+            reserves += (p_max - p)
+
+    for gen_id in gens.index:
+        if not gens.at[gen_id, 'connected']:
+            continue
+        if gens.at[gen_id, 'energy_source'] in ['SOLAR', 'WIND']:
+            continue
+        if gen_id in disconnected_elements:
+            continue
+
+        par_set = par_root.find("{{{}}}set[@id='{}']".format(DYNAWO_NAMESPACE, gen_id))
+        if par_set is None:
+            raise ValueError(gen_id, 'parameters not found')
+        Snom = float(par_set.find("{{{}}}par[@name='generator_SNom']".format(DYNAWO_NAMESPACE)).get('value'))
+        inertia = float(par_set.find("{{{}}}par[@name='generator_H']".format(DYNAWO_NAMESPACE)).get('value')) * Snom / BASEMVA
+        total_inertia += Snom * inertia
+
+    RoCoF = power_loss / (2 * total_inertia / BASEFREQUENCY)
+
+    return RoCoF < 0.5 and power_loss < 0.8 * reserves, RoCoF, power_loss / reserves
+
+
 if __name__ == '__main__':
-    # n = pp.network.load('/home/fsabot/Desktop/PDSA-RTS-GMLC/4-PDSA/simulations/test.xiidm')
-    n = pp.network.load('/home/fsabot/Desktop/PDSA-RTS-GMLC/4-PDSA/simulations/year/4491/0/A21_end2/RTS.iidm')
-    # pp.loadflow.run_ac(n)
+    n = pp.network.load('/home/fsabot/Desktop/PDSA-RTS-GMLC/4-PDSA/simulations/year/12/0/A34_end1/RTS.iidm')
     print(voltage_screening(n, []))
-    print(transient_screening(n, 0.15, 'V-122_0', []))
+    print(transient_screening(n, 0.15, 'V-122_0', ['121_NUCLEAR_1']))
+    print(frequency_screening(n, ['121_NUCLEAR_1']))
