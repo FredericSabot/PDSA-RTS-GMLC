@@ -22,6 +22,7 @@ class Master:
 
         self.comm = MPI.COMM_WORLD
         self.slaves = set(slaves)
+        self.slaves_state = {slave: 'Waiting' for slave in self.slaves}
         self.create_contingency_list()
         self.job_queue = JobQueue(self.contingency_list)
         self.run()
@@ -51,61 +52,97 @@ class Master:
 
                     while wait_for_data:
                         self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI_TAGS.DONE.value, status=status)
-                        slave = status.Get_source()
-                        job = self.comm.recv(source=slave, tag=MPI_TAGS.DONE.value)
-                        logger.logger.log(logger.logging.TRACE, 'Master: slave {} returned {}'.format(slave, job))
-                        self.job_queue.store_completed_job(job)
+                        self.get_data_from_slave(status)
                         jobs_to_run, wait_for_data = self.job_queue.get_next_jobs(init=False)
 
                     if len(jobs_to_run) == 0:  # No more jobs to run and not waiting for data
-                        break  # Note that the master is directly stopped when statistical indicators are satisfied even if some slaves are still running
+                        break
 
                 status = MPI.Status()
                 self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
-                slave = status.Get_source()
                 tag = status.Get_tag()
 
                 if tag == MPI_TAGS.READY.value:
                     job = jobs_to_run.pop(0)
-                    if REUSE_RESULTS:
-                        if job.contingency.id in self.job_queue.saved_results:
-                            if job.static_id in self.job_queue.saved_results[job.contingency.id]:
-                                if job.dynamic_seed in self.job_queue.saved_results[job.contingency.id][job.static_id]:
-                                    if self.job_queue.saved_results[job.contingency.id][job.static_id][job.dynamic_seed].completed:
-                                        saved_job = self.job_queue.saved_results[job.contingency.id][job.static_id][job.dynamic_seed]
-                                        if saved_job.results.load_shedding <= 100.1:
-                                            self.job_queue.store_completed_job(saved_job, exists=True)
-                                            continue
-                                        else:
-                                            pass  # Rerun timeouts and cancelled jobs
-
-                    self.comm.recv(source=slave, tag=MPI_TAGS.READY.value, status=status)
-
-                    logger.logger.log(logger.logging.TRACE, 'Master: sending input job {} to slave {}'.format(job, slave))
-                    self.comm.send(obj=job, dest=slave, tag=MPI_TAGS.START.value)
-
+                    self.send_work_to_slave(job, status)
                 elif tag == MPI_TAGS.DONE.value:
-                    # Read data
-                    slave = status.Get_source()
-                    job = self.comm.recv(source=slave, tag=MPI_TAGS.DONE.value)
-                    logger.logger.log(logger.logging.TRACE, 'Master: slave {} returned {}'.format(slave, job))
-                    self.job_queue.store_completed_job(job)
-
+                    self.get_data_from_slave(status)
                 else:
                     raise NotImplementedError("Unexpected tag:", tag)
 
+            self.job_queue.write_saved_results()
             self.job_queue.write_analysis_output()
-            self.job_queue.write_saved_results()
+
+            logger.logger.info(("##############################################"))
+            logger.logger.info(("# Statistical accuracy reached, running"))
+            logger.logger.info(("# additional samples for critical contingencies"))
+            logger.logger.info(("##############################################"))
+
+            jobs_to_run = self.job_queue.get_additional_jobs()
+            for job in jobs_to_run:
+                status = MPI.Status()
+                self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
+                tag = status.Get_tag()
+
+                if tag == MPI_TAGS.READY.value:
+                    self.send_work_to_slave(job, status)
+                elif tag == MPI_TAGS.DONE.value:
+                    self.get_data_from_slave(status)
+                else:
+                    raise NotImplementedError("Unexpected tag:", tag)
+
             self.terminate_slaves()
-        except KeyboardInterrupt:
-            self.job_queue.write_analysis_output(err=True)
             self.job_queue.write_saved_results()
+            self.job_queue.write_analysis_output(done=True)
+        except KeyboardInterrupt:
+            self.job_queue.write_saved_results()
+            self.job_queue.write_analysis_output()
 
     def terminate_slaves(self):
-        for s in self.slaves:
-            self.comm.send(obj=None, dest=s, tag=MPI_TAGS.EXIT.value)
-        for s in self.slaves:
-            self.comm.recv(source=s, tag=MPI_TAGS.EXIT.value)
+        for slave in self.slaves_state.keys():
+            # Wait for slaves to finish running jobs
+            if self.slaves_state[slave] == 'Working':
+                status = MPI.Status()
+                self.comm.probe(source=slave, tag=MPI_TAGS.DONE, status=status)
+                self.get_data_from_slave(status)
+
+            # Terminate slaves
+            self.comm.send(obj=None, dest=slave, tag=MPI_TAGS.EXIT.value)
+            self.comm.recv(source=slave, tag=MPI_TAGS.EXIT.value)
+
+
+    def load_job_results(self, job: Job) -> Job:
+        if job.contingency.id in self.job_queue.saved_results:
+            if job.static_id in self.job_queue.saved_results[job.contingency.id]:
+                if job.dynamic_seed in self.job_queue.saved_results[job.contingency.id][job.static_id]:
+                    if self.job_queue.saved_results[job.contingency.id][job.static_id][job.dynamic_seed].completed:
+                        return self.job_queue.saved_results[job.contingency.id][job.static_id][job.dynamic_seed]
+        return None
+
+
+    def send_work_to_slave(self, job, status: MPI.Status):
+        if REUSE_RESULTS:
+            saved_job = self.load_job_results(job)
+            if saved_job is not None:  # If save of job exist
+                if saved_job.results.load_shedding <= 100.1:
+                    self.job_queue.store_completed_job(saved_job, exists=True)
+                    return  # Don't rerun job
+                else:
+                    pass  # Rerun timeouts and cancelled jobs
+
+        slave = status.Get_source()
+        self.comm.recv(source=slave, tag=MPI_TAGS.READY.value, status=status)
+        logger.logger.log(logger.logging.TRACE, 'Master: sending input job {} to slave {}'.format(job, slave))
+        self.comm.send(obj=job, dest=slave, tag=MPI_TAGS.START.value)
+        self.slaves_state[slave] = 'Working'
+
+
+    def get_data_from_slave(self, status: MPI.Status):
+        slave = status.Get_source()
+        job = self.comm.recv(source=slave, tag=MPI_TAGS.DONE.value)
+        self.slaves_state[slave] = 'Waiting'
+        logger.logger.log(logger.logging.TRACE, 'Master: slave {} returned {}'.format(slave, job))
+        self.job_queue.store_completed_job(job)
 
 
 class JobQueue:
@@ -236,8 +273,8 @@ class JobQueue:
             return jobs, wait_for_data
 
         else:
-            self.write_analysis_output(err=True)  # TODO: make signal handling work with SLURM and remove this (but, it is relatively fast anyway)
-            self.write_saved_results()  # TODO: same
+            self.write_saved_results()
+            self.write_analysis_output()
 
             # Run simulations until requested statistical accuracy is reached
             contingencies_to_run = []
@@ -357,11 +394,45 @@ class JobQueue:
             wait_for_data = False
             return jobs, wait_for_data
 
-    def write_analysis_output(self, err=False):
+
+    def get_additional_jobs(self) -> list[Job]:
+        jobs = []
+        worst_contingency_ids = [key for key, _ in sorted(self.risk_per_contingency.items(), key = lambda item:item[1])]
+        worst_contingencies: list[Contingency]
+        worst_contingencies = []
+        for worst_contingency_id in worst_contingency_ids:
+            for contingency in self.contingencies:
+                if contingency.id == worst_contingency_id:
+                    worst_contingencies.append(contingency)
+                    break
+
+        for critical_contingency in worst_contingencies[:10]:
+            nb_static_ids_launched = len(self.simulations_launched[critical_contingency.id].static_ids)
+            nb_static_ids_to_launch = MIN_NUMBER_STATIC_SEED_CRITICAL_CONTINGENCY - nb_static_ids_launched
+
+            if nb_static_ids_to_launch < 1:
+                continue  # Enough samples launched for this contingency
+
+            for i in range(nb_static_ids_to_launch):
+                if nb_static_ids_launched + i >= len(self.static_samples):
+                    logger.logger.warn("MIN_NUMBER_STATIC_SEED_CRITICAL_CONTINGENCY larger than number of available static samples, stopping at {}".format(len(self.static_samples)))
+                    break
+                static_sample = self.static_samples_per_contingency[critical_contingency.id][nb_static_ids_launched + i]
+
+                if DOUBLE_MC_LOOP:
+                    job = SpecialJob(static_sample, 0, critical_contingency)
+                else:
+                    job = self.create_job(critical_contingency, static_sample)
+                self.simulations_launched[critical_contingency.id].add_job(job)
+                jobs.append(job)
+        return jobs
+
+
+    def write_analysis_output(self, done=False):
         t0 = time.time()
         root = etree.Element('Analysis')
         root.set('total_risk', str(self.total_risk))
-        root.set('interrupted', str(err))
+        root.set('interrupted', str(not done))
         total_computation_time = 0
         for contingency_results in self.simulation_results.values():
             total_computation_time += contingency_results.total_elapsed_time

@@ -25,6 +25,7 @@ REUSE_RESULTS = True  # If true, don't rerun cases already simulated, note that 
 BYPASS_SCREENING = True
 
 MIN_NUMBER_STATIC_SEED = 10
+MIN_NUMBER_STATIC_SEED_CRITICAL_CONTINGENCY = 2000
 MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED = 5
 NB_RUNS_PER_INDICATOR_EVALUATION = 1000  # Note: slightly less runs migth be done per indicator evaluation due to capping
 DOUBLE_MC_LOOP = True
