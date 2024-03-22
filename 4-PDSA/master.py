@@ -422,7 +422,7 @@ class JobQueue:
 
     def get_additional_jobs(self) -> list[Job]:
         jobs = []
-        worst_contingency_ids = [key for key, _ in sorted(self.risk_per_contingency.items(), key = lambda item:item[1])]
+        worst_contingency_ids = [key for key, _ in sorted(self.risk_per_contingency.items(), key = lambda item:item[1], reverse=True)]
         worst_contingencies: list[Contingency]
         worst_contingencies = []
         for worst_contingency_id in worst_contingency_ids:
@@ -434,6 +434,7 @@ class JobQueue:
         for critical_contingency in worst_contingencies[:10]:
             nb_static_ids_launched = len(self.simulations_launched[critical_contingency.id].static_ids)
             nb_static_ids_to_launch = MIN_NUMBER_STATIC_SEED_CRITICAL_CONTINGENCY - nb_static_ids_launched
+            logger.logger.info("Launching {} jobs for critical contingency {}".format(max(0, nb_static_ids_to_launch), critical_contingency.id))
 
             if nb_static_ids_to_launch < 1:
                 continue  # Enough samples launched for this contingency
