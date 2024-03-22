@@ -16,7 +16,7 @@ import pickle
 import shutil
 
 class Master:
-    def __init__(self, slaves):
+    def __init__(self, slaves: list[int]):
         if len(slaves) == 0:
             raise ValueError('Need at least one slave')
 
@@ -103,7 +103,7 @@ class Master:
             # Wait for slaves to finish running jobs
             if self.slaves_state[slave] == 'Working':
                 status = MPI.Status()
-                self.comm.probe(source=slave, tag=MPI_TAGS.DONE, status=status)
+                self.comm.probe(source=slave, tag=MPI_TAGS.DONE.value, status=status)
                 self.get_data_from_slave(status)
 
             # Terminate slaves
