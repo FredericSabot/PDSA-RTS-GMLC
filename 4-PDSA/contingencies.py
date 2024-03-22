@@ -10,38 +10,8 @@ class InitEvent:
     category: INIT_EVENT_CATEGORIES
     element: str
 
-    n = pp.network.load('../RTS-Data/RTS.iidm')
-    lines = n.get_lines()
-    lines.drop('name', axis=1, inplace=True)
-
     def __repr__(self) -> str:
         return self.category.name + '_' + self.element
-
-    """ def __eq__(self, other) -> bool:
-        if not(self.time_start == other.time_start and self.category == other.category):
-            return False
-        match self.category:
-            case INIT_EVENT_CATEGORIES.BUS_FAULT:
-                raise TypeError('Child function should be called instead')
-            case INIT_EVENT_CATEGORIES.LINE_DISC:
-                ""
-                Lines that are connected to the same elements and have the same parameters are considered equal (avoid to
-                simulate twice the same contingnecy when we have double lines)
-
-                This will have to be adapted if substation configuration (i.e. node breaker model) are considered
-                ""
-                return (InitEvent.lines.loc[self.element] == InitEvent.lines.loc[other.element]).all()
-            case INIT_EVENT_CATEGORIES.GEN_DISC:
-                raise NotImplementedError()
-
-    def __hash__(self) -> int:
-        match self.category:
-            case INIT_EVENT_CATEGORIES.BUS_FAULT:
-                raise TypeError('Child function should be called instead')
-            case INIT_EVENT_CATEGORIES.LINE_DISC:
-                return hash((self.time_start, self.category, tuple(InitEvent.lines.loc[self.element])))
-            case INIT_EVENT_CATEGORIES.GEN_DISC:
-                raise NotImplementedError() """
 
 
 @dataclass
@@ -54,12 +24,6 @@ class InitFault(InitEvent):
     def __repr__(self) -> str:
         return self.fault_id + '_' + self.element
 
-    """ def __eq__(self, other) -> bool:
-        return self.time_start == other.time_start and self.category == other.category and self.element == other.element and \
-               self.fault_id == other.fault_id and self.r == other.r and self.x == other.x and self.time_end == other.time_end
-
-    def __hash__(self) -> int:
-        return hash((self.time_start, self.category, self.element, self.fault_id, self.r, self.x, self.time_end)) """
 
 @dataclass
 class Contingency:
