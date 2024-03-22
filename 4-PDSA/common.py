@@ -22,6 +22,7 @@ NETWORK_NAME = 'RTS'
 CASE = 'year'
 
 REUSE_RESULTS = True  # If true, don't rerun cases already simulated, note that setting this to False does not delete old versions of saved_results.pickle and saved_results_bak.pickle
+REUSE_RESULTS_FAST_FORWARD = True
 BYPASS_SCREENING = True
 
 MIN_NUMBER_STATIC_SEED = 10

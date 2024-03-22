@@ -203,6 +203,10 @@ class JobQueue:
         else:
             self.saved_results = {}
 
+        if REUSE_RESULTS_FAST_FORWARD:
+            self.fast_forward_load_job_results()
+            self.write_analysis_output()
+
     def write_saved_results(self):
         t0 = time.time()
         # Pickle to a temp file to guarantee one correct version always exists if the program is interrupted
@@ -212,6 +216,13 @@ class JobQueue:
         delta_t = time.time() - t0
         logger.logger.info('Write saved results completed in {}s'.format(delta_t))
 
+    def fast_forward_load_job_results(self):
+        for contingency_id, contingency in self.saved_results.items():
+            logger.logger.info('Fast forward load of contingency {}'.format(contingency_id))
+            for static_id in contingency.values():
+                for saved_job in static_id.values():
+                    self.simulations_launched[saved_job.contingency.id].add_job(saved_job)  # Emulate an actual job launch
+                    self.store_completed_job(saved_job, exists=True)
 
     def add_job_to_priority_queue(self, job: Job):
         self.priority_queue.append(job)
@@ -230,8 +241,21 @@ class JobQueue:
         if isinstance(job, SpecialJob):
             if job.variable_order or job.missing_events:
                 for j in range(MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED - 1):
-                    new_job = self.create_job(job.contingency, job.static_id)
-                    self.add_job_to_priority_queue(new_job)
+                    if not REUSE_RESULTS_FAST_FORWARD:
+                        new_job = self.create_job(job.contingency, job.static_id)
+                        self.add_job_to_priority_queue(new_job)
+                    else:
+                        dynamic_seed = self.dynamic_seed_counters[job.contingency.id][job.static_id]
+                        self.dynamic_seed_counters[job.contingency.id][job.static_id] += 1
+
+                        if job.contingency.id in self.saved_results:
+                            if job.static_id in self.saved_results[job.contingency.id]:
+                                if dynamic_seed in self.saved_results[job.contingency.id][job.static_id]:
+                                    saved_job = self.saved_results[job.contingency.id][job.static_id][dynamic_seed]
+                                    self.store_completed_job(saved_job, exists=True)
+                                    continue
+                        self.add_job_to_priority_queue(Job(job.static_id, dynamic_seed, job.contingency))
+
 
     def create_job(self, contingency: Contingency, static_id):
         dynamic_seed = self.dynamic_seed_counters[contingency.id][static_id]
@@ -243,6 +267,7 @@ class JobQueue:
         t0 = time.time()
         jobs = []
         nb_priority_jobs = len(self.priority_queue)
+        logger.logger.info(("{} jobs in priority queue".format(nb_priority_jobs)))
         while len(jobs) < NB_RUNS_PER_INDICATOR_EVALUATION and len(self.priority_queue) > 0:
             jobs.append(self.priority_queue.pop(0))
         if len(jobs) == NB_RUNS_PER_INDICATOR_EVALUATION:
