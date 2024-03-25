@@ -512,7 +512,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaMinPu', 'value': '0.95'},
                     {'type': 'DOUBLE', 'name': 'ibg_tFilterOmega', 'value': '0.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.2'},
+                    {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '99'},  # Original: 1.2, disabled because of overvoltages caused by plant itself, requires better modelling
                     {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
@@ -593,7 +593,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                     {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.3'},
                     {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '1.5'},
                     {'type': 'DOUBLE', 'name': 'ibg_ULVRTMinPu', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0.5'},
+                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0.25'},  # Original: 0.5, made more strict to help frequency stable screening (TODO: better estimate of the amount of RTPV disconnection instead)
                     {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.85'},  # Original: 0.9
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaMaxPu', 'value': '1.05'},
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaDeadBandPu', 'value': '1.05'},
