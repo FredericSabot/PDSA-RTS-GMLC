@@ -584,11 +584,13 @@ def frequency_screening(n: pp.network.Network, disconnected_elements):
 
     RoCoF = power_loss / (2 * total_inertia / BASEFREQUENCY)
 
-    return RoCoF < 0.5 and power_loss < 0.8 * reserves, RoCoF, power_loss / reserves
+    return RoCoF < 0.4 and power_loss < 0.7 * reserves, RoCoF, power_loss / reserves
 
 
 if __name__ == '__main__':
-    n = pp.network.load('/home/fsabot/Desktop/PDSA-RTS-GMLC/4-PDSA/simulations/year/12/0/A34_end1/RTS.iidm')
+    n = pp.network.load('/home/fsabot/Desktop/PDSA-RTS-GMLC/4-PDSA/simulations/year/7330/0/CA-2_end1_DELAYED/RTS.iidm')
     print(voltage_screening(n, []))
     print(transient_screening(n, 0.15, 'V-122_0', ['121_NUCLEAR_1']))
-    print(frequency_screening(n, ['121_NUCLEAR_1']))
+    print(frequency_screening(n, ['320_RTPV_1', '320_RTPV_2', '320_RTPV_3', '320_RTPV_4', '320_RTPV_5', '320_RTPV_6',
+                                  '313_RTPV_1', '313_RTPV_2', '313_RTPV_3', '313_RTPV_4', '313_RTPV_5', '313_RTPV_6',
+                                  '313_RTPV_7', '313_RTPV_8', '313_RTPV_9', '313_RTPV_10', '313_RTPV_11', '313_RTPV_12', '313_RTPV_13']))

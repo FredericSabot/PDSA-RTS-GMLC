@@ -42,10 +42,16 @@ class Job:
         network_path = os.path.join('../2-SCOPF/d-Final-dispatch', CASE, str(self.static_id) + '.iidm')
         network = pp.network.load(network_path)
         disconnected_elements = [event.element for event in self.contingency.init_events if not isinstance(event, contingencies.InitFault)]
+        lines = network.get_lines()
+        disconnected_lines = [disconnected_element for disconnected_element in disconnected_elements if disconnected_element in lines.index]
         self.voltage_stable, self.shc_ratio = screening.voltage_screening(network, disconnected_elements)
         self.transient_stable, self.cct = screening.transient_screening(network, self.contingency.clearing_time, self.contingency.fault_location, disconnected_elements)
 
-        if self.contingency.clearing_time > 0.15:
+        sensitive_buses = []
+        for disconnected_line in disconnected_lines:
+            sensitive_buses += [lines.at[disconnected_line, 'bus1_id'], lines.at[disconnected_line, 'bus2_id']]
+
+        if self.contingency.clearing_time > 0:
             # Generators near the fault are likely to trip, so also perform screening assuming they trip
             gens = network.get_generators()
             for gen_id in gens.index:
@@ -54,8 +60,12 @@ class Job:
                 if gen_id in disconnected_elements:
                     continue
 
-                if gens.at[gen_id, 'bus_id'] == self.contingency.fault_location:
-                    disconnected_elements.append(gen_id)
+                if gens.at[gen_id, 'energy_source'] in ['SOLAR', 'WIND']:
+                    if gens.at[gen_id, 'bus_id'] == self.contingency.fault_location or gens.at[gen_id, 'bus_id'] in sensitive_buses:
+                        disconnected_elements.append(gen_id)
+                else:
+                    if gens.at[gen_id, 'bus_id'] == self.contingency.fault_location and self.contingency.clearing_time > 0.15:
+                        disconnected_elements.append(gen_id)
 
             voltage_stable, shc_ratio = screening.voltage_screening(network, disconnected_elements)
             transient_stable, cct = screening.transient_screening(network, self.contingency.clearing_time, self.contingency.fault_location, disconnected_elements)
