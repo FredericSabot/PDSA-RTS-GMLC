@@ -79,12 +79,13 @@ class Master:
             logger.logger.info(("##############################################"))
 
             jobs_to_run = self.job_queue.get_additional_jobs()
-            for job in jobs_to_run:
+            while len(jobs_to_run) > 0:
                 status = MPI.Status()
                 self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI.ANY_TAG, status=status)
                 tag = status.Get_tag()
 
                 if tag == MPI_TAGS.READY.value:
+                    job = jobs_to_run.pop(0)
                     self.send_work_to_slave(job, status)
                 elif tag == MPI_TAGS.DONE.value:
                     self.get_data_from_slave(status)
