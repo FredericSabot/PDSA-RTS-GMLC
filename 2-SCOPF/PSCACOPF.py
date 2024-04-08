@@ -245,8 +245,7 @@ addGamsParams(db_preDC, 'contingency_states', 'Line states in the considered con
 
 addGamsParams(db_preDC, 'demand', 'demand at each bus', [i_bus], demand_bus * (1 + losses))
 
-lincost = np.array(thermal_gens['HR_incr_3']) / (np.array(thermal_gens['Output_pct_3']) - np.array(thermal_gens['Output_pct_2'])) / \
-    np.array(thermal_gens['PMax MW']) * np.array(thermal_gens['Fuel Price $/MMBTU']) / 1000  # kWh to MWh
+lincost = np.array(thermal_gens['HR_incr_3']) * 1000 * np.array(thermal_gens['Fuel Price $/MMBTU']) / 1e6
 addGamsParams(db_preDC, 'lincost', 'linear cost', [i_thermal], lincost)
 
 addGamsParams(db_preDC, 'P_thermal_0', 'Initial thermal outputs', [i_thermal], np.array(prescient_thermal_dispatch['Output']) / baseMVA)
