@@ -11,7 +11,7 @@
 #SBATCH --signal=USR1@60  #Send USR1 signal 60s before job end
 #
 #SBATCH --mail-user=frederic.sabot@ulb.be
-#SBATCH --mail-type=END
+#SBATCH --mail-type=END,FAIL
 
 if false
 then
@@ -24,6 +24,7 @@ else
     module load releases/2022b
     module load Python/3.10
     module load OpenMPI
+    module load SciPy-bundle  # For Scipy itself
 fi
 
 

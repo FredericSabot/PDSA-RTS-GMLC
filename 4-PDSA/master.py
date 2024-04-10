@@ -29,7 +29,7 @@ class Master:
 
     def create_contingency_list(self):
         base_contingency = Contingency.create_base_contingency()
-        N_1_contingencies = Contingency.create_N_1_contingencies()
+        N_1_contingencies = Contingency.create_N_1_contingencies(with_normal_clearing=False)
         N_2_contingencies = Contingency.create_N_2_contingencies()
 
         self.contingency_list = base_contingency + N_1_contingencies + N_2_contingencies
@@ -172,11 +172,14 @@ class JobQueue:
         self.simulations_launched : dict[str, ContingencyLaunched]
         self.simulations_launched = {}
         self.total_risk = 0
+        self.total_cost = 0
         self.risk_per_contingency = {}
+        self.cost_per_contingency = {}
         for contingency in self.contingencies:
             self.simulation_results[contingency.id] = ContingencyResults()
             self.simulations_launched[contingency.id] = ContingencyLaunched()
             self.risk_per_contingency[contingency.id] = 0
+            self.cost_per_contingency[contingency.id] = 0
 
         # To make the algorithm deterministic (in an MPI context), a seed is given to each set of (contingency, static_id, number of runs for this contingency and static id)
         self.dynamic_seed_counters = {}
@@ -237,7 +240,9 @@ class JobQueue:
 
         self.simulation_results[job.contingency.id].add_job(job)
         self.risk_per_contingency[job.contingency.id] = self.simulation_results[job.contingency.id].get_average_load_shedding() * job.contingency.frequency
+        self.cost_per_contingency[job.contingency.id] = self.simulation_results[job.contingency.id].get_average_cost() * job.contingency.frequency
         self.total_risk = sum(self.risk_per_contingency.values())
+        self.total_cost = sum(self.cost_per_contingency.values())
 
         if isinstance(job, SpecialJob):
             if job.variable_order or job.missing_events:
@@ -423,7 +428,7 @@ class JobQueue:
 
     def get_additional_jobs(self) -> list[Job]:
         jobs = []
-        worst_contingency_ids = [key for key, _ in sorted(self.risk_per_contingency.items(), key = lambda item:item[1], reverse=True)]
+        worst_contingency_ids = [key for key, _ in sorted(self.cost_per_contingency.items(), key = lambda item:item[1], reverse=True)]
         worst_contingencies: list[Contingency]
         worst_contingencies = []
         for worst_contingency_id in worst_contingency_ids:
@@ -459,6 +464,7 @@ class JobQueue:
         t0 = time.time()
         root = etree.Element('Analysis')
         root.set('total_risk', str(self.total_risk))
+        root.set('total_cost', str(self.total_cost))
         root.set('interrupted', str(not done))
         total_computation_time = 0
         for contingency_results in self.simulation_results.values():
@@ -476,6 +482,7 @@ class JobQueue:
             contingency_results = self.simulation_results[contingency.id]
             mean = contingency_results.get_average_load_shedding()
             max_shedding = contingency_results.get_maximum_load_shedding()
+            mean_cost = contingency_results.get_average_cost()
             N = sum([len(contingency_results.jobs[static_id]) for static_id in contingency_results.static_ids])
             N_static = len(contingency_results.static_ids)
             indicators = self.get_statistical_indicators(contingency)
@@ -484,6 +491,7 @@ class JobQueue:
                                   'mean_load_shed': str(mean),
                                   'max_load_shed': str(max_shedding),
                                   'risk': str(contingency.frequency * mean),
+                                  'cost': str(contingency.frequency * mean_cost),
                                   'N': str(N),
                                   'N_static': str(N_static)}
             for i, indicator in enumerate(indicators):
@@ -499,11 +507,13 @@ class JobQueue:
                 static_id_max_power_loss_over_reserve = 0
                 static_id_frequency_stable = True
                 mean = contingency_results.get_average_load_shedding_per_static_id(static_id)
-                variance = contingency_results.get_variance_per_static_id_allow_error(static_id, value_on_error=np.nan)
+                mean_cost = contingency_results.get_average_cost_per_static_id(static_id)
+                variance = contingency_results.get_cost_variance_per_static_id_allow_error(static_id, value_on_error=np.nan)
                 N = len(contingency_results.jobs[static_id])
                 static_id_attrib = {'static_id': static_id,
                                     'mean_load_shed': str(mean),
                                     'risk': str(mean * contingency.frequency),
+                                    'cost': str(mean_cost * contingency.frequency),
                                     'std_dev': str(sqrt(variance)),
                                     'N': str(N)}
                 if DOUBLE_MC_LOOP:
@@ -531,6 +541,7 @@ class JobQueue:
                                 'timeout': str(job.timed_out)}
                     if job.completed or job.timed_out:
                         job_attrib['load_shedding'] = '{:.2f}'.format(job.results.load_shedding)
+                        job_attrib['cost'] = '{:.2f}'.format(job.results.cost)
                         if not job.voltage_stable:
                             voltage_stable = False
                             static_id_voltage_stable = False
@@ -594,14 +605,14 @@ class JobQueue:
 
         accuracy_reached = True
         for i, indicator in enumerate(indicators):
-            if indicator > 0.01 * self.total_risk:
+            if indicator > 0.01 * self.total_cost:
                 accuracy_reached = False
-                logger.logger.info("Contingency {}: statistical indicator {} not satisfied: {} > {}".format(contingency.id, i+1, indicator, 0.01 * self.total_risk))
+                logger.logger.info("Contingency {}: statistical indicator {} not satisfied: {} > {}".format(contingency.id, i+1, indicator, 0.01 * self.total_cost))
 
         if accuracy_reached:
             logger.logger.info("Contingency {}: statistical accuracy reached".format(contingency.id))
 
-        if self.total_risk == 0:
+        if self.total_cost == 0:
             logger.logger.critical('Total risk is 0, so statistical indicators cannot be satisfied')
             # accuracy_reached = True
 
@@ -620,7 +631,7 @@ class JobQueue:
 
         N = len(static_ids)
 
-        mean_per_static_id = np.array([contingency_results.get_average_load_shedding_per_static_id(static_id) for static_id in static_ids])
+        mean_per_static_id = np.array([contingency_results.get_average_cost_per_static_id(static_id) for static_id in static_ids])
         mean = np.mean(mean_per_static_id)
         std_dev = sqrt(np.var(mean_per_static_id))  # TODO: add sqrt(N/(N-1)) factor and handle div by 0 in this case
 
@@ -642,7 +653,7 @@ class JobQueue:
         return indicator_1, indicator_2, indicator_3
 
     def get_distances_from_statistical_accuracy(self, contingency: Contingency):
-        return [indicator - 0.01 * self.total_risk for indicator in self.get_statistical_indicators(contingency)]
+        return [indicator - 0.01 * self.total_cost for indicator in self.get_statistical_indicators(contingency)]
 
 
     def get_statistical_indicator_derivatives(self, contingency: Contingency):
@@ -654,14 +665,14 @@ class JobQueue:
         contingency_launched_jobs = self.simulations_launched[contingency.id]
         static_ids = contingency_results.static_ids
 
-        mean_per_static_id = np.array([contingency_results.get_average_load_shedding_per_static_id(static_id) for static_id in static_ids])
+        mean_per_static_id = np.array([contingency_results.get_average_cost_per_static_id(static_id) for static_id in static_ids])
         mean = np.mean(mean_per_static_id)
         std_dev = sqrt(np.var(mean_per_static_id))  # TODO: add sqrt(N/(N-1)) factor and handle div by 0 in this case
 
         # Compute N and N_per_static_id from simulations "launched" not completed, this lowers priority of contingencies that have jobs currently running
         static_ids = contingency_launched_jobs.static_ids
         N = len(static_ids)
-        variance_per_static_id = np.array([contingency_results.get_variance_per_static_id_allow_error(static_id, value_on_error=0) for static_id in static_ids])
+        variance_per_static_id = np.array([contingency_results.get_cost_variance_per_static_id_allow_error(static_id, value_on_error=0) for static_id in static_ids])
         N_per_static_id = [len(contingency_launched_jobs.dynamic_seeds[static_id]) for static_id in static_ids]
         N_per_static_id = np.array(N_per_static_id)
 
@@ -730,6 +741,8 @@ class ContingencyResults:
         self.jobs = {}
         self.sum_load_shedding = {}
         self.sum_load_shedding_squared = {}
+        self.sum_cost = {}
+        self.sum_cost_squared = {}
         self.elapsed_time = {}
         self.total_elapsed_time = 0
 
@@ -739,16 +752,21 @@ class ContingencyResults:
             self.jobs[static_id].append(job)
             self.sum_load_shedding[static_id] += job.results.load_shedding
             self.sum_load_shedding_squared[static_id] += job.results.load_shedding ** 2
+            self.sum_cost[static_id] += job.results.cost
+            self.sum_cost_squared[static_id] += job.results.cost ** 2
             self.elapsed_time[static_id] += job.elapsed_time
         else:
             self.static_ids.append(static_id)
             self.jobs[static_id] = [job]
             self.sum_load_shedding[static_id] = job.results.load_shedding
             self.sum_load_shedding_squared[static_id] = job.results.load_shedding ** 2
+            self.sum_cost[static_id] = job.results.cost
+            self.sum_cost_squared[static_id] = job.results.cost ** 2
+            self.sum_cost[static_id] = job.results.cost
             self.elapsed_time[static_id] = job.elapsed_time
         self.total_elapsed_time += job.elapsed_time
 
-    def get_variance_per_static_id_no_error(self, static_id):
+    def get_cost_variance_per_static_id_no_error(self, static_id):
         """
         Naive computation of the variance following https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
         Since N should be at most 1000, and the variance at most two order of magnitudes below the average (and not
@@ -762,15 +780,15 @@ class ContingencyResults:
         else:
             logger.logger.warn("First job for a given static id should always be a special job")
 
-        sum_ = self.sum_load_shedding[static_id]
-        sum_sq = self.sum_load_shedding_squared[static_id]
+        sum_ = self.sum_cost[static_id]
+        sum_sq = self.sum_cost_squared[static_id]
         n = len(self.jobs[static_id])
         variance = (sum_sq - (sum_**2) / n) / (n - 1)
-        if variance < 0 and variance > -1e-6:  # Avoids negative values caused by numerical errors
+        if variance < 0 and variance > -1e-3:  # Avoids negative values caused by numerical errors
             variance = 0
         return variance
 
-    def get_variance_per_static_id_allow_error(self, static_id, value_on_error):
+    def get_cost_variance_per_static_id_allow_error(self, static_id, value_on_error):
         if not DOUBLE_MC_LOOP:
             return 0
         if static_id not in self.jobs:
@@ -785,7 +803,7 @@ class ContingencyResults:
         if n < 2:
             return value_on_error
         else:
-            return self.get_variance_per_static_id_no_error(static_id)
+            return self.get_cost_variance_per_static_id_no_error(static_id)
 
     def get_average_load_shedding_per_static_id(self, static_id):
         return self.sum_load_shedding[static_id] / len(self.jobs[static_id])
@@ -801,6 +819,16 @@ class ContingencyResults:
         average_load_shedding_per_static_id = [self.get_average_load_shedding_per_static_id(static_id) for static_id in self.static_ids]
         if len(average_load_shedding_per_static_id) > 0:
             return max(average_load_shedding_per_static_id)
+        else:
+            return 0
+
+    def get_average_cost_per_static_id(self, static_id):
+        return self.sum_cost[static_id] / len(self.jobs[static_id])
+
+    def get_average_cost(self):
+        average_cost_per_static_id = [self.get_average_cost_per_static_id(static_id) for static_id in self.static_ids]
+        if len(average_cost_per_static_id) > 0:
+            return np.mean(average_cost_per_static_id)
         else:
             return 0
 

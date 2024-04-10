@@ -1,12 +1,14 @@
 from results import Results
 from common import *
 from dataclasses import dataclass
-
 from lxml import etree
 import pypowsybl as pp
 import os
 import csv
 import logger
+from scipy.interpolate import interp1d
+import scipy.integrate
+import numpy as np
 
 """ def isSameModel(model1, model2):
     ""
@@ -61,7 +63,7 @@ def get_job_results(working_dir):
     generator_disconnection_timeline = []
     disconnected_models = []
     if not os.path.exists(timeline_file):  # Might not be created if timeouts
-        return Results(100.2, trip_timeline)
+        return Results(100.2, 0, trip_timeline)
 
     with open(os.path.join(timeline_file), 'r') as f:
         events = f.readlines()
@@ -197,7 +199,33 @@ def get_job_results(working_dir):
     elif len(generator_disconnection_timeline) > len(connected_machines):
         raise RuntimeError('Working_dir {}: missing generators in "connected_machines", or some generators were reconnected during the simulation'.format(working_dir))
 
-    return Results(load_shedding, trip_timeline)
+    cost = load_shedding_to_cost(load_shedding, total_load)
+
+    return Results(load_shedding, cost, trip_timeline)
+
+
+def load_shedding_to_cost(load_shedding, total_load):
+    """
+    Compute Value of Lost Load (VoLL)
+    Derived from Pierre Henneaux and  Daniel S. Kirschen, "Probabilistic Security
+    Analysis of Optimal Transmission Switching"
+    """
+    time = [1/60, 20/60, 1, 4, 8, 24]
+    cost = [571, 61, 39, 30, 27, 13]
+    for i in range(len(cost)):
+        cost[i] *= 1000 # from kWh to MWh
+
+    def interpolVoLL(t):
+        if t >= time[0]:
+            return interp1d(time, cost)(t)
+        else:
+            return interp1d(time, cost)(time[0])
+
+    H = 0.1419 * load_shedding + 0.6482
+    load_shedding_MW = load_shedding * total_load
+
+    k = 3
+    return scipy.integrate.quad(lambda t: k/H*np.exp(-k*t/H) * load_shedding_MW * t * interpolVoLL(t), 0, H, epsabs=1, epsrel=1e-6)[0] / 1e6  # To Millions of euros/dollars
 
 
 def get_job_results_special(working_dir):

@@ -6,7 +6,8 @@ import dynawo_outputs
 @dataclass
 class Results:
     load_shedding: float
+    cost: float
     trip_timeline: list[dynawo_outputs.TimeLineEvent]
 
     def __repr__(self) -> str:
-        return CSV_SEPARATOR.join([str(self.load_shedding)] + [str(timeline_event) for timeline_event in self.trip_timeline])
+        return CSV_SEPARATOR.join([str(self.load_shedding), str(self.cost)] + [str(timeline_event) for timeline_event in self.trip_timeline])

@@ -34,7 +34,7 @@ class Job:
 
     def skip(self):
         self.elapsed_time = 1
-        self.results = Results(0, [])
+        self.results = Results(0, 0, [])
         self.completed = True
 
     def run(self):
