@@ -644,7 +644,7 @@ class JobQueue:
 
         # SE of risk from unobserved samples with 99% confidence
         p = 1 - 0.01**(1/N)
-        b = max((100-mean)**2, (mean-0)**2)
+        b = max((MAX_CONSEQUENCES-mean)**2, (mean-0)**2)
         indicator_2 = contingency.frequency * sqrt(p*b/N)
 
         # Total SE

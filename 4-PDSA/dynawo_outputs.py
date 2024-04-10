@@ -225,7 +225,7 @@ def load_shedding_to_cost(load_shedding, total_load):
     load_shedding_MW = load_shedding * total_load
 
     k = 3
-    return scipy.integrate.quad(lambda t: k/H*np.exp(-k*t/H) * load_shedding_MW * t * interpolVoLL(t), 0, H, epsabs=1, epsrel=1e-6)[0] / 1e6  # To Millions of euros/dollars
+    return scipy.integrate.quad(lambda t: k/H*np.exp(-k*t/H) * t * interpolVoLL(t), 0, H, epsabs=1e-4, epsrel=1e-4)[0] * load_shedding_MW / 1e6  # To Millions of euros/dollars
 
 
 def get_job_results_special(working_dir):

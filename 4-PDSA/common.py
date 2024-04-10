@@ -30,6 +30,7 @@ MIN_NUMBER_STATIC_SEED_CRITICAL_CONTINGENCY = 1000
 MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED = 5
 NB_RUNS_PER_INDICATOR_EVALUATION = 1000  # Note: slightly less runs migth be done per indicator evaluation due to capping
 DOUBLE_MC_LOOP = True
+MAX_CONSEQUENCES = 94190  # result of load_shedding_to_cost(100, peak_load), with peak load = 8185.5 MW
 
 BASEMVA = 100
 BASEFREQUENCY = 60
