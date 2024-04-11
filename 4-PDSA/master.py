@@ -522,13 +522,12 @@ class JobQueue:
                     static_id_attrib['missing_events'] = str(special_job.missing_events)
 
                 job = contingency_results.jobs[static_id][0]
-                trip_timeline = job.results.trip_timeline
-                # Remove 'fake' trips from trip_timeline
-                trip_timeline = [timeline_event for timeline_event in trip_timeline if 'tripped zone 1' not in timeline_event.event_description or 'tripped zone 4' not in timeline_event.event_description]
-                index = 0
+                tripped_models = job.results.get_sanitised_tripped_models()
+
                 # Write first 3 elements to trip
-                for timeline_event in trip_timeline:
-                    static_id_attrib['trip_{}'.format(index)] = timeline_event.model
+                index = 0
+                for tripped_model in tripped_models:
+                    static_id_attrib['trip_{}'.format(index)] = tripped_model
                     index += 1
                     if index >= 3:
                         break
@@ -570,10 +569,10 @@ class JobQueue:
                             static_id_max_power_loss_over_reserve = job.power_loss_over_reserve
 
                     # Write first 3 elements to trip
-                    trip_timeline = job.results.trip_timeline
+                    tripped_models = job.results.get_sanitised_tripped_models()
                     index = 0
-                    for timeline_event in trip_timeline:
-                        job_attrib['trip_{}'.format(index)] = timeline_event.model
+                    for tripped_model in tripped_models:
+                        job_attrib['trip_{}'.format(index)] = tripped_model
                         index += 1
                         if index >= 3:
                             break
