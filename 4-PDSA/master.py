@@ -690,6 +690,7 @@ class JobQueue:
 
         global_derivative_3 = global_derivative_1 + global_derivative_2
 
+        return (global_derivative_1, global_derivative_2, global_derivative_3), (0, 0, 0)
         derivative_1_per_static_id = []
         derivative_2_per_static_id = []
         derivative_3_per_static_id = []
