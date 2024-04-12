@@ -297,6 +297,12 @@ class JobQueue:
                         job = SpecialJob(static_sample, 0, contingency)
                     else:
                         job = self.create_job(contingency, static_sample)
+
+                    if REUSE_RESULTS_FAST_FORWARD:
+                        if job.static_id in self.simulations_launched[contingency.id].static_ids:
+                            if job.dynamic_seed in self.simulations_launched[contingency.id].dynamic_seeds[job.static_id]:
+                                continue  # Init job already included in saved results
+
                     self.simulations_launched[contingency.id].add_job(job)
                     jobs.append(job)
 
