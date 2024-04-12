@@ -493,15 +493,15 @@ class JobQueue:
             N_static = len(contingency_results.static_ids)
             indicators = self.get_statistical_indicators(contingency)
             contingency_attrib = {'id': contingency.id,
-                                  'frequency': str(contingency.frequency),
-                                  'mean_load_shed': str(mean),
-                                  'max_load_shed': str(max_shedding),
-                                  'risk': str(contingency.frequency * mean),
-                                  'cost': str(contingency.frequency * mean_cost),
+                                  'frequency': '{:.6g}'.format(contingency.frequency),
+                                  'mean_load_shed': '{:.4g}'.format(mean),
+                                  'max_load_shed': '{:.4g}'.format(max_shedding),
+                                  'risk': '{:.4g}'.format(contingency.frequency * mean),
+                                  'cost': '{:.4g}'.format(contingency.frequency * mean_cost),
                                   'N': str(N),
                                   'N_static': str(N_static)}
             for i, indicator in enumerate(indicators):
-                contingency_attrib['ind_{}'.format(i+1)] = str(indicator)
+                contingency_attrib['ind_{}'.format(i+1)] = '{:.4g}'.format(indicator)
             contingency_element = etree.SubElement(root, 'Contingency', contingency_attrib)
 
             for static_id in contingency_results.static_ids:
@@ -517,11 +517,11 @@ class JobQueue:
                 variance = contingency_results.get_cost_variance_per_static_id_allow_error(static_id, value_on_error=np.nan)
                 N = len(contingency_results.jobs[static_id])
                 static_id_attrib = {'static_id': static_id,
-                                    'mean_load_shed': str(mean),
-                                    'risk': str(mean * contingency.frequency),
-                                    'cost': str(mean_cost * contingency.frequency),
-                                    'std_dev': str(sqrt(variance)),
-                                    'N': str(N)}
+                                    'mean_load_shed': '{:.4g}'.format(mean),
+                                    'risk': '{:.4g}'.format(mean * contingency.frequency),
+                                    'cost': '{:.4g}'.format(mean_cost * contingency.frequency),
+                                    'std_dev': '{:.4g}'.format(sqrt(variance)),
+                                    'N': '{:.4g}'.format(N)}
                 if DOUBLE_MC_LOOP:
                     special_job = contingency_results.jobs[static_id][0]
                     static_id_attrib['variable_order'] = str(special_job.variable_order)
@@ -542,11 +542,11 @@ class JobQueue:
 
                 for job in contingency_results.jobs[static_id]:
                     job_attrib = {'dyn_id': str(job.dynamic_seed),
-                                'simulation_time': '{:.2f}'.format(job.elapsed_time),
+                                'simulation_time': '{:.2g}'.format(job.elapsed_time),
                                 'timeout': str(job.timed_out)}
                     if job.completed or job.timed_out:
-                        job_attrib['load_shedding'] = '{:.2f}'.format(job.results.load_shedding)
-                        job_attrib['cost'] = '{:.2f}'.format(job.results.cost)
+                        job_attrib['load_shedding'] = '{:.2g}'.format(job.results.load_shedding)
+                        job_attrib['cost'] = '{:.2g}'.format(job.results.cost)
                         if not job.voltage_stable:
                             voltage_stable = False
                             static_id_voltage_stable = False
@@ -587,17 +587,17 @@ class JobQueue:
                 static_id_element.set('voltage_stable', str(static_id_voltage_stable))
                 static_id_element.set('transient_stable', str(static_id_transient_stable))
                 static_id_element.set('frequency_stable', str(static_id_frequency_stable))
-                static_id_element.set('shc_ratio', str(static_id_min_shc))
-                static_id_element.set('CCT', str(static_id_min_CCT))
-                static_id_element.set('RoCoF', str(static_id_max_RoCoF))
-                static_id_element.set('dP_over_reserves', str(static_id_max_power_loss_over_reserve))
+                static_id_element.set('shc_ratio', '{:.4g}'.format(static_id_min_shc))
+                static_id_element.set('CCT', '{:.4g}'.format(static_id_min_CCT))
+                static_id_element.set('RoCoF', '{:.4g}'.format(static_id_max_RoCoF))
+                static_id_element.set('dP_over_reserves', '{:.4g}'.format(static_id_max_power_loss_over_reserve))
             contingency_element.set('voltage_stable', str(voltage_stable))
             contingency_element.set('transient_stable', str(transient_stable))
             contingency_element.set('frequency_stable', str(frequency_stable))
-            contingency_element.set('shc_ratio', str(min_shc))
-            contingency_element.set('CCT', str(min_CCT))
-            contingency_element.set('RoCoF', str(max_RoCoF))
-            contingency_element.set('dP_over_reserves', str(max_power_loss_over_reserve))
+            contingency_element.set('shc_ratio', '{:.4g}'.format(min_shc))
+            contingency_element.set('CCT', '{:.4g}'.format(min_CCT))
+            contingency_element.set('RoCoF', '{:.4g}'.format(max_RoCoF))
+            contingency_element.set('dP_over_reserves', '{:.4g}'.format(max_power_loss_over_reserve))
 
         with open('AnalysisOutput.xml', 'wb') as doc:
             doc.write(etree.tostring(root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
