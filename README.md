@@ -1,14 +1,14 @@
 
 # PDSA-RTS-GMLC
 
-This repo contains a collection of scripts to prepare a probabilistic dynamic security assessment (PDSA) of the Reliability Test Sytem - Grid Modernization Lab Consortium version (RTS-GMLC).
+This repo contains a collection of scripts to prepare a probabilistic dynamic security assessment (PDSA) of the Reliability Test System - Grid Modernization Lab Consortium version (RTS-GMLC).
 
 It consists in:
 
 1. A market model/unit commitment model based on [Prescient](https://github.com/grid-parity-exchange/Prescient). Prescient iterates between day-ahead and hourly dispatch. A (DC) nodal market (considering N-1 limits) is used here.
-2. A preventive security constained AC optimal power flow (PSCACOPF) to refine individual hourly dispatches
-3. Scripts to add dynamic data to the RTS in [dynawo](https://dynawo.github.io/) format. These data have been checked to lead to a N-1 secure system (considering all possible line faults occuring at either end of the line and being cleared in 100ms by opening the line) for the cases january at hours 0 (min load), 13 (peak PV) and 17 (peak load), and july at hours 0 (min load) and 15 (peak load).
-4. Scripts to perform the PDSA. Results are writen to AnalysisOutput.xml. Results can be visualised using software that shows XML files in grid view, such as Ximple ([http://www.ximple.cz/](http://www.ximple.cz/), Windows only) as shown below.
+2. A preventive security constrained AC optimal power flow (PSCACOPF) to refine individual hourly dispatches
+3. Scripts to add dynamic data to the RTS in [dynawo](https://dynawo.github.io/) format. These data have been checked to lead to an N-1 secure system (considering all possible line faults occurring at either end of the line and being cleared in 100ms by opening the line) for the cases January at hours 0 (min load), 13 (peak PV) and 17 (peak load), and July at hours 0 (min load) and 15 (peak load).
+4. Scripts to perform the PDSA. Results are written to AnalysisOutput.xml. Results can be visualised using software that shows XML files in grid view, such as Ximple ([http://www.ximple.cz/](http://www.ximple.cz/), Windows only) as shown below.
 
 ![AnalysisExample](AnalysisOutputExample.png)
 
@@ -64,6 +64,8 @@ to run locally. However, HPC is almost mandatory for PDSA (except if a limited n
 sbatch PDSA.sh
 ```
 
+Note: in the current implementation, all the results which are output in AnalysisOutput.xml are always loaded in RAM by the master process (in master.job_queue.simulation_results and master.job_queue.simulations_launched). To scale to larger grids, it would be needed for the master to only remember the information needed to schedule new jobs (i.e. load shedding/cost + protection sensitivity for each job). All the remaining information (output in AnalysisOutput.xml) should be stored in a database/on disk instead. Optimisation of some computations in Master.JobQueue.get_next_jobs() might also be useful. (For the RTS system, the master needs up to 4Go of RAM in the current implementation, while the slaves need only 1.)
+
 # Requirements
 
 ## Prescient
@@ -85,7 +87,7 @@ Pypowsybl
 python -m pip install pypowsybl
 ```
 
-[GAMS](https://www.gams.com/download/) and GAMS Python bindings. Note that depending on the GAMS version, different installation procedures are sugggested for the python bindings, e.g. [link](https://www.gams.com/36/docs/API_PY_TUTORIAL.html) or [link](https://www.gams.com/43/docs/API_PY_GETTING_STARTED.html).
+[GAMS](https://www.gams.com/download/) and GAMS Python bindings. Note that depending on the GAMS version, different installation procedures are suggested for the python bindings, e.g. [link](https://www.gams.com/36/docs/API_PY_TUTORIAL.html) or [link](https://www.gams.com/43/docs/API_PY_GETTING_STARTED.html).
 
 Tested with Python 3.9 and GAMS 36. Note that older versions of GAMS might not support recent versions of Python and that Pypowsybl requires Python >= 3.7
 
@@ -101,4 +103,4 @@ python -m pip install pypowsybl lxml
 python -m pip install pypowsybl lxml logger mpi4py natsort
 ```
 
-Install [dynawo](https://dynawo.github.io/) and set DYNAWO_PATH in 4-PDSA/common.py accordingly. Currently, the dynamic models used are only available on my fork of dynawo on the branch [30_RTQ2024](https://github.com/FredericSabot/dynawo/tree/30_RTS2024). You can compile it from source, or I can make release on demand.
+Install [dynawo](https://dynawo.github.io/) and set DYNAWO_PATH in 4-PDSA/common.py accordingly. Currently, the dynamic models used are only available on my fork of Dynawo on the branch [30_RTQ2024](https://github.com/FredericSabot/dynawo/tree/30_RTS2024). You can compile it from source, or I can make release on demand.

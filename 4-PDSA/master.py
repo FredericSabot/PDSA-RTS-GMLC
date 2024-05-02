@@ -14,6 +14,7 @@ from natsort import natsorted
 import time
 import pickle
 import shutil
+# from pympler import asizeof
 
 class Master:
     def __init__(self, slaves: list[int]):
@@ -95,9 +96,40 @@ class Master:
             self.terminate_slaves()
             self.job_queue.write_saved_results()
             self.job_queue.write_analysis_output(done=True)
+            # self.show_memory_usage()
         except KeyboardInterrupt:
             self.job_queue.write_saved_results()
             self.job_queue.write_analysis_output()
+            # self.show_memory_usage()
+
+    """ def show_memory_usage(self):
+        print('1  Job queue', asizeof.asizeof(self.job_queue) / 1e6)
+        print('2  Job queue', asizeof.asizeof(self.job_queue.contingencies) / 1e6)
+        print('3  Job queue', asizeof.asizeof(self.job_queue.contingencies_skipped) / 1e6)
+        print('4  Job queue', asizeof.asizeof(self.job_queue.static_samples) / 1e6)
+        print('5  Job queue', asizeof.asizeof(self.job_queue.static_samples_per_contingency) / 1e6)
+        print('6  Job queue', asizeof.asizeof(self.job_queue.simulation_results) / 1e6)
+        print('7  Job queue', asizeof.asizeof(self.job_queue.simulations_launched) / 1e6)
+        print('8  Job queue', asizeof.asizeof(self.job_queue.risk_per_contingency) / 1e6)
+        print('9  Job queue', asizeof.asizeof(self.job_queue.dynamic_seed_counters) / 1e6)
+        print('10 Job queue', asizeof.asizeof(self.job_queue.priority_queue) / 1e6)
+        print('11 Job queue', asizeof.asizeof(self.job_queue.saved_results) / 1e6)
+        print('12 Contingency list', asizeof.asizeof(self.contingency_list) / 1e6)
+        print('13 Slave state', asizeof.asizeof(self.slaves_state) / 1e6)
+
+        for contingency_result in self.job_queue.simulation_results.values():
+            for jobs in contingency_result.jobs.values():
+                job = jobs[0]
+                print('Completed job', asizeof.asizeof(job))
+                break
+            break
+        for contingency_launched in self.job_queue.simulations_launched.values():
+            for jobs in contingency_launched.dynamic_seeds.values():
+                job = jobs[0]
+                print('Init job', asizeof.asizeof(job))
+                break
+            break """
+
 
     def terminate_slaves(self):
         for slave in self.slaves_state.keys():
