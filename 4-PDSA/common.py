@@ -30,7 +30,7 @@ MIN_NUMBER_STATIC_SEED_CRITICAL_CONTINGENCY = 1000
 MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED = 5
 NB_RUNS_PER_INDICATOR_EVALUATION = 5000  # Note: slightly less runs migth be done per indicator evaluation due to capping
 DOUBLE_MC_LOOP = True
-MAX_CONSEQUENCES = 50000  # Average consequences of a full blackout, i.e. result of load_shedding_to_cost(100, peak_load), with average load = 4348 MW
+MAX_CONSEQUENCES = 500  # Average consequences of a full blackout, i.e. result of load_shedding_to_cost(100, average_load), with average load = 4348 MW
 
 BASEMVA = 100
 BASEFREQUENCY = 60
@@ -43,8 +43,8 @@ T_END = 20
 R_FAULT = 0.001
 X_FAULT = 0.001
 
-OUTAGE_RATE_PER_KM = 0.27 / 100
+OUTAGE_RATE_PER_KM = 2.5 / 100  # French 400kV statistics from Calmet, B, "Protection des réseaux de transport et de répartition : présentation - D4800"
 DELAYED_CLEARING_RATE = 0.1
-CB_FAILURE_RATE = 0.01
+CB_FAILURE_RATE = 0.01  # Based on (9 + 6 + 2) CB failures to open in 10 years with around 300 faults per year (17/3000 = 0.0056 rounded to 0.01) according to Table 5.1 of Haarla et. al. "Transmission Grid Security: A PSA approach"
 
 CSV_SEPARATOR = ','
