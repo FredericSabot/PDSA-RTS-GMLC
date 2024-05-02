@@ -9,3 +9,7 @@ Comments:
   * Finally, an AC PSCOPF initialized based on the outcome of the previous steps to optimize the convergence properties
     * Contingencies that are not secure in the current dispatch are iteratively added to the optimisation problem for performance reason
     * After a contingency, generators try to keep their terminal voltage equal to the pre-contingency value up to their reactive capabilities
+
+The PSCACOPF.py scripts successively launches the PSC DC OPF, the ACOPF and PSC AC OPF python scripts respectively located in a-PSCDCOPF/, b-ACOPF, and c-PSCACOPF folders. These scripts themselves call GAMS scripts where the actual optimisation is performed.
+
+The postprocessing/ folder contains small scripts for manual inspection of the results. They are not part of the main probabilistic security assessment workflow.
