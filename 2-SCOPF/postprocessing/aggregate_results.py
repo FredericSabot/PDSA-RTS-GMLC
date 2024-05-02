@@ -1,4 +1,9 @@
-case = 'january'
+"""
+Summarise which hour of the year have been successfully run and for which the OPF has not converged.
+path = 'logs/{}/{}.log'.format(case, i) is for a local run (./run.sh)
+path = 'slurm-71780476_' + str(i) + '.out' is for the SLURM-based run (sbatch ./run_cluster.sh)
+"""
+case = 'year'
 total_time_s = 0
 for i in range(24):
     path = 'logs/{}/{}.log'.format(case, i)

@@ -1,4 +1,4 @@
-case="january"
+case="year"
 mkdir -p logs/$case
 
 for i in {0..23}
