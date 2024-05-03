@@ -421,12 +421,12 @@ class JobQueue:
 
             nb_runs_per_contingency = JobQueue.allocation(weigths, NB_RUNS_PER_INDICATOR_EVALUATION - nb_priority_jobs)
 
+
             for contingency, nb_runs in zip(contingencies_to_run, nb_runs_per_contingency):
-
                 nb_static_ids = len(self.simulations_launched[contingency.id].static_ids)
-                nb_runs = min(nb_runs, ceil(0.5 * nb_static_ids))  # Derivatives might not be very accurate if we run many job compared to what has already be done + avoid overcommiting to a single contingency
+                nb_runs = min(nb_runs, ceil(0.5 * nb_static_ids))  # Indicators might not be very accurate if we run many job compared to what has already be done + avoid overcommiting to a single contingency
 
-                contingency_results = self.simulation_results[contingency.id]
+                """ contingency_results = self.simulation_results[contingency.id]
                 global_derivative, derivative_per_static_id = self.get_statistical_indicator_derivatives(contingency)
                 limiting_indicator = limiting_indicators[contingency.id]
                 global_derivative, derivative_per_static_id = global_derivative[limiting_indicator], derivative_per_static_id[limiting_indicator]
@@ -436,11 +436,14 @@ class JobQueue:
 
                 run_static_ids = contingency_results.static_ids
                 cost_per_new_dynamic_id = [contingency_results.elapsed_time[static_id] / len(contingency_results.jobs[static_id]) for static_id in run_static_ids]
-                weigth_per_static_id = list(np.array(derivative_per_static_id) / np.array(cost_per_new_dynamic_id))
+                weigth_per_static_id = list(np.array(derivative_per_static_id) / np.array(cost_per_new_dynamic_id)
 
                 allocations = JobQueue.allocation([weigth] + weigth_per_static_id, nb_runs)
                 static_allocation = allocations[0]
-                dynamic_allocations = allocations[1:]
+                dynamic_allocations = allocations[1:] """
+                # It is found best to only run the minimum of dynamic seeds per static samples, so no additional dynamic runs are allocated
+                static_allocation = nb_runs
+                dynamic_allocations = [0] * len(self.simulation_results[contingency.id].static_ids)
 
                 for i in range(1, static_allocation + 1):
                     if nb_static_ids + i >= len(self.static_samples):
@@ -456,7 +459,7 @@ class JobQueue:
                     self.simulations_launched[contingency.id].add_job(job)
                     jobs.append(job)
 
-                for i in range(len(run_static_ids)):
+                for i in range(len(self.simulation_results[contingency.id].static_ids)):
                     static_sample = self.simulations_launched[contingency.id].static_ids[i]  # Not self.static_samples_per_contingency[contingency.id][i] as they are not necessarily in the same order
                     for j in range(dynamic_allocations[i]):
                         job = self.create_job(contingency, static_sample)
@@ -703,6 +706,7 @@ class JobQueue:
         Evaluate the potential improvement in statistical indicators if the number of static runs (global derivatives) or
         dynamic runs (derivative_per_static_id) was increased
         """
+        raise NotImplementedError('Actually implemented (and tested), but found better to simply run the minimum number of dynamic seeds')
         contingency_results = self.simulation_results[contingency.id]
         contingency_launched_jobs = self.simulations_launched[contingency.id]
         static_ids = contingency_results.static_ids
