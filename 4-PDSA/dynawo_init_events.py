@@ -1,6 +1,25 @@
 from common import *
 from lxml import etree
 
+def add_init_events(dyd_root, par_root, init_events):
+    """
+    Add initiating events model to Dynawo input files
+    """
+    for init_event in init_events:
+        if init_event.category == INIT_EVENT_CATEGORIES.BUS_FAULT:
+                parID = init_event.category.name + init_event.fault_id
+                add_bus_fault(dyd_root, par_root,  faultID=init_event.fault_id, busID=init_event.element, parID=parID,
+                              t_init=init_event.time_start, t_clearing=init_event.time_end, r_fault=init_event.r, x_fault=init_event.x)
+        elif init_event.category == INIT_EVENT_CATEGORIES.LINE_DISC:
+                parID = init_event.category.name + init_event.element
+                add_line_disc_to_dyd(dyd_root, par_root, lineID=init_event.element, t_disc=init_event.time_start, parID=parID)
+        elif init_event.category == INIT_EVENT_CATEGORIES.GEN_DISC:
+                parID = init_event.category.name + init_event.element
+                add_gen_disc_to_dyd(dyd_root, par_root, genID=init_event.element, t_disc=init_event.time_start, parID=parID)
+        else:
+                raise NotImplementedError()
+
+
 def add_bus_fault(dyd_root, par_root, faultID, busID, parID, t_init, t_clearing, r_fault, x_fault):
     """
     Add a bus fault to the dynawo model
@@ -65,19 +84,3 @@ def add_gen_disc_to_dyd(dyd_root, par_root,  genID, t_disc, parID = 'GenDisc'):
     ]
     for par_attrib in par_attribs:
         etree.SubElement(gen_disc_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
-
-
-def add_init_events(dyd_root, par_root, init_events):
-    for init_event in init_events:
-        if init_event.category == INIT_EVENT_CATEGORIES.BUS_FAULT:
-                parID = init_event.category.name + init_event.fault_id
-                add_bus_fault(dyd_root, par_root,  faultID=init_event.fault_id, busID=init_event.element, parID=parID,
-                              t_init=init_event.time_start, t_clearing=init_event.time_end, r_fault=init_event.r, x_fault=init_event.x)
-        elif init_event.category == INIT_EVENT_CATEGORIES.LINE_DISC:
-                parID = init_event.category.name + init_event.element
-                add_line_disc_to_dyd(dyd_root, par_root, lineID=init_event.element, t_disc=init_event.time_start, parID=parID)
-        elif init_event.category == INIT_EVENT_CATEGORIES.GEN_DISC:
-                parID = init_event.category.name + init_event.element
-                add_gen_disc_to_dyd(dyd_root, par_root, genID=init_event.element, t_disc=init_event.time_start, parID=parID)
-        else:
-                raise NotImplementedError()

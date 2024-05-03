@@ -17,6 +17,7 @@ def main():
     rank = MPI.COMM_WORLD.Get_rank()
     size = MPI.COMM_WORLD.Get_size()
 
+    # Catches SIGTERM, SIGINT, SIGUSR1, and SIGUSR2 and gracefully terminate when received
     signal.signal(signal.SIGTERM, terminate)
     signal.signal(signal.SIGINT, terminate)
     signal.signal(signal.SIGUSR1, terminate)

@@ -4,7 +4,7 @@ PSCACOPF are difficult to solve numerically, especially if they are not initiali
 
 1. a-PSCDCOPF/PSCDCOPF.gms: a DC PSC-OPF (accounting for an estimation of the losses), to find an estimation of the active power dispatch
 2. b-ACOPF/ACOPF.gms: an AC OPF (without N-1 constraints) aiming at finding a feasible AC solution to the power flow equations the closest possible to the solution of the DC PSC-OPF and trying to set the reactive power of generators close to the middle of their capability. The aim is to avoid to push voltages to their upper bound to reduce the losses by generating the maximum of reactive power, at the expense of security (no margin).
-3. c-PSCACOPF/PSCACOPF.gms: an AC SCOPF that considers N-1 constraints. For performance and stability, only contingencies that are not secure in the current dispatch are iteratively added to the optimisation problem.
+3. c-PSCACOPF/PSCACOPF.gms: an AC SCOPF that considers N-1 constraints. For performance and stability, only contingencies that are not secure in the current dispatch are iteratively added to the optimisation problem. A simple load flow is used to determine if contingencies are unsecure
 
 The final dispatches are written in d-Final-dispatch in Powsybl/Dynawo format (with name = $hour_of_year.iidm) and used in the next step.
 

@@ -615,7 +615,7 @@ while True:
                 P2_cont[i][j] = transformer_results['p2'][UID] / baseMVA
                 Q2_cont[i][j] = transformer_results['q2'][UID] / baseMVA
         for i in range(N_branches):
-            P1_cont[i][i] = 0  # No flow in disconnected line (Powsybl returns NaN)
+            P1_cont[i][i] = 0  # There is no flow in the disconnected line (but Powsybl returns NaN)
             Q1_cont[i][i] = 0
             P2_cont[i][i] = 0
             Q2_cont[i][i] = 0

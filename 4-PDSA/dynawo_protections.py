@@ -5,6 +5,56 @@ import random
 from common import *
 import pandas as pd
 
+
+def add_protections(dyd_root, par_root, iidm_file, seed):
+    """
+    Add all protection models to Dynawo input files
+    """
+    special = False
+    if seed == 0:
+        special = True
+
+    CB_time = 0.08
+    CB_max_error = 0.01  # +/- 10ms
+
+    random.seed(seed)
+
+    # Read iidm
+    network = pp.network.load(iidm_file)
+    lines = network.get_lines()
+    gens = network.get_generators()
+
+    # Generator protections
+    dyd_root.append(etree.Comment('Generator protections'))
+    for gen_id in gens.index:
+        if gens.at[gen_id, 'energy_source'] == 'SOLAR' or gens.at[gen_id, 'energy_source'] == 'WIND':
+            continue  # Protection only for synchronous machines
+        if not gens.at[gen_id, 'connected']:
+            continue
+        # Over-/under-speed protection
+        add_gen_speed_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error)
+        # Under-voltage protection
+        add_gen_UVA_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error)
+        # Out-of-step protection
+        add_gen_OOS_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error)
+
+    # Under-frequency load shedding
+    dyd_root.append(etree.Comment('Under-frequency load shedding'))
+    add_UFLS(dyd_root, par_root, network)
+
+    # Line/distance protection
+    dyd_root.append(etree.Comment('Line protection'))
+    bus2lines = get_buses_to_lines(network)
+    lines_csv = pd.read_csv('../RTS-Data/branch.csv').to_dict()
+
+    for i in range(len(lines_csv['UID'])):
+        line_id = lines_csv['UID'][i]
+        line_rating = lines_csv['Cont Rating'][i]
+        if lines_csv['Tr Ratio'][i] != 0:
+            continue  # Consider lines, not transformers
+        add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, line_rating, CB_time, CB_max_error, special)
+
+
 def get_buses_to_lines(network):
     """
     Compute a dictionary where the keys are the bus ids of all buses in the network, and values are a list of all lines connected
@@ -36,6 +86,9 @@ def get_adjacent_lines(bus_to_lines, network, line_id, side):
 
 
 def add_gen_speed_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error, omega_max_error=0.01):
+    """
+    Add protection model to Dynawo input files
+    """
     protection_id = gen_id + '_Speed'
     speed_attrib = {'id': protection_id, 'lib': 'SpeedProtection', 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
     etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), speed_attrib)
@@ -67,6 +120,9 @@ def add_gen_speed_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error, 
 
 
 def add_gen_UVA_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error):
+    """
+    Add protection model to Dynawo input files
+    """
     protection_id = gen_id + '_UVA'
     uva_attrib = {'id': protection_id, 'lib': 'UnderVoltageAutomaton', 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
     etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), uva_attrib)
@@ -95,6 +151,9 @@ def add_gen_UVA_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error):
 
 
 def add_gen_OOS_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error, angle_max_error=10):
+    """
+    Add protection model to Dynawo input files
+    """
     protection_id = gen_id + '_InternalAngle'
     oos_attrib = {'id': protection_id, 'lib': 'LossOfSynchronismProtection', 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
     etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), oos_attrib)
@@ -123,6 +182,9 @@ def add_gen_OOS_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error, an
 
 
 def add_UFLS(dyd_root, par_root, network):
+    """
+    Add protection model to Dynawo input files
+    """
     protection_id = 'UFLS'
     ufls_attrib = {'id': protection_id, 'lib': 'UFLS10Steps', 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
     etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), ufls_attrib)
@@ -170,6 +232,9 @@ def add_UFLS(dyd_root, par_root, network):
 
 
 def add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, line_rating, CB_time, CB_max_error, special, measurement_max_error = 0.1):
+    """
+    Add protection model to Dynawo input files
+    """
     lines = network.get_lines()
     for side in [1,2]:
         opposite_side = 3-side  # 2 if side == 1, 1 if side == 2
@@ -289,49 +354,3 @@ def add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, li
             ]
         for par_attrib in par_attribs:
             etree.SubElement(dist_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
-
-
-def add_protections(dyd_root, par_root, iidm_file, seed):
-    special = False
-    if seed == 0:
-        special = True
-
-    CB_time = 0.08
-    CB_max_error = 0.01  # +/- 10ms
-
-    random.seed(seed)
-
-    # Read iidm
-    network = pp.network.load(iidm_file)
-    lines = network.get_lines()
-    gens = network.get_generators()
-
-    # Generator protections
-    dyd_root.append(etree.Comment('Generator protections'))
-    for gen_id in gens.index:
-        if gens.at[gen_id, 'energy_source'] == 'SOLAR' or gens.at[gen_id, 'energy_source'] == 'WIND':
-            continue  # Protection only for synchronous machines
-        if not gens.at[gen_id, 'connected']:
-            continue
-        # Over-/under-speed protection
-        add_gen_speed_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error)
-        # Under-voltage protection
-        add_gen_UVA_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error)
-        # Out-of-step protection
-        add_gen_OOS_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error)
-
-    # Under-frequency load shedding
-    dyd_root.append(etree.Comment('Under-frequency load shedding'))
-    add_UFLS(dyd_root, par_root, network)
-
-    # Line/distance protection
-    dyd_root.append(etree.Comment('Line protection'))
-    bus2lines = get_buses_to_lines(network)
-    lines_csv = pd.read_csv('../RTS-Data/branch.csv').to_dict()
-
-    for i in range(len(lines_csv['UID'])):
-        line_id = lines_csv['UID'][i]
-        line_rating = lines_csv['Cont Rating'][i]
-        if lines_csv['Tr Ratio'][i] != 0:
-            continue  # Consider lines, not transformers
-        add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, line_rating, CB_time, CB_max_error, special)

@@ -56,7 +56,7 @@ class Master:
                         self.get_data_from_slave(status)
                         jobs_to_run, wait_for_data = self.job_queue.get_next_jobs(init=False)
 
-                    if len(jobs_to_run) == 0:  # No more jobs to run and not waiting for data
+                    if len(jobs_to_run) == 0:  # No more jobs to run and not waiting for data just after call to get_next_job call()
                         break
 
                 status = MPI.Status()
@@ -132,6 +132,9 @@ class Master:
 
 
     def terminate_slaves(self):
+        """
+        Wait for slaves to finish their current job then kill them
+        """
         for slave in self.slaves_state.keys():
             # Wait for slaves to finish running jobs
             if self.slaves_state[slave] == 'Working':
@@ -145,6 +148,9 @@ class Master:
 
 
     def load_job_results(self, job: Job) -> Job:
+        """
+        Return job results if they exist in self.job_queue.saved_results, otherwise return None
+        """
         if job.contingency.id in self.job_queue.saved_results:
             if job.static_id in self.job_queue.saved_results[job.contingency.id]:
                 if job.dynamic_seed in self.job_queue.saved_results[job.contingency.id][job.static_id]:
@@ -228,6 +234,11 @@ class JobQueue:
         self.load_saved_results()
 
     def load_saved_results(self):
+        """
+        Load results of past runs from the saved_results.pickle file to self.saved_results
+        If REUSE_RESULTS_FAST_FORWARD, those results are directly included in the results of the analysis,
+        otherwise, they are only included if the master requests to perform a job that exists in saved_results
+        """
         self.saved_results: dict[dict[dict[Job]]]
         if os.path.exists(self.saved_results_path):
             with open(self.saved_results_path, 'rb') as file:
@@ -308,6 +319,7 @@ class JobQueue:
         logger.logger.info(("{} jobs in priority queue".format(nb_priority_jobs)))
         while len(jobs) < NB_RUNS_PER_INDICATOR_EVALUATION and len(self.priority_queue) > 0:
             jobs.append(self.priority_queue.pop(0))
+
         if len(jobs) == NB_RUNS_PER_INDICATOR_EVALUATION:
             logger.logger.info(("##############################################"))
             logger.logger.info(("# Batch with only priority runs"))
@@ -333,7 +345,7 @@ class JobQueue:
                     if REUSE_RESULTS_FAST_FORWARD:
                         if job.static_id in self.simulations_launched[contingency.id].static_ids:
                             if job.dynamic_seed in self.simulations_launched[contingency.id].dynamic_seeds[job.static_id]:
-                                continue  # Init job already included in saved results
+                                continue  # Init job already included in saved results, so don't relaunch it
 
                     self.simulations_launched[contingency.id].add_job(job)
                     jobs.append(job)
@@ -409,9 +421,7 @@ class JobQueue:
                 # the convergence threshold, as the threshold might decrease if the total risk estimation decreases), and
                 # to increase the speed at which the estimate of the total risk decreases.
                 distances_from_statistical_accuracy = self.get_distances_from_statistical_accuracy(contingency)
-                # Most often, indicators will be very different for a given contingency (indicator 1 is mostly meant for N-2 contingencies
-                # while indicator 2 is mostly meant to N-1 dcontingencies), so only the indicator that is the furthest from convergence
-                # is considered. It is not very useful to try to optimise to reduce both indicators at the same time
+                # Only consider the statistical indicator that is the furthest from being satisfied
                 limiting_indicator = np.argmax(distances_from_statistical_accuracy)
                 weigth = max(distances_from_statistical_accuracy)
                 assert weigth > 0  # Distance should be positive as only contingencies that have not converged yet are considered at this stage
@@ -473,6 +483,10 @@ class JobQueue:
 
 
     def get_additional_jobs(self) -> list[Job]:
+        """
+        Run at least MIN_NUMBER_STATIC_SEED_CRITICAL_CONTINGENCY for critical contingencies.
+        Useful to train machine learning models in step 5-SecurityEnhancement
+        """
         jobs = []
         worst_contingency_ids = [key for key, _ in sorted(self.cost_per_contingency.items(), key = lambda item:item[1], reverse=True)]
         worst_contingencies: list[Contingency]
@@ -507,6 +521,9 @@ class JobQueue:
 
 
     def write_analysis_output(self, done=False):
+        """
+        Write the (current) results of the analysis to the AnalysisOutput.xml file.
+        """
         t0 = time.time()
         root = etree.Element('Analysis')
         root.set('total_risk', str(self.total_risk))
@@ -518,6 +535,8 @@ class JobQueue:
         root.set('total_computation_time', str(total_computation_time))
 
         for contingency in self.contingencies:
+            total_cases = 0
+            cases_unsecure = 0
             min_shc = 999
             voltage_stable = True
             min_CCT = 999
@@ -554,6 +573,9 @@ class JobQueue:
                 static_id_frequency_stable = True
                 mean = contingency_results.get_average_load_shedding_per_static_id(static_id)
                 mean_cost = contingency_results.get_average_cost_per_static_id(static_id)
+                total_cases += 1
+                if mean_cost > 0:
+                    cases_unsecure += 1
                 variance = contingency_results.get_cost_variance_per_static_id_allow_error(static_id, value_on_error=np.nan)
                 N = len(contingency_results.jobs[static_id])
                 static_id_attrib = {'static_id': static_id,
@@ -631,6 +653,8 @@ class JobQueue:
                 static_id_element.set('CCT', '{:.4g}'.format(static_id_min_CCT))
                 static_id_element.set('RoCoF', '{:.4g}'.format(static_id_max_RoCoF))
                 static_id_element.set('dP_over_reserves', '{:.4g}'.format(static_id_max_power_loss_over_reserve))
+            if total_cases > 0:
+                contingency_element.set('share_unsecure', str(cases_unsecure / total_cases * 100))
             contingency_element.set('voltage_stable', str(voltage_stable))
             contingency_element.set('transient_stable', str(transient_stable))
             contingency_element.set('frequency_stable', str(frequency_stable))
@@ -768,6 +792,7 @@ class JobQueue:
         allocations = dividors - 1
         return list(allocations)
 
+
 class ContingencyLaunched:
     def __init__(self):
         self.static_ids = []
@@ -780,6 +805,7 @@ class ContingencyLaunched:
         else:
             self.static_ids.append(static_id)
             self.dynamic_seeds[static_id] = [job]
+
 
 class ContingencyResults:
     def __init__(self):
@@ -880,10 +906,8 @@ class ContingencyResults:
             return 0
 
 
-    # TODO: ctrl+h static_id -> static_seed, or reverse (because of the way they are generated), same for static_files ?
-
 def hash(string):
     """
     Deterministic hashing function, implementation does not really matter
     """
-    return int(hashlib.sha1(bytes(string, 'utf-8')).hexdigest()[:10], 16)  # Only use 10 firs bytes of the hexdigest because that's plenty enough
+    return int(hashlib.sha1(bytes(string, 'utf-8')).hexdigest()[:10], 16) + 0  # Only use 10 firs bytes of the hexdigest because that's plenty enough

@@ -1,5 +1,7 @@
 In this step, the security assessment is actually performed. The code is written in a master-slave architecture, i.e. one thread (the master) collects all the information and decides what are the next simulations to perform (in Master.JobQueue.get_next_jobs()), and all the others (the slaves) perform those simulations. The results of the PDSA are written to AnalysisOutput.xml. These results can be visualised using software that shows XML files in grid view, such as Ximple ([http://www.ximple.cz/](http://www.ximple.cz/), Windows only).
 
+All the main parameters of the analysis are defined in common.py
+
 # Requirements
 
 ```

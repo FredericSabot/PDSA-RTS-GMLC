@@ -224,6 +224,10 @@ def get_admittance_matrix(n: pp.network.Network, disconnected_elements = [], inv
 
 
 def voltage_screening(n: pp.network.Network, disconnected_elements = []):
+    """
+    Return False (insecure) if the short-circuit level at any bus is lower than 4 times the load at said bus.
+    Also returns the minimum Shc to load ratio
+    """
     buses = n.get_buses()
     loads = n.get_loads()
 
@@ -550,6 +554,10 @@ def transient_screening(n: pp.network.Network, clearing_time, fault_location, di
 
 
 def frequency_screening(n: pp.network.Network, disconnected_elements):
+    """
+    Returns False (insecure) if the power loss caused by the "disconnected elements" causes a RoCoF > 0.4Hz.s or loss higher than 70% of primary reserve.
+    Also, returns said RoCoF
+    """
     gens = n.get_generators()
     par_root = etree.parse('../3-DynData/{}.par'.format(NETWORK_NAME)).getroot()
     power_loss = 0

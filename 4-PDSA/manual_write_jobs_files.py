@@ -4,6 +4,11 @@ from contingencies import Contingency
 import dynawo_inputs
 
 def write_jobs_files(args):
+    """
+    Write job files for a given scenario. Meant to be used manually for local simulations. Run with
+    python write_jobs_files static_id dynamic_seed contingency_id
+    where static_id is the id of the operating condition sample and dynamic_seed is the seed to generate random protection parameters.
+    """
     static_id = int(sys.argv[1])
     dynamic_seed = int(sys.argv[2])
     contingency_id = sys.argv[3]

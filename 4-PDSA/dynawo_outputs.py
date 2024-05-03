@@ -10,21 +10,11 @@ from scipy.interpolate import interp1d
 import scipy.integrate
 import numpy as np
 
-""" def isSameModel(model1, model2):
-    ""
-    Return true if model1 and model2 disconnect the same element
-    ""
-    if len(model1) >= 23 and len(model2) >= 23:  # e.g. 5.41972 _BUS___26-BUS___29-1_AC_side2_Distance
-                                                 #      5.41972 _BUS___28-BUS___29-1_AC_side1_Distance
-        if model1[:23] == model2[:23]:
-            return True
-    elif len(model1) >= 8 and len(model2) >= 8:  # e.g. 5.5 GEN___38_SM_UVA Under-voltage generator trip
-                                                 #      5.59184 GEN___38_SM_Speed Speed protection trip
-        if model1[:8] == model2[:8]:
-            return True
-    return False """
 
 def get_job_results(working_dir):
+    """
+    Estimate the consequences and read the event timeline of a given scenario based on the simulation output files (located in working_dir)
+    """
     log_file = os.path.join(working_dir, 'outputs', 'logs', 'dynawo.log')  # TODO: read file name from job instead of assuming it is outputs/dynawo.log
     # TODO: while at it, can check/force for <dyn:timeline exportMode="TXT" filter="true"/>
 
@@ -81,13 +71,6 @@ def get_job_results(working_dir):
                 disconnected_models.append(event.model)
             if 'UFLS step' in event.event_description and 'activated' in event.event_description:
                 trip_timeline.append(event)
-
-            """ if 'Distance protection zone' in event.event_description:
-                if 'disarming' in event.event_description:
-                    distance_disarming_timeline.append(event)  # TODO: now consider the fact that when a zone trips, the others disarm (still used?)
-                elif 'arming' in event.event_description:  # elif -> does not include disarmings
-                    distance_arming_timeline.append(event) """
-
             if 'GENERATOR : disconnecting' in event.event_description:
                 generator_disconnection_timeline.append(event)
 
@@ -229,6 +212,9 @@ def load_shedding_to_cost(load_shedding, total_load):
 
 
 def get_job_results_special(working_dir):
+    """
+    Same as get_job_results() but also check if protection-related uncertainties can affect the cascading path (for special jobs only)
+    """
     timeline_file = os.path.join(working_dir, 'outputs', 'timeLine', 'timeline.log')
 
     trip_timeline: list[TimeLineEvent]

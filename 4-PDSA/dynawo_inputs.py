@@ -13,6 +13,9 @@ sys.path.insert(1, '../3-DynData')
 import add_dyn_data
 
 def write_job_files(job : job.Job):
+    """
+    Write the input files for a given scenario
+    """
     Path(job.working_dir).mkdir(parents=True, exist_ok=True)
 
     # Copy static file for the considered sample
