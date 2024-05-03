@@ -356,23 +356,28 @@ class JobQueue:
                     continue
 
                 # Check if all initial runs have been completed
+                init_completed = True
                 if len(self.simulation_results[contingency.id].static_ids) < MIN_NUMBER_STATIC_SEED:
                     contingencies_waiting.append(contingency)
                     logger.logger.log(logger.logging.TRACE, 'Contingency {} waiting for first static seed runs'.format(contingency.id))
+                    init_completed = False
                 else:
-                    if DOUBLE_MC_LOOP:
+                    if DOUBLE_MC_LOOP:  # Check if all dynamic runs of all initial runs have been completed
                         for static_id in self.simulation_results[contingency.id].static_ids[:MIN_NUMBER_STATIC_SEED]:
                             nb_completed_runs = len(self.simulation_results[contingency.id].jobs[static_id])
                             special_job = self.simulation_results[contingency.id].jobs[static_id][0]
                             if (special_job.variable_order or special_job.missing_events) and nb_completed_runs < MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED:
                                 contingencies_waiting.append(contingency)
                                 logger.logger.info('Contingency {} waiting for first dynamic seed runs'.format(contingency.id))
-                                continue
+                                init_completed = False
+                                break
 
+                if not init_completed:
+                    continue
                 if self.is_statistical_accuracy_reached(contingency):
                     continue
-                else:
-                    contingencies_to_run.append(contingency)
+
+                contingencies_to_run.append(contingency)
 
             if not contingencies_to_run and not contingencies_waiting:
                 logger.logger.info("##############################################")
