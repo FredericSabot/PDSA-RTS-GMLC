@@ -218,6 +218,7 @@ if __name__ == '__main__':
 
         X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(samples, labels, random_state=42)
         X_train, y_train = imblearn.under_sampling.RandomUnderSampler(random_state=42).fit_resample(X_train, y_train)
+        X_test, y_test = imblearn.under_sampling.RandomUnderSampler(random_state=42).fit_resample(X_test, y_test)
         print(len(y_train))
 
         """ Path("trees").mkdir(exist_ok=True)
