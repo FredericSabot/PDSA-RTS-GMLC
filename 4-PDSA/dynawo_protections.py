@@ -174,7 +174,7 @@ def add_gen_OOS_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error, an
 
     oos_par_set = etree.SubElement(par_root, etree.QName(DYNAWO_NAMESPACE, 'set'), {'id' : protection_id})
     par_attribs = [
-        {'type':'DOUBLE', 'name':'lossOfSynchronismProtection_ThetaMax', 'value':str(2 * pi + rand_thetaMin)},
+        {'type':'DOUBLE', 'name':'lossOfSynchronismProtection_ThetaMax', 'value':str(7/8 * pi + rand_thetaMin)},
         {'type':'DOUBLE', 'name':'lossOfSynchronismProtection_tLagAction', 'value':str(0.02 + CB_time + rand_CB)}
     ]
     for par_attrib in par_attribs:
