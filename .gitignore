@@ -21,6 +21,8 @@
 4-PDSA/simulations/*
 4-PDSA/log*.log
 4-PDSA/AnalysisOutput.xml
+4-PDSA/postprocessing/contingency_classification.csv
+4-PDSA/postprocessing/distance_matrix.csv
 *.zip
 *.pyc
 *.pickle
