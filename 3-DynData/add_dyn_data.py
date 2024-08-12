@@ -512,7 +512,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                     {'type': 'DOUBLE', 'name': 'ibg_OmegaMinPu', 'value': '0.95'},
                     {'type': 'DOUBLE', 'name': 'ibg_tFilterOmega', 'value': '0.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '99'},  # Original: 1.2, disabled because of overvoltages caused by plant itself, requires better modelling
+                    {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.4'},  # Original: 1.2, increased because of overvoltages caused by plant itself, requires better modelling
                     {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
