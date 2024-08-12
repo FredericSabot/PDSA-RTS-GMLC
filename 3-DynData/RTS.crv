@@ -193,13 +193,13 @@
   <curve model="GEN___39_SM" variable="generator_QGen"/>
   <curve model="GEN-1062" variable="generator_thetaInternal_value"/>
   <curve model="GEN-22" variable="generator_thetaInternal_value"/>
-  <curve model="GEN___32_SM" variable="generator_thetaInternal_value"/>
-  <curve model="GEN___33_SM" variable="generator_thetaInternal_value"/>
-  <curve model="GEN___34_SM" variable="generator_thetaInternal_value"/>
-  <curve model="GEN___35_SM" variable="generator_thetaInternal_value"/>
-  <curve model="GEN___36_SM" variable="generator_thetaInternal_value"/>
-  <curve model="GEN___37_SM" variable="generator_thetaInternal_value"/>
-  <curve model="GEN___38_SM" variable="generator_thetaInternal_value"/>
+  <curve model="121_NUCLEAR_1" variable="generator_thetaInternal_value"/>
+  <curve model="122_HYDRO_1" variable="generator_thetaInternal_value"/>
+  <curve model="123_STEAM_2" variable="generator_thetaInternal_value"/>
+  <curve model="123_STEAM_3" variable="generator_thetaInternal_value"/>
+  <curve model="123_CT_1" variable="generator_thetaInternal_value"/>
+  <curve model="123_CT_4" variable="generator_thetaInternal_value"/>
+  <curve model="123_CT_5" variable="generator_thetaInternal_value"/>
   <curve model="GEN___39_SM" variable="generator_thetaInternal_value"/>
   <curve model="GEN-1062" variable="generator_omegaPu"/>
   <curve model="GEN-22" variable="generator_omegaPu"/>
