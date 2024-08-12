@@ -39,6 +39,50 @@ class Job:
 
     def run(self):
         logger.logger.log(logger.logging.TRACE, 'Launching job %s' % self)
+
+        self.stability_screening()
+
+        if not self.voltage_stable or not self.transient_stable or not self.frequency_stable or BYPASS_SCREENING:
+            self.call_dynawo()
+        else:
+            self.skip()
+
+    def call_dynawo(self):
+        t0 = time.time()
+
+        dynawo_inputs.write_job_files(self)
+        cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '.jobs')]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        try:
+            _, stderr = proc.communicate(timeout=JOB_TIMEOUT_S)
+        except subprocess.TimeoutExpired:
+            stderr = ''
+            proc.send_signal(signal.SIGINT)
+            time.sleep(10)  # Give time to interupt and create output files
+            proc.kill()
+            self.timed_out = True
+
+        if 'Error' in str(stderr) or self.timed_out:  # Simulation failed, so retry with another solver
+            # Delete output files of failed attempt
+            output_dir = os.path.join(self.working_dir, 'outputs')
+            shutil.rmtree(output_dir, ignore_errors=True)
+            # Retry with another solver
+            cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '_alt_solver.jobs')]
+            logger.logger.log(logger.logging.TRACE, 'Launching job %s with alternative solver' % self)
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            try:
+                proc.communicate(timeout=JOB_TIMEOUT_S)
+            except subprocess.TimeoutExpired:
+                proc.send_signal(signal.SIGINT)
+                time.sleep(10)
+                proc.kill()
+
+        delta_t = time.time() - t0
+        self.complete(delta_t)
+
+    def stability_screening(self):
         network_path = os.path.join('../2-SCOPF/d-Final-dispatch', CASE, str(self.static_id) + '.iidm')
         network = pp.network.load(network_path)
         disconnected_elements = [event.element for event in self.contingency.init_events if not isinstance(event, contingencies.InitFault)]
@@ -77,46 +121,6 @@ class Job:
 
         self.frequency_stable, self.RoCoF, self.power_loss_over_reserve = screening.frequency_screening(network, disconnected_elements)
 
-        if not self.voltage_stable or not self.transient_stable or not self.frequency_stable or BYPASS_SCREENING:
-            self.call_dynawo()
-        else:
-            self.skip()
-
-    def call_dynawo(self):
-        t0 = time.time()
-
-        dynawo_inputs.write_job_files(self)
-        cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '.jobs')]
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        timed_out = False
-        try:
-            _, stderr = proc.communicate(timeout=JOB_TIMEOUT_S)
-        except subprocess.TimeoutExpired:
-            stderr = ''
-            proc.send_signal(signal.SIGINT)
-            time.sleep(10)  # Give time to interupt and create output files
-            proc.kill()
-            timed_out = True
-
-        if 'Error' in str(stderr) or timed_out:  # Simulation failed, so retry with another solver
-            # Delete output files of failed attempt
-            output_dir = os.path.join(self.working_dir, 'outputs')
-            shutil.rmtree(output_dir, ignore_errors=True)
-            # Retry with another solver
-            cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '_alt_solver.jobs')]
-            logger.logger.log(logger.logging.TRACE, 'Launching job %s with alternative solver' % self)
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-            try:
-                proc.communicate(timeout=JOB_TIMEOUT_S)
-            except subprocess.TimeoutExpired:
-                proc.send_signal(signal.SIGINT)
-                time.sleep(10)
-                proc.kill()
-
-        delta_t = time.time() - t0
-        self.complete(delta_t)
 
     def __repr__(self) -> str:
         out = '\nJob {}\n'.format(self.id)
