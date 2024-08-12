@@ -189,7 +189,7 @@ if __name__ == '__main__':
     indices = []
     for i, name in enumerate(feature_names):
         # if 'P1_' not in name and 'Q1_' not in name:
-        if 'Q_' in name or 'Q1_' in name or 'Vmag' in name:
+        if 'Q_' in name or 'Q1_' in name or 'Vmag' in name: # or 'P1' in name:
             indices.append(i)
     for key, feature in features.items():
         features[key] = np.delete(feature, indices)
@@ -205,21 +205,52 @@ if __name__ == '__main__':
         if worst_contingencies[i].get('id') in critical_contingency_list:
             critical_contingency_indices.append(i)
 
-    for contingency_index in critical_contingency_indices: #range(10):
+    for contingency_index in range(10):
         critical_contingency = worst_contingencies[contingency_index]
         print("\n\n\nContingency", critical_contingency.get('id'))
 
         samples = []
         labels = []
+        colors = []
 
         for j, sample in enumerate(critical_contingency):
             samples.append(features[sample.get('static_id')])
             labels.append(float(sample.get('mean_load_shed')) > 0)
 
-        X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(samples, labels, random_state=42)
-        X_train, y_train = imblearn.under_sampling.RandomUnderSampler(random_state=42).fit_resample(X_train, y_train)
-        X_test, y_test = imblearn.under_sampling.RandomUnderSampler(random_state=42).fit_resample(X_test, y_test)
+            trip_0 = sample.get('trip_0')
+            trip_1 = sample.get('trip_1')
+            trip_2 = sample.get('trip_2')
+            if trip_0 is None or 'RTPV' in trip_0:
+                trip_0 = ''
+            if trip_1 is None or 'RTPV' in trip_1:
+                trip_1 = ''
+            if trip_2 is None or 'RTPV' in trip_2:
+                trip_2 = ''
+            load_shedding = float(sample.get('mean_load_shed'))
+
+            # if label > 0:
+            #     colors.append('red')
+            # else:
+            #     colors.append('green')
+            if load_shedding > 20:
+                colors.append('red')
+            elif load_shedding > 0:
+                colors.append('orange')
+            elif trip_0 != '' or trip_1 != '' or trip_2 != '':
+                colors.append('yellow')
+            else:
+                colors.append('green')
+
+        try:
+            X_train, X_test, y_train, y_test = sklearn.model_selection.train_test_split(samples, labels, random_state=42)
+            X_train, y_train = imblearn.under_sampling.RandomUnderSampler(random_state=42).fit_resample(X_train, y_train)
+            X_test, y_test = imblearn.under_sampling.RandomUnderSampler(random_state=42).fit_resample(X_test, y_test)
+        except ValueError:
+            continue
         print(len(y_train))
+        if len(y_train) < 30:
+            print('No enough data to train (most likely not enough unsecure cases)')
+            continue
 
         """ Path("trees").mkdir(exist_ok=True)
         # Decision tree
@@ -324,17 +355,11 @@ if __name__ == '__main__':
         best_feature_ids = best_feature_ids[:2]  # 2D plot max
         samples = np.array(samples)[:, best_feature_ids]
 
-        colors = []
-        for label in labels:
-            if label > 0:
-                colors.append('red')
-            else:
-                colors.append('green')
-
         feature_names = np.array(feature_names)
         plt.scatter(x=samples[:, 0], y=samples[:, 1], c=colors)
         plt.xlabel(feature_names[best_feature_ids[0]])
         plt.ylabel(feature_names[best_feature_ids[1]])
+        plt.title('Contingency ' + critical_contingency.get('id'))
 
         model = sklearn.svm.LinearSVC(penalty="l1", loss="squared_hinge", dual=False, C=1).fit(X_train[:, best_feature_ids], y_train)
 
@@ -367,3 +392,15 @@ if __name__ == '__main__':
         Path("SVMs").mkdir(exist_ok=True)
         plt.savefig('SVMs/{}_SVM_{}.pdf'.format(contingency_index, critical_contingency.get('id')))
         plt.close()
+
+        # for i in range(len(colors)):
+        #     color = colors[i]
+        #     if color == 'green':
+        #         c = 0
+        #     elif color == 'red':
+        #         c = 1
+        #     elif color == 'yellow':
+        #         c = 2
+        #     else:
+        #         c = 3
+        #     print(samples[i, 0], samples[i, 1], c)
