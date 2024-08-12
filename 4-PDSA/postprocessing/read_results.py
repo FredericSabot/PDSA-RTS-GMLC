@@ -9,6 +9,8 @@ simulated, otherwise the false positives rate will be estimated as 0), computati
 simulations per contingency type, etc.
 """
 
+# TODO: clean up this mess
+
 n = pp.network.load('../../RTS-Data/RTS.iidm')
 lines = n.get_lines()
 buses = n.get_buses()
@@ -45,9 +47,9 @@ def positive(static_id, contingency_id):
 
     contingency_type = get_contingency_type(contingency_id)
     if contingency_type == 0:
-        CCT_threshold = 0.15
+        CCT_threshold = 0.25
     else:
-        CCT_threshold = 0.15
+        CCT_threshold = 0.25
 
     transient_unstable = False
     if float(static_id.get('CCT')) < CCT_threshold:
@@ -60,7 +62,7 @@ def positive(static_id, contingency_id):
 
 
 XMLparser = etree.XMLParser(remove_blank_text=True)  # Necessary for pretty_print to work
-file = '../AnalysisOutput.xml' #../../../../Dropbox/VM_backup/AnalysisOutput2024_no_SVM_no_critical.xml'
+file = '../AnalysisOutput.xml'
 root = etree.parse(file, XMLparser).getroot()
 
 total_computation_time = [0, 0, 0]
@@ -98,6 +100,11 @@ total_protection_cases_with_consequences = 0
 total_protection_cases_with_consequences_protection_impact = 0
 total_protection_cases_with_consequences_cascading_path = 0
 
+share_protection_failure_potential = {contingency.get('id'): 0 for contingency in root}
+freq_protection_failure_potential = 0
+share_unsecure = {}
+total_freq = 0
+
 def get_contingency_type(contingency_id):
     if 'BREAKER' in contingency_id:
         return 2  # N-2 event
@@ -107,6 +114,7 @@ def get_contingency_type(contingency_id):
         return 0  # N-1 event with normal clearing
 
 for contingency in root:
+    total_freq += float(contingency.get('frequency'))
     contingency_id = contingency.get('id')
     contingency_type = get_contingency_type(contingency_id)
 
@@ -126,7 +134,7 @@ for contingency in root:
         for job in static_id:
             total_computation_time[contingency_type] += float(job.get('simulation_time')) / 3600
 
-            if contingency_type == 2:
+            if True: # contingency_type == 2:
                 total_total_computation_time += float(job.get('simulation_time')) / 3600
                 if once:
                     total_cases += 1
@@ -149,7 +157,7 @@ for contingency in root:
                 if 'trip_1' in job.attrib:
                     cascading_path += job.get('trip_1')
                 if 'trip_2' in job.attrib:
-                    cascading_path += job.get('trip_1')
+                    cascading_path += job.get('trip_2')
                 cascading_path_per_job.append(cascading_path)
 
             total_protection_cases += 1
@@ -198,6 +206,25 @@ for contingency in root:
 
             total_risk_true += np.mean(risk_contingency) / len(contingency)
             total_risk_screening += np.mean(risk_contingency_screening) / len(contingency)
+
+        if float(static_id.get('mean_load_shed')) < 100:
+            trips = []
+            if 'trip_0' in job.attrib:
+                trips.append(job.get('trip_0'))
+            if 'trip_1' in job.attrib:
+                trips.append(job.get('trip_1'))
+            if 'trip_2' in job.attrib:
+                trips.append(job.get('trip_2'))
+            nb_potential_cases = sum(['Distance' in trip for trip in trips])
+            if nb_potential_cases > 0:
+                if static_id.get('variable_order') == 'True' or static_id.get('missing_events') == 'True':
+                    pass
+                    share_protection_failure_potential[contingency_id] += nb_potential_cases / len(contingency)
+                    freq_protection_failure_potential += float(contingency.get('frequency')) * nb_potential_cases / len(contingency)
+                else:
+                    share_protection_failure_potential[contingency_id] += nb_potential_cases / len(contingency)
+                    freq_protection_failure_potential += float(contingency.get('frequency')) * nb_potential_cases / len(contingency)
+    share_unsecure[contingency_id] = contingency.get('share_unsecure')
 
     # if contingency.get('id')[0] == 'B':
     total_risk[contingency_type] += float(contingency.get('risk'))
@@ -263,3 +290,12 @@ print('Scenarios where protection-related uncertainties assumed important', tota
 print('Scenarios where protection-related uncertainties assumed important, and non-zero consequences', total_protection_cases_with_consequences)
 print(total_protection_cases_with_consequences_protection_impact)
 print(total_protection_cases_with_consequences_cascading_path)
+
+print()
+for contingency_id in share_protection_failure_potential:
+    if share_protection_failure_potential[contingency_id] != 0:
+        print(contingency_id, share_protection_failure_potential[contingency_id] * 100, share_unsecure[contingency_id])
+print(freq_protection_failure_potential)  # Only save first 3 trips, so might miss some cases, but assume full blackout below, so compensates + stable scenarios should not have more than 3 trips
+print('Max cost protection failure', freq_protection_failure_potential * 0.01 * 500)  # Assume failure proba of protection of 0.01 and max consequences 500 + that contingency was initialy secure (cannot increase consequences by 500 if was already 500)
+print('Cost', root.get('total_cost'))
+print(total_freq)
