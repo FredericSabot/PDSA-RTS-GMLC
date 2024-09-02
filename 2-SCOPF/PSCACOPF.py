@@ -219,7 +219,8 @@ def addGamsParams(db, name, description, sets, values):
         i_1, i_2 = sets[0], sets[1]
         for i in range(len(i_1)):
             for j in range(len(i_2)):
-                m.add_record((str(i+1),str(j+1))).value = values[i][j]
+                if values[i][j] != 0:  # Only store non-zero values for speed
+                    m.add_record((str(i+1),str(j+1))).value = values[i][j]
 
 addGamsParams(db_preDC, 'thermal_map', 'thermal generators map', [i_thermal, i_bus], thermal_gen_map)
 addGamsParams(db_preDC, 'hydro_map', 'hydro generators map', [i_hydro, i_bus], hydro_gen_map)
@@ -240,7 +241,7 @@ addGamsParams(db_preDC, 'branch_admittance', 'branch admittance', [i_branch], 1 
 addGamsParams(db_preDC, 'branch_max_N', 'Normal branch max power', [i_branch], np.array(branches['Cont Rating']) / baseMVA)
 addGamsParams(db_preDC, 'branch_max_E', 'Emergency branch max power', [i_branch], np.array(branches['LTE Rating']) / baseMVA)
 
-contingency_states = np.ones((N_branches, N_branches)) - np.diag(np.diag(np.ones((N_branches, N_branches))))  # Matrix full of ones, but zeroes on the diagonal
+contingency_states = np.diag(np.full(N_branches, 1.0))  # Diagonal matrix of ones
 addGamsParams(db_preDC, 'contingency_states', 'Line states in the considered contingencies', [i_branch, i_branch], contingency_states)
 
 addGamsParams(db_preDC, 'demand', 'demand at each bus', [i_bus], demand_bus * (1 + losses))

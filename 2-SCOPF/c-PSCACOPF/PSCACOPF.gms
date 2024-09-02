@@ -484,22 +484,22 @@ sum(i_branch$(branch_map(i_branch,i_bus) = 1),Q1_ck(i_branch, i_contingency))+su
 line_P1_ck(i_branch, i_contingency)..
 P1_ck(i_branch, i_contingency)
 =e=
-contingency_states(i_branch, i_contingency)*sum(i_bus$(branch_map(i_branch,i_bus) = 1),(sum(j_bus$(branch_map(i_branch,j_bus)=-1), V_ck(i_bus, i_contingency)*(V_ck(i_bus, i_contingency)*Gff(i_branch)+V_ck(j_bus, i_contingency)*Gft(i_branch)*cos(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))+V_ck(j_bus, i_contingency)*Bft(i_branch)*sin(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))))));
+(1-contingency_states(i_branch, i_contingency))*sum(i_bus$(branch_map(i_branch,i_bus) = 1),(sum(j_bus$(branch_map(i_branch,j_bus)=-1), V_ck(i_bus, i_contingency)*(V_ck(i_bus, i_contingency)*Gff(i_branch)+V_ck(j_bus, i_contingency)*Gft(i_branch)*cos(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))+V_ck(j_bus, i_contingency)*Bft(i_branch)*sin(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))))));
 
 line_Q1_ck(i_branch, i_contingency)..
 Q1_ck(i_branch, i_contingency)
 =e=
-contingency_states(i_branch, i_contingency)*sum(i_bus$(branch_map(i_branch,i_bus) = 1),(sum(j_bus$(branch_map(i_branch,j_bus)=-1), V_ck(i_bus, i_contingency)*(-V_ck(i_bus, i_contingency)*Bff(i_branch)+V_ck(j_bus, i_contingency)*Gft(i_branch)*sin(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))-V_ck(j_bus, i_contingency)*Bft(i_branch)*cos(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))))));
+(1-contingency_states(i_branch, i_contingency))*sum(i_bus$(branch_map(i_branch,i_bus) = 1),(sum(j_bus$(branch_map(i_branch,j_bus)=-1), V_ck(i_bus, i_contingency)*(-V_ck(i_bus, i_contingency)*Bff(i_branch)+V_ck(j_bus, i_contingency)*Gft(i_branch)*sin(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))-V_ck(j_bus, i_contingency)*Bft(i_branch)*cos(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))))));
 
 line_P2_ck(i_branch, i_contingency)..
 P2_ck(i_branch, i_contingency)
 =e=
-contingency_states(i_branch, i_contingency)*sum(i_bus$(branch_map(i_branch,i_bus) = -1),(sum(j_bus$(branch_map(i_branch,j_bus)=1), V_ck(i_bus, i_contingency)*(V_ck(i_bus, i_contingency)*Gtt(i_branch)+V_ck(j_bus, i_contingency)*Gtf(i_branch)*cos(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))+V_ck(j_bus, i_contingency)*Btf(i_branch)*sin(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))))));
+(1-contingency_states(i_branch, i_contingency))*sum(i_bus$(branch_map(i_branch,i_bus) = -1),(sum(j_bus$(branch_map(i_branch,j_bus)=1), V_ck(i_bus, i_contingency)*(V_ck(i_bus, i_contingency)*Gtt(i_branch)+V_ck(j_bus, i_contingency)*Gtf(i_branch)*cos(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))+V_ck(j_bus, i_contingency)*Btf(i_branch)*sin(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))))));
 
 line_Q2_ck(i_branch, i_contingency)..
 Q2_ck(i_branch, i_contingency)
 =e=
-contingency_states(i_branch, i_contingency)*sum(i_bus$(branch_map(i_branch,i_bus) = -1),(sum(j_bus$(branch_map(i_branch,j_bus)=1), V_ck(i_bus, i_contingency)*(-V_ck(i_bus, i_contingency)*Btt(i_branch)+V_ck(j_bus, i_contingency)*Gtf(i_branch)*sin(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))-V_ck(j_bus, i_contingency)*Btf(i_branch)*cos(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))))));
+(1-contingency_states(i_branch, i_contingency))*sum(i_bus$(branch_map(i_branch,i_bus) = -1),(sum(j_bus$(branch_map(i_branch,j_bus)=1), V_ck(i_bus, i_contingency)*(-V_ck(i_bus, i_contingency)*Btt(i_branch)+V_ck(j_bus, i_contingency)*Gtf(i_branch)*sin(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))-V_ck(j_bus, i_contingency)*Btf(i_branch)*cos(theta_ck(i_bus, i_contingency)-theta_ck(j_bus, i_contingency))))));
 
 line_max1_ck(i_branch, i_contingency)..
 P1_ck(i_branch, i_contingency)*P1_ck(i_branch, i_contingency)+Q1_ck(i_branch, i_contingency)*Q1_ck(i_branch, i_contingency) =l= branch_max_E(i_branch)*branch_max_E(i_branch);

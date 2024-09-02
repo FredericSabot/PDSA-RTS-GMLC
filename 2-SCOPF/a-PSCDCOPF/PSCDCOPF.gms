@@ -216,8 +216,14 @@ rtpv_maxP(i_rtpv)..         P_rtpv(i_rtpv) =e= rtpv_max(i_rtpv);
 power_balance_0(i_bus)..    sum(i_thermal$(thermal_map(i_thermal, i_bus)), P_thermal(i_thermal)) + sum(i_hydro$(hydro_map(i_hydro, i_bus)), P_hydro(i_hydro)) + sum(i_pv$(pv_map(i_pv, i_bus)), P_pv(i_pv)) + sum(i_wind$(wind_map(i_wind, i_bus)), P_wind(i_wind)) + sum(i_rtpv$(rtpv_map(i_rtpv, i_bus)), P_rtpv(i_rtpv)) - sum(i_branch, pf0(i_branch)*branch_map(i_branch, i_bus))
                             =e= demand(i_bus);
 
-power_balance_contingency(i_bus, i_branchp)..   sum(i_thermal$(thermal_map(i_thermal, i_bus)), P_thermal_contingency(i_thermal, i_branchp)) + sum(i_hydro$(hydro_map(i_hydro, i_bus)), P_hydro_contingency(i_hydro, i_branchp)) + sum(i_pv$(pv_map(i_pv, i_bus)), P_pv_contingency(i_pv, i_branchp)) + sum(i_wind$(wind_map(i_wind, i_bus)), P_wind_contingency(i_wind, i_branchp)) + sum(i_rtpv$(rtpv_map(i_rtpv, i_bus)), P_rtpv_contingency(i_rtpv, i_branchp)) + sum(i_branch, pfcontingency(i_branch, i_branchp)*branch_map(i_branch, i_bus))
-                            =e= demand(i_bus);
+power_balance_contingency(i_bus, i_branchp)..
+sum(i_thermal$(thermal_map(i_thermal, i_bus)), P_thermal_contingency(i_thermal, i_branchp))
++ sum(i_hydro$(hydro_map(i_hydro, i_bus)), P_hydro_contingency(i_hydro, i_branchp))
++ sum(i_pv$(pv_map(i_pv, i_bus)), P_pv_contingency(i_pv, i_branchp))
++ sum(i_wind$(wind_map(i_wind, i_bus)), P_wind_contingency(i_wind, i_branchp))
++ sum(i_rtpv$(rtpv_map(i_rtpv, i_bus)), P_rtpv_contingency(i_rtpv, i_branchp))
++ sum(i_branch, pfcontingency(i_branch, i_branchp)*branch_map(i_branch, i_bus))
+=e= demand(i_bus);
 
 P_thermal_cont(i_thermal, i_branchp)..  P_thermal_contingency(i_thermal, i_branchp) =e= P_thermal(i_thermal);
 
@@ -231,15 +237,15 @@ P_rtpv_cont(i_rtpv, i_branchp)..        P_rtpv_contingency(i_rtpv, i_branchp) =e
 
 line_flow_0(i_branch)..         pf0(i_branch) =e= -branch_admittance(i_branch)*sum(i_bus, theta0(i_bus)*branch_map(i_branch, i_bus));
 
-line_flow_contingency(i_branch, i_branchp)..         pfcontingency(i_branch, i_branchp) =e= contingency_states(i_branch, i_branchp)*branch_admittance(i_branch)*sum(i_bus, thetacontingency(i_bus, i_branchp)*branch_map(i_branch, i_bus));
+line_flow_contingency(i_branch, i_branchp)..         pfcontingency(i_branch, i_branchp) =e= (1-contingency_states(i_branch, i_branchp)) * branch_admittance(i_branch)*sum(i_bus, thetacontingency(i_bus, i_branchp)*branch_map(i_branch, i_bus));
 
 line_capacity_min_0(i_branch)..   pf0(i_branch) =g= -0.95 * branch_max_N(i_branch);
 
 line_capacity_max_0(i_branch)..   pf0(i_branch) =l= 0.95 * branch_max_N(i_branch);
 
-line_capacity_min_contingency(i_branch, i_branchp)..   pfcontingency(i_branch, i_branchp) =g= -0.95 * contingency_states(i_branch, i_branchp)*branch_max_E(i_branch);
+line_capacity_min_contingency(i_branch, i_branchp)..   pfcontingency(i_branch, i_branchp) =g= -0.95 * (1-contingency_states(i_branch, i_branchp)) * branch_max_E(i_branch);
 
-line_capacity_max_contingency(i_branch, i_branchp)..   pfcontingency(i_branch, i_branchp) =l= 0.95 * contingency_states(i_branch, i_branchp)*branch_max_E(i_branch);
+line_capacity_max_contingency(i_branch, i_branchp)..   pfcontingency(i_branch, i_branchp) =l= 0.95 * (1-contingency_states(i_branch, i_branchp)) * branch_max_E(i_branch);
 
 voltage_angles_min_0(i_bus)..  theta0(i_bus) =g= -pi;
 
