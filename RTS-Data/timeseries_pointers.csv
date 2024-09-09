@@ -266,6 +266,6 @@ REAL_TIME,Generator,118_RTPV_8,PMin MW,11.2,timeseries_data_files/RTPV/REAL_TIME
 REAL_TIME,Generator,118_RTPV_9,PMin MW,10.3,timeseries_data_files/RTPV/REAL_TIME_rtpv.csv
 REAL_TIME,Generator,118_RTPV_10,PMin MW,4.5,timeseries_data_files/RTPV/REAL_TIME_rtpv.csv
 REAL_TIME,Generator,213_RTPV_1,PMin MW,13.2,timeseries_data_files/RTPV/REAL_TIME_rtpv.csv
-REAL_TIME,Area,1,MW Load,2850,timeseries_data_files/Load/REAL_TIME_regional_load.csv
-REAL_TIME,Area,2,MW Load,2850,timeseries_data_files/Load/REAL_TIME_regional_load.csv
-REAL_TIME,Area,3,MW Load,2850,timeseries_data_files/Load/REAL_TIME_regional_load.csv
+REAL_TIME,Area,1,MW Load,2850,timeseries_data_files/Load/REAL_TIME_regional_Load.csv
+REAL_TIME,Area,2,MW Load,2850,timeseries_data_files/Load/REAL_TIME_regional_Load.csv
+REAL_TIME,Area,3,MW Load,2850,timeseries_data_files/Load/REAL_TIME_regional_Load.csv

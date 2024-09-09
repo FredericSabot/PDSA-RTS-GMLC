@@ -30,7 +30,10 @@ parameter pv_map(i_pv, i_bus) pv generator map;
 parameter wind_map(i_wind, i_bus) wind generator map;
 parameter rtpv_map(i_rtpv, i_bus) rtpv generator map;
 
-parameter lincost(i_thermal) slope of each generator cost curve block;
+parameter lincost_thermal(i_thermal) slope of each generator cost curve block;
+parameter lincost_hydro(i_hydro) slope of each generator cost curve block;
+parameter lincost_pv(i_pv) slope of each generator cost curve block;
+parameter lincost_wind(i_wind) slope of each generator cost curve block;
 
 parameter P_thermal_0(i_thermal) initial thermal outputs;
 parameter P_hydro_0(i_hydro) initial hydro outputs;
@@ -63,7 +66,7 @@ parameter demand(i_bus) demand at each bus;
 
 
 $gdxin PrePSCDCOPF
-$load i_thermal i_hydro i_pv i_wind i_rtpv i_bus i_branch thermal_map hydro_map pv_map wind_map rtpv_map lincost thermal_min thermal_max hydro_max pv_max wind_max rtpv_max branch_admittance branch_map branch_max_N branch_max_E demand contingency_states P_thermal_0 P_hydro_0 P_pv_0 P_wind_0 on_0
+$load i_thermal i_hydro i_pv i_wind i_rtpv i_bus i_branch thermal_map hydro_map pv_map wind_map rtpv_map lincost_thermal lincost_hydro lincost_pv lincost_wind thermal_min thermal_max hydro_max pv_max wind_max rtpv_max branch_admittance branch_map branch_max_N branch_max_E demand contingency_states P_thermal_0 P_hydro_0 P_pv_0 P_wind_0 on_0
 $gdxin
 
 ***************************************************************
@@ -71,8 +74,6 @@ $gdxin
 ***************************************************************
 
 variable total_cost objective function variable
-variable c(i_thermal) operation cost for each thermal generator
-
 variable deviation total deviation from initial dispatch
 variable deviation_thermal(i_thermal) absolute deviation from initial thermal dispatch
 variable deviation_hydro(i_hydro) absolute deviation from initial hydro dispatch
@@ -109,7 +110,6 @@ variable thetacontingency(i_bus, i_branchp) bus voltage angles in contingency i
 equations
 
 cost objective function
-cost_sum(i_thermal) generation cost summation
 dev_thermal_plus positive deviation from initial thermal dispatch
 dev_thermal_minus negative deviation from initial thermal dispatch
 dev_hydro_plus positive deviation from initial hydro dispatch
@@ -161,9 +161,11 @@ thetacontingency.fx('1', i_branchp)= 0;
 ***************************************************************
 
 cost..
-total_cost =e= sum(i_thermal, c(i_thermal));
-
-cost_sum(i_thermal)..       c(i_thermal) =e= P_thermal(i_thermal) * lincost(i_thermal);
+total_cost =e=
+sum(i_thermal, P_thermal(i_thermal) * lincost_thermal(i_thermal)) +
+sum(i_hydro, P_hydro(i_hydro) * lincost_hydro(i_hydro)) +
+sum(i_pv, P_pv(i_pv) * lincost_pv(i_pv)) +
+sum(i_wind, P_wind(i_wind) * lincost_wind(i_wind));
 
 dev_thermal_plus(i_thermal)..
 deviation_thermal(i_thermal) =g= P_thermal(i_thermal) - P_thermal_0(i_thermal);
@@ -273,4 +275,4 @@ solve test using mip minimizing deviation;
 scalar sol;
 sol = test.modelstat;
 
-execute_unload 'PostPSCDCOPF' total_cost, c, deviation, on, P_thermal, P_hydro, P_pv, P_wind, pf0, theta0, sol;
+execute_unload 'PostPSCDCOPF' total_cost, deviation, on, P_thermal, P_hydro, P_pv, P_wind, pf0, theta0, sol;

@@ -14,7 +14,19 @@ baseMVA = 100
 # sys.argv = ['PSCACOPF.py', '167', 'january']  # Don't uncomment, copy paste to interpreter if needed (avoid mistakes)
 hour = int(sys.argv[1])
 case = sys.argv[2]
-print('Running PSCACOPF for case', case, 'hour:', hour)
+network_name = sys.argv[3]
+print('Running PSCACOPF for case', case, 'hour:', hour, 'network:', network_name)
+
+if network_name == 'RTS':
+    LOWEST_CONTINGENCY_VOLTAGE = 138
+elif network_name == 'Texas':
+    LOWEST_CONTINGENCY_VOLTAGE = 345
+else:
+    raise NotImplementedError('Network not considered')
+
+WITH_PRESCIENT = True  # If initialise OPF based on prescient outputs
+if network_name == 'Texas':
+    WITH_PRESCIENT = False  # Prescient too slow for large networks
 
 if case == 'january':
     init_date = datetime.datetime(2020, 1, 1)
@@ -50,17 +62,70 @@ def csvToDict(csv_file, dir='.'):
     return dic
 
 
-data_dir = '../RTS-Data'
-timeseries_dir = '../RTS-Data/timeseries_data_files'
-prescient_dir = '../1-Prescient/PrescientDispatch' + '_' + case
+def opf_results_to_powsybl(network:pp.network.Network, thermal_gens, thermal_connected, P_thermal, Q_thermal,
+                           hydro_gens, P_hydro, Q_hydro, hydro_max,
+                           wind_gens, P_wind, Q_wind, wind_max,
+                           pv_gens, P_pv, Q_pv, pv_max,
+                           rtpv_gens, rtpv_max,
+                           syncon_gens, Q_syncon,
+                           buses, demand_bus, demand_bus_Q,
+                           gens, V_target):
+    N_pv_gens = len(pv_gens['Gen ID'])
+    N_rtpv_gens = len(rtpv_gens['Gen ID'])
+    N_buses = len(buses['Bus ID'])
+    N_gens = len(gens['GEN UID'])
+
+    network.update_generators(id=thermal_gens['GEN UID'], connected=thermal_connected,
+                            target_p=np.array(list(P_thermal.values())) * baseMVA,
+                            target_q=np.array(list(Q_thermal.values())) * baseMVA)
+    network.update_generators(id=hydro_gens['GEN UID'],
+                            target_p=np.array(list(P_hydro.values())) * baseMVA,
+                            target_q=np.array(list(Q_hydro.values())) * baseMVA,
+                            max_p=hydro_max * baseMVA)
+    network.update_generators(id=wind_gens['GEN UID'],
+                            target_p=np.array(list(P_wind.values())) * baseMVA,
+                            target_q=np.array(list(Q_wind.values())) * baseMVA,
+                            max_p=wind_max * baseMVA)
+    network.update_generators(id=pv_gens['GEN UID'],
+                            target_p=np.array(list(P_pv.values())) * baseMVA,
+                            target_q=np.array(list(Q_pv.values())) * baseMVA,
+                            max_p=pv_max * baseMVA,
+                            voltage_regulator_on=[True] * N_pv_gens)
+    network.update_generators(id=rtpv_gens['GEN UID'],
+                            target_p=rtpv_max * baseMVA,
+                            max_p=rtpv_max * baseMVA,
+                            voltage_regulator_on=[False] * N_rtpv_gens)
+    network.update_generators(id=syncon_gens['GEN UID'], target_q=np.array(list(Q_syncon.values())) * baseMVA)
+
+    # Disconnect PV generators at night
+    for i in range(N_pv_gens):
+        network.update_generators(id=pv_gens['GEN UID'][i], connected = pv_max[i] > 0)
+    for i in range(N_rtpv_gens):
+        network.update_generators(id=rtpv_gens['GEN UID'][i], connected = rtpv_max[i] > 0)
+
+    load_ids = ['L-'+str(int(buses['Bus ID'][i])) for i in range(N_buses)]
+    network.update_loads(id=load_ids, p0=demand_bus * baseMVA, q0=demand_bus_Q * baseMVA)
+
+    for i in range(N_gens):
+        bus_id = gens['Bus ID'][i]
+        index = buses['Bus ID'].index(bus_id)
+        V = list(V_target.values())[index] * buses['BaseKV'][index]
+        network.update_generators(id=gens['GEN UID'][i], target_v=V)
+
+
+data_dir = f'../{network_name}-Data'
+timeseries_dir = f'../{network_name}-Data/timeseries_data_files'
+prescient_dir = f'../1-Prescient/PrescientDispatch' + '_' + case
 
 buses = csvToDict('bus.csv', data_dir)
 branches = csvToDict('branch.csv', data_dir)
 gens = csvToDict('gen.csv', data_dir)
-prescient_thermal_dispatch = csvToDict('Thermal-' + str(hour) + '.csv', prescient_dir)
-prescient_hydro_dispatch = csvToDict('Hydro-' + str(hour) + '.csv', prescient_dir)
-prescient_pv_dispatch = csvToDict('PV-' + str(hour) + '.csv', prescient_dir)
-prescient_wind_dispatch = csvToDict('Wind-' + str(hour) + '.csv', prescient_dir)
+
+if WITH_PRESCIENT:
+    prescient_thermal_dispatch = csvToDict('Thermal-' + str(hour) + '.csv', prescient_dir)
+    prescient_hydro_dispatch = csvToDict('Hydro-' + str(hour) + '.csv', prescient_dir)
+    prescient_pv_dispatch = csvToDict('PV-' + str(hour) + '.csv', prescient_dir)
+    prescient_wind_dispatch = csvToDict('Wind-' + str(hour) + '.csv', prescient_dir)
 
 N_buses = len(buses['Bus ID'])
 N_branches = len(branches['UID'])
@@ -70,17 +135,16 @@ loads_P = buses['MW Load']
 loads_Q = buses['MVAR Load']
 area = buses['Area']
 area = [int(a) for a in area]
-load_per_area = [0] * 3
+N_areas = len(set(area))
+load_per_area = [0] * N_areas
 for i in range(N_buses):
     load_per_area[area[i] - 1] += loads_P[i]
-load_participation_area = [[], [], []]
-for i in range(N_buses):
-    load_participation_area[area[i] -1].append(loads_P[i] / load_per_area[area[i] - 1])
 
+load_participation_area = []
+for i in range(N_buses):
+    load_participation_area.append(loads_P[i] / load_per_area[area[i] - 1])
 
 admit = 1 / np.array(branches['X'])
-Imax = np.array(branches['Cont Rating']) / baseMVA
-
 branch_map = np.zeros((N_branches, N_buses))
 
 for i in range(N_branches):
@@ -90,9 +154,26 @@ for i in range(N_branches):
     branch_map[i, int(branches['To Bus'][i])] = -1
 
 for j in range(N_buses):
+    if buses['BaseKV'][j] < LOWEST_CONTINGENCY_VOLTAGE:
+        continue
     if sum([abs(branch_map[i][j]) for i in range(N_branches)]) < 2:
         raise Exception('Bus', buses['Bus ID'][j], 'is only connected to one branch, system thus cannot be N-1 secure')
 
+cont_rating = np.array(branches['Cont Rating'])
+lte_rating  = np.array(branches['LTE Rating'])
+if network_name == 'Texas':
+    cont_rating *= 1.1
+    lte_rating *= 1.1
+
+contingency_states = np.diag(np.full(N_branches, 1.0))  # Diagonal matrix of ones
+considered_contingencies = []
+for i in range(N_branches):  # Only consider contingencies at the highest voltage level(s)
+    from_ = branches['From Bus'][i]
+    to = branches['To Bus'][i]
+    if buses['BaseKV'][from_] < LOWEST_CONTINGENCY_VOLTAGE or buses['BaseKV'][to] < LOWEST_CONTINGENCY_VOLTAGE:
+        continue
+    considered_contingencies.append(i)
+print('Case with', len(considered_contingencies), 'considered contingencies')
 
 thermal_gens = {}
 hydro_gens = {}
@@ -115,7 +196,7 @@ for i in range(N_gens):
             thermal_gens[key].append(gens[key][i])
         elif gens['Fuel'][i] == 'Hydro':
             hydro_gens[key].append(gens[key][i])
-        elif gens['Category'][i] == 'Solar PV':
+        elif gens['Category'][i] == 'Solar PV' or gens['Category'][i] == 'PV':
             pv_gens[key].append(gens[key][i])
         elif gens['Fuel'][i] == 'Wind':
             wind_gens[key].append(gens[key][i])
@@ -164,8 +245,14 @@ def extractRealTimeData(hour, dir, name):
             year = int(row[0])
             month = int(row[1])
             day = int(row[2])
-            min5 = int(row[3]) - 1
-            date = datetime.datetime(year, month, day) + datetime.timedelta(minutes = min5*5)
+            period_minutes = int(row[3]) - 1
+            if network_name == 'RTS':
+                period_length = 5
+            elif network_name == 'Texas':
+                period_length = 60
+            else:
+                raise
+            date = datetime.datetime(year, month, day) + datetime.timedelta(minutes = period_minutes * period_length)
             if init_date + datetime.timedelta(hours = hour) == date:
                 data = []
                 for value in row[4:]:
@@ -173,25 +260,34 @@ def extractRealTimeData(hour, dir, name):
                 return data
     raise Exception('Hour', hour, 'not found in timeseries')
 
-hydro_max = np.array(extractRealTimeData(hour, 'HYDRO', 'hydro')) / baseMVA
+try:
+    hydro_max = np.array(extractRealTimeData(hour, 'HYDRO', 'hydro')) / baseMVA
+except FileNotFoundError:
+    print('Warning: hydro availability file not found, assuming no water shortage')
+    hydro_max = np.array(hydro_gens['PMax MW']) / baseMVA
+
 pv_max = np.array(extractRealTimeData(hour, 'PV', 'pv')) / baseMVA
 wind_max = np.array(extractRealTimeData(hour, 'WIND', 'wind')) / baseMVA
-rtpv_max = np.array(extractRealTimeData(hour, 'RTPV', 'rtpv')) / baseMVA
+if len(rtpv_gens['GEN UID']) > 0:
+    rtpv_max = np.array(extractRealTimeData(hour, 'RTPV', 'rtpv')) / baseMVA
+else:
+    rtpv_max = np.array([])
 
 losses = 0.04
-demand_area = np.array(extractRealTimeData(hour, 'Load', 'regional_load')) / baseMVA
+demand_area = np.array(extractRealTimeData(hour, 'Load', 'regional_Load')) / baseMVA
 demand_bus = []
-for i in range(3):
-    demand_bus.append(demand_area[i] * np.array(load_participation_area[i]))
-demand_bus = np.concatenate((demand_bus[0], demand_bus[1], demand_bus[2]))
 
+for i in range(N_buses):
+    demand_bus.append(loads_P[i] / load_per_area[area[i] - 1] * demand_area[area[i] - 1])
+demand_bus = np.array(demand_bus)
 
-# DCOPF: Send data to GAMS
-print('\nPSCDCOPF')
-dcopf_path = os.path.join('a-PSCDCOPF', str(hour))
-Path(dcopf_path).mkdir(parents=True, exist_ok=True)
-ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), dcopf_path), debug=gams.DebugLevel.Off)
-db_preDC = ws.add_database()
+Q_AC_thermal = {i+1: 0 for i in range(N_thermal_gens)}  # Reactive outputs unkown at this stage
+Q_AC_hydro = {i+1: 0 for i in range(N_hydro_gens)}
+Q_AC_wind = {i+1: 0 for i in range(N_wind_gens)}
+Q_AC_pv = {i+1: 0 for i in range(N_pv_gens)}
+Q_AC_syncon = {i+1: 0 for i in range(N_syncon_gens)}
+V_AC = {i+1: 1 for i in range(N_buses)}  # Flat start
+
 
 def addGamsSet(db, name, description, lst):
     # Adds a 1-dimensional set
@@ -199,15 +295,6 @@ def addGamsSet(db, name, description, lst):
     for i in lst:
         set.add_record(str(i))
     return set
-
-i_thermal = addGamsSet(db_preDC, 'i_thermal', 'thermal generators', range(1, N_thermal_gens + 1))
-i_hydro = addGamsSet(db_preDC, 'i_hydro', 'hydro generators', range(1, N_hydro_gens + 1))
-i_pv = addGamsSet(db_preDC, 'i_pv', 'pv generators', range(1, N_pv_gens + 1))
-i_wind = addGamsSet(db_preDC, 'i_wind', 'wind generators', range(1, N_wind_gens + 1))
-i_rtpv = addGamsSet(db_preDC, 'i_rtpv', 'rtpv generators', range(1, N_rtpv_gens + 1))
-i_syncon = addGamsSet(db_preDC, 'i_syncon', 'syncon generators', range(1, N_syncon_gens + 1))
-i_bus = addGamsSet(db_preDC, 'i_bus', 'buses', range(1, N_buses + 1))
-i_branch = addGamsSet(db_preDC, 'i_branch', 'branches', range(1, N_branches + 1))
 
 def addGamsParams(db, name, description, sets, values):
     m = db.add_parameter_dc(name, sets, description)
@@ -219,8 +306,26 @@ def addGamsParams(db, name, description, sets, values):
         i_1, i_2 = sets[0], sets[1]
         for i in range(len(i_1)):
             for j in range(len(i_2)):
-                if values[i][j] != 0:  # Only store non-zero values for speed
+                if values[i][j] != 0:  # Only store non-zero values for performance
                     m.add_record((str(i+1),str(j+1))).value = values[i][j]
+
+
+# DCOPF: Send data to GAMS
+print('\nPSCDCOPF')
+dcopf_path = os.path.join('a-PSCDCOPF', str(hour))
+Path(dcopf_path).mkdir(parents=True, exist_ok=True)
+ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), dcopf_path), debug=gams.DebugLevel.Off)
+db_preDC = ws.add_database()
+shutil.copy(os.path.join('a-PSCDCOPF', 'cplex.opt'), dcopf_path)
+
+i_thermal = addGamsSet(db_preDC, 'i_thermal', 'thermal generators', range(1, N_thermal_gens + 1))
+i_hydro = addGamsSet(db_preDC, 'i_hydro', 'hydro generators', range(1, N_hydro_gens + 1))
+i_pv = addGamsSet(db_preDC, 'i_pv', 'pv generators', range(1, N_pv_gens + 1))
+i_wind = addGamsSet(db_preDC, 'i_wind', 'wind generators', range(1, N_wind_gens + 1))
+i_rtpv = addGamsSet(db_preDC, 'i_rtpv', 'rtpv generators', range(1, N_rtpv_gens + 1))
+i_syncon = addGamsSet(db_preDC, 'i_syncon', 'syncon generators', range(1, N_syncon_gens + 1))
+i_bus = addGamsSet(db_preDC, 'i_bus', 'buses', range(1, N_buses + 1))
+i_branch = addGamsSet(db_preDC, 'i_branch', 'branches', range(1, N_branches + 1))
 
 addGamsParams(db_preDC, 'thermal_map', 'thermal generators map', [i_thermal, i_bus], thermal_gen_map)
 addGamsParams(db_preDC, 'hydro_map', 'hydro generators map', [i_hydro, i_bus], hydro_gen_map)
@@ -238,27 +343,47 @@ addGamsParams(db_preDC, 'wind_max', 'wind generator maximum generation', [i_wind
 addGamsParams(db_preDC, 'rtpv_max', 'rtpv generator maximum generation', [i_rtpv], rtpv_max)
 
 addGamsParams(db_preDC, 'branch_admittance', 'branch admittance', [i_branch], 1 / np.array(branches['X']))
-addGamsParams(db_preDC, 'branch_max_N', 'Normal branch max power', [i_branch], np.array(branches['Cont Rating']) / baseMVA)
-addGamsParams(db_preDC, 'branch_max_E', 'Emergency branch max power', [i_branch], np.array(branches['LTE Rating']) / baseMVA)
+addGamsParams(db_preDC, 'branch_max_N', 'Normal branch max power', [i_branch], cont_rating / baseMVA)
+addGamsParams(db_preDC, 'branch_max_E', 'Emergency branch max power', [i_branch], lte_rating / baseMVA)
 
-contingency_states = np.diag(np.full(N_branches, 1.0))  # Diagonal matrix of ones
-addGamsParams(db_preDC, 'contingency_states', 'Line states in the considered contingencies', [i_branch, i_branch], contingency_states)
+considered_contingency_states = contingency_states[:, considered_contingencies]
+i_contingency = addGamsSet(db_preDC, 'i_contingency', 'contingencies', range(1, 1 + len(considered_contingencies)))
+addGamsParams(db_preDC, 'contingency_states', 'Line states in the considered contingencies', [i_branch, i_contingency], contingency_states)
 
 addGamsParams(db_preDC, 'demand', 'demand at each bus', [i_bus], demand_bus * (1 + losses))
 
-lincost = np.array(thermal_gens['HR_incr_3']) * 1000 * np.array(thermal_gens['Fuel Price $/MMBTU']) / 1e6
-addGamsParams(db_preDC, 'lincost', 'linear cost', [i_thermal], lincost)
+if network_name == 'RTS':
+    thermal_lincost = np.array(thermal_gens['HR_incr_3']) * 1000 * np.array(thermal_gens['Fuel Price $/MMBTU']) / 1e6
+    hydro_lincost = np.array(hydro_gens['HR_incr_3']) * 1000 * np.array(hydro_gens['Fuel Price $/MMBTU']) / 1e6
+    pv_lincost = np.array(pv_gens['HR_incr_3']) * 1000 * np.array(pv_gens['Fuel Price $/MMBTU']) / 1e6
+    wind_lincost = np.array(wind_gens['HR_incr_3']) * 1000 * np.array(wind_gens['Fuel Price $/MMBTU']) / 1e6
+elif network_name == 'Texas':
+    thermal_lincost = np.array(thermal_gens['HR_incr_1']) * 1000 * np.array(thermal_gens['Fuel Price $/MMBTU']) / 1e6
+    hydro_lincost = np.array(hydro_gens['HR_incr_1']) * 1000 * np.array(hydro_gens['Fuel Price $/MMBTU']) / 1e6
+    pv_lincost = np.array(pv_gens['HR_incr_1']) * 1000 * np.array(pv_gens['Fuel Price $/MMBTU']) / 1e6
+    wind_lincost = np.array(wind_gens['HR_incr_1']) * 1000 * np.array(wind_gens['Fuel Price $/MMBTU']) / 1e6
+else:
+    raise
+addGamsParams(db_preDC, 'lincost_thermal', 'thermal linear cost', [i_thermal], thermal_lincost)
+addGamsParams(db_preDC, 'lincost_hydro', 'hydro linear cost', [i_hydro], hydro_lincost)
+addGamsParams(db_preDC, 'lincost_pv', 'pv linear cost', [i_pv], pv_lincost)
+addGamsParams(db_preDC, 'lincost_wind', 'wind linear cost', [i_wind], wind_lincost)
 
-addGamsParams(db_preDC, 'P_thermal_0', 'Initial thermal outputs', [i_thermal], np.array(prescient_thermal_dispatch['Output']) / baseMVA)
-addGamsParams(db_preDC, 'P_hydro_0', 'Initial hydro outputs', [i_hydro], np.array(prescient_hydro_dispatch['Output']) / baseMVA)
-addGamsParams(db_preDC, 'P_pv_0', 'Initial pv outputs', [i_pv], np.array(prescient_pv_dispatch['Output']) / baseMVA)
-addGamsParams(db_preDC, 'P_wind_0', 'Initial wind outputs', [i_wind], np.array(prescient_wind_dispatch['Output']) / baseMVA)
+if WITH_PRESCIENT:
+    addGamsParams(db_preDC, 'P_thermal_0', 'Initial thermal outputs', [i_thermal], np.array(prescient_thermal_dispatch['Output']) / baseMVA)
+    addGamsParams(db_preDC, 'P_hydro_0', 'Initial hydro outputs', [i_hydro], np.array(prescient_hydro_dispatch['Output']) / baseMVA)
+    addGamsParams(db_preDC, 'P_pv_0', 'Initial pv outputs', [i_pv], np.array(prescient_pv_dispatch['Output']) / baseMVA)
+    addGamsParams(db_preDC, 'P_wind_0', 'Initial wind outputs', [i_wind], np.array(prescient_wind_dispatch['Output']) / baseMVA)
 
-prescient_thermal_dispatch['State'] = [int(i) for i in prescient_thermal_dispatch['State']]
-addGamsParams(db_preDC, 'on_0', 'Initial commitment status of thermal generators', [i_thermal], prescient_thermal_dispatch['State'])
+    prescient_thermal_dispatch['State'] = [int(i) for i in prescient_thermal_dispatch['State']]
+    addGamsParams(db_preDC, 'on_0', 'Initial commitment status of thermal generators', [i_thermal], prescient_thermal_dispatch['State'])
 
 db_preDC.export('PrePSCDCOPF.gdx')
-t = ws.add_job_from_file('../PSCDCOPF.gms')
+if WITH_PRESCIENT:
+    t = ws.add_job_from_file('../PSCDCOPF.gms')
+else:
+    t = ws.add_job_from_file('../PSCDCOPF_no_init.gms')
+print('Launching GAMS')
 t.run()
 
 db_postDC = ws.add_database_from_gdx("PostPSCDCOPF.gdx")
@@ -272,23 +397,27 @@ P_DC_hydro = {rec.keys[0]:rec.level for rec in db_postDC["P_hydro"]}
 P_DC_pv = {rec.keys[0]:rec.level for rec in db_postDC["P_pv"]}
 P_DC_wind = {rec.keys[0]:rec.level for rec in db_postDC["P_wind"]}
 P_DC_pf = {rec.keys[0]:rec.level for rec in db_postDC["pf0"]}
-on_DC = {rec.keys[0]:rec.level for rec in db_postDC["on"]}
+theta_DC = {rec.keys[0]:rec.level for rec in db_postDC["theta0"]}
 
 cost = db_postDC["total_cost"].first_record().level
-deviation = db_postDC["deviation"].first_record().level
+if WITH_PRESCIENT:
+    deviation = db_postDC["deviation"].first_record().level
 
 for key in P_DC_thermal:
     P_DC_thermal[key] = round(P_DC_thermal[key], 4)
 
-print('Demand + estimated losses', sum(demand_bus) * (1 + losses))
-print('Total generation',
-      sum(np.array(prescient_thermal_dispatch['Output']) / baseMVA) +
-      sum(np.array(prescient_hydro_dispatch['Output']) / baseMVA) +
-      sum(np.array(prescient_pv_dispatch['Output']) / baseMVA) +
-      sum(np.array(prescient_wind_dispatch['Output']) / baseMVA) +
-      sum(rtpv_max))
+if WITH_PRESCIENT:
+    print('Deviation:', round(deviation, 2))
+else:
+    print('Cost', cost)
 
-print('Deviation:', round(deviation, 2))
+
+if network_name == 'RTS':
+    on_DC = {rec.keys[0]:rec.level for rec in db_postDC["on"]}
+elif network_name == 'Texas':  # Network too large to run a mixed-integer DCOPF, so all generators are considered on
+    on_DC = {i+1: 1 if P_DC_thermal[i] > 1e-3 else 0 for i in range(N_thermal_gens)}
+else:
+    raise
 
 
 #####
@@ -316,7 +445,7 @@ for i in range(N_branches):
         branch_FromTo[i] = -1/z
         branch_ToFrom[i] = -1/z
         branch_ToTo[i] = y2 + 1/z
-    else:  # Transformer (no phase shift in RTS data)
+    else:  # Transformer (no phase shift in RTS data format)
         tap = 1/tap  # Inverse conventions in Powsybl and RTS/Matpower
         y = 1j * branches['B'][i]
         branch_FromFrom[i] = (y/2 + 1/z) * tap**2
@@ -340,10 +469,142 @@ B_branch_ToFrom = branch_ToFrom.imag
 G_branch_ToTo = branch_ToTo.real
 B_branch_ToTo = branch_ToTo.imag
 
+
+# Run a first AC load flow to initialise the AC OPF
+demand_bus_Q = np.zeros(N_buses)
+for i in range(N_buses):
+    if loads_P[i] != 0:
+        demand_bus_Q[i] = loads_Q[i]/loads_P[i] * demand_bus[i]
+    else:
+        demand_bus_Q[i] = 0
+    demand_bus_Q[i] += - buses['MVAR Shunt B'][i] / baseMVA
+
+network = pp.network.load(f'../{network_name}-Data/{network_name}.iidm')
+thermal_connected = [True if on == 1 else False for on in on_DC.values()]
+
+opf_results_to_powsybl(network, thermal_gens, thermal_connected, P_DC_thermal, Q_AC_thermal,
+                           hydro_gens, P_DC_hydro, Q_AC_hydro, hydro_max,
+                           wind_gens, P_DC_wind, Q_AC_wind, wind_max,
+                           pv_gens, P_DC_pv, Q_AC_pv, pv_max,
+                           rtpv_gens, rtpv_max,
+                           syncon_gens, Q_AC_syncon,
+                           buses, demand_bus, demand_bus_Q,
+                           gens, V_AC)
+
+
+load_ids = ['L-'+str(int(buses['Bus ID'][i])) for i in range(N_buses)]
+for i in range(N_buses):
+    if loads_P[i] != 0:
+        demand_bus_Q[i] = loads_Q[i]/loads_P[i] * demand_bus[i]
+    else:
+        demand_bus_Q[i] = 0
+    # demand_bus_Q[i] += - buses['MVAR Shunt B'][i] / baseMVA
+network.update_loads(id=load_ids, q0=demand_bus_Q * baseMVA)
+
+# Represent shunts as static var compensators because continuous variables are easier to manage in an OPF. They will be put back
+# as negative loads for the PSCACOPF (assume shunts do not directly react following disturbances (as capacitor banks do not react
+# before a few dozens seconds to minutes))
+shunt_indices = []
+shunt_Qmin = []
+shunt_Qmax = []
+for i in range(N_buses):
+    Q_shunt = buses['MVAR Shunt B'][i] / baseMVA
+    bus_id = str(int(buses['Bus ID'][i]))
+    if Q_shunt != 0:
+        shunt_indices.append(i)
+        # shunt_capability = [0, Q_shunt]
+        # Q_min, Q_max = min(shunt_capability), max(shunt_capability)
+        Q_max = abs(Q_shunt)  # Assuming shunts can go both directions (otherwise Texas case does not converge)
+        Q_min = -abs(Q_shunt)
+        shunt_Qmin.append(Q_min)
+        shunt_Qmax.append(Q_max)
+        b_min = Q_min * baseMVA / buses['BaseKV'][i]**2
+        b_max = Q_max * baseMVA / buses['BaseKV'][i]**2
+        network.create_static_var_compensators(id = 'Shunt-' + bus_id, voltage_level_id='V-' + bus_id, bus_id='B-' + bus_id,
+                                                b_max = b_max, b_min = b_min,
+                                                target_v=buses['V Mag'][i] * buses['BaseKV'][i], regulation_mode='VOLTAGE')
+N_shunts = len(shunt_indices)
+
+shunt_map = np.zeros((N_shunts, N_buses))
+for i in range(N_shunts):
+    shunt_map[i][buses['Bus ID'].index(buses['Bus ID'][shunt_indices[i]])] = 1
+
+sol = pp.loadflow.run_dc(network)
+print(sol)
+sol = pp.loadflow.run_ac(network)
+print(sol)
+
+if str(sol[0].status) == 'ComponentStatus.MAX_ITERATION_REACHED' or str(sol[0].status) == 'ComponentStatus.FAILED':
+    raise RuntimeError('Non convergence of initial load flow')
+
+gen_results = network.get_generators()
+np.nan_to_num(gen_results['p'], copy=False)  # Set 0 output for disconnected generators instead of nan
+np.nan_to_num(gen_results['q'], copy=False)
+P_AC_thermal = {}
+P_AC_hydro = {}
+P_AC_wind = {}
+P_AC_pv = {}
+for i in range(N_thermal_gens):
+    P_AC_thermal[i+1] = -gen_results['p'][thermal_gens['GEN UID'][i]] / baseMVA  # Receptor convention
+    Q_AC_thermal[i+1] = -gen_results['q'][thermal_gens['GEN UID'][i]] / baseMVA
+for i in range(N_hydro_gens):
+    P_AC_hydro[i+1] = -gen_results['p'][hydro_gens['GEN UID'][i]] / baseMVA
+    Q_AC_hydro[i+1] = -gen_results['q'][hydro_gens['GEN UID'][i]] / baseMVA
+for i in range(N_wind_gens):
+    P_AC_wind[i+1] = -gen_results['p'][wind_gens['GEN UID'][i]] / baseMVA
+    Q_AC_wind[i+1] = -gen_results['q'][wind_gens['GEN UID'][i]] / baseMVA
+for i in range(N_pv_gens):
+    P_AC_pv[i+1] = -gen_results['p'][pv_gens['GEN UID'][i]] / baseMVA
+    Q_AC_pv[i+1] = -gen_results['q'][pv_gens['GEN UID'][i]] / baseMVA
+for i in range(N_syncon_gens):
+    Q_AC_syncon[i+1] = -gen_results['q'][syncon_gens['GEN UID'][i]] / baseMVA
+
+shunt_results = network.get_static_var_compensators()
+Q_AC_shunt = {}
+for i in range(N_shunts):
+    Q_AC_shunt[i+1] = -shunt_results['q']['Shunt-' + str(int(buses['Bus ID'][shunt_indices[i]]))] / baseMVA
+
+V = []
+theta = []
+bus_results = network.get_buses()
+vl_results = network.get_voltage_levels()
+for i in range(N_buses):
+    id = int(buses['Bus ID'][i])
+    bus_id = 'V-' + str(id) + '_0'  # Powsybl renames buses for fun
+    vl_id = 'V-' + str(id)
+    V_bus = bus_results.loc[bus_id, 'v_mag'] / vl_results.loc[vl_id, 'nominal_v']
+    V.append(V_bus)
+    theta.append(bus_results.loc[bus_id, 'v_angle'] * pi/180)
+
+    if V_bus < 0.9 or V_bus > 1.1:
+        print('Warning: unacceptable voltage at bus', bus_id, 'in initial load flow', V_bus)
+    elif V_bus < 0.95 or V_bus > 1.08:
+        print('Warning: problematic voltage  at bus', bus_id, 'in initial load flow', V_bus)
+
+theta_AC = {}
+for i in range(N_buses):
+    V_AC[i+1] = V[i]
+    theta_AC[i+1] = theta[i]
+
+P1 = np.zeros(N_branches)
+Q1 = np.zeros(N_branches)
+line_results = network.get_lines()
+transformer_results = network.get_2_windings_transformers()
+for i in range(N_branches):
+    UID = branches['UID'][i]
+    if branches['Tr Ratio'][i] == 0:
+        P1[i] = line_results['p1'][UID] / baseMVA
+        Q1[i] = line_results['q1'][UID] / baseMVA
+    else:
+        P1[i] = transformer_results['p1'][UID] / baseMVA
+        Q1[i] = transformer_results['q1'][UID] / baseMVA
+
+
 acopf_path = os.path.join('b-ACOPF', str(hour))
 Path(acopf_path).mkdir(parents=True, exist_ok=True)
-ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), acopf_path), debug=gams.DebugLevel.Off)
+ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), acopf_path), debug=gams.DebugLevel.Off) # Off, KeepFilesOnError, KeepFiles, ShowLog, Verbose
 db_preAC = ws.add_database()
+shutil.copy(os.path.join('b-ACOPF', 'ipopt.opt'), acopf_path)
 
 i_thermal = addGamsSet(db_preAC, 'i_thermal', 'thermal generators', range(1, N_thermal_gens + 1))
 i_hydro = addGamsSet(db_preAC, 'i_hydro', 'hydro generators', range(1, N_hydro_gens + 1))
@@ -351,6 +612,7 @@ i_pv = addGamsSet(db_preAC, 'i_pv', 'pv generators', range(1, N_pv_gens + 1))
 i_wind = addGamsSet(db_preAC, 'i_wind', 'wind generators', range(1, N_wind_gens + 1))
 i_rtpv = addGamsSet(db_preAC, 'i_rtpv', 'rtpv generators', range(1, N_rtpv_gens + 1))
 i_syncon = addGamsSet(db_preAC, 'i_syncon', 'syncon generators', range(1, N_syncon_gens + 1))
+i_shunt = addGamsSet(db_preAC, 'i_shunt', 'shunts', range(1, N_shunts + 1))
 i_bus = addGamsSet(db_preAC, 'i_bus', 'buses', range(1, N_buses + 1))
 i_branch = addGamsSet(db_preAC, 'i_branch', 'branches', range(1, N_branches + 1))
 
@@ -360,6 +622,7 @@ addGamsParams(db_preAC, 'pv_map', 'pv generators map', [i_pv, i_bus], pv_gen_map
 addGamsParams(db_preAC, 'wind_map', 'wind generators map', [i_wind, i_bus], wind_gen_map)
 addGamsParams(db_preAC, 'rtpv_map', 'rtpv generators map', [i_rtpv, i_bus], rtpv_gen_map)
 addGamsParams(db_preAC, 'syncon_map', 'syncon generators map', [i_syncon, i_bus], syncon_gen_map)
+addGamsParams(db_preAC, 'shunt_map', 'shunt generators map', [i_shunt, i_bus], shunt_map)
 addGamsParams(db_preAC, 'branch_map', 'branches map', [i_branch, i_bus], branch_map)
 
 addGamsParams(db_preAC, 'thermal_min', 'thermal generator minimum generation', [i_thermal], thermal_min)
@@ -390,6 +653,8 @@ addGamsParams(db_preAC, 'hydro_Qmin', 'hydro generator minimum reactive generati
 addGamsParams(db_preAC, 'hydro_Qmax', 'hydro generator maximum reactive generation', [i_hydro], hydro_Qmax)
 addGamsParams(db_preAC, 'syncon_Qmin', 'syncon generator minimum reactive generation', [i_syncon], syncon_Qmin)
 addGamsParams(db_preAC, 'syncon_Qmax', 'syncon generator maximum reactive generation', [i_syncon], syncon_Qmax)
+addGamsParams(db_preAC, 'shunt_Qmin', 'shunt generator minimum reactive generation', [i_shunt], shunt_Qmin)
+addGamsParams(db_preAC, 'shunt_Qmax', 'shunt generator maximum reactive generation', [i_shunt], shunt_Qmax)
 addGamsParams(db_preAC, 'pv_Qmin', 'pv generator minimum reactive generation', [i_pv], pv_Qmin)
 addGamsParams(db_preAC, 'pv_Qmax', 'pv generator maximum reactive generation', [i_pv], pv_Qmax)
 addGamsParams(db_preAC, 'wind_Qmin', 'wind generator minimum reactive generation', [i_wind], wind_Qmin)
@@ -401,24 +666,29 @@ addGamsParams(db_preAC, 'Gff', 'line conductance (from-from)', [i_branch], G_bra
 addGamsParams(db_preAC, 'Gft', 'line conductance (from-to)', [i_branch], G_branch_FromTo)
 addGamsParams(db_preAC, 'Bff', 'line susceptance (from-from)', [i_branch], B_branch_FromFrom)
 addGamsParams(db_preAC, 'Bft', 'line susceptance (from-to)', [i_branch], B_branch_FromTo)
-addGamsParams(db_preAC, 'branch_max_N', 'Normal branch max power', [i_branch], np.array(branches['Cont Rating']) / baseMVA)
+addGamsParams(db_preAC, 'branch_max_N', 'Normal branch max power', [i_branch], cont_rating / baseMVA)
 
 addGamsParams(db_preAC, 'demand', 'demand at each bus', [i_bus], demand_bus)
-demand_bus_Q = np.zeros(N_buses)
-for i in range(N_buses):
-    if loads_P[i] != 0:
-        demand_bus_Q[i] = loads_Q[i]/loads_P[i] * demand_bus[i] - buses['MVAR Shunt B'][i] / baseMVA
-    # else = 0
 addGamsParams(db_preAC, 'demandQ', 'reactive demand at each bus', [i_bus], demand_bus_Q)
 
-addGamsParams(db_preAC, 'P_thermal_0', 'Initial thermal outputs', [i_thermal], list(P_DC_thermal.values()))
-addGamsParams(db_preAC, 'P_hydro_0', 'Initial hydro outputs', [i_hydro], list(P_DC_hydro.values()))
-addGamsParams(db_preAC, 'P_pv_0', 'Initial pv outputs', [i_pv], list(P_DC_pv.values()))
-addGamsParams(db_preAC, 'P_wind_0', 'Initial wind outputs', [i_wind], list(P_DC_wind.values()))
-addGamsParams(db_preAC, 'Ppf_0', 'Initial line active power flows', [i_branch], list(P_DC_pf.values()))
+addGamsParams(db_preAC, 'P_thermal_0', 'Initial thermal outputs', [i_thermal], list(P_AC_thermal.values()))
+addGamsParams(db_preAC, 'P_hydro_0', 'Initial hydro outputs', [i_hydro], list(P_AC_hydro.values()))
+addGamsParams(db_preAC, 'P_pv_0', 'Initial pv outputs', [i_pv], list(P_AC_pv.values()))
+addGamsParams(db_preAC, 'P_wind_0', 'Initial wind outputs', [i_wind], list(P_AC_wind.values()))
+addGamsParams(db_preAC, 'Ppf_0', 'Initial line active power flows', [i_branch], P1)
+addGamsParams(db_preAC, 'Q_thermal_0', 'Initial thermal reactive outputs', [i_thermal], list(Q_AC_thermal.values()))
+addGamsParams(db_preAC, 'Q_hydro_0', 'Initial hydro reactive outputs', [i_hydro], list(Q_AC_hydro.values()))
+addGamsParams(db_preAC, 'Q_syncon_0', 'Initial syncon reactive outputs', [i_syncon], list(Q_AC_syncon.values()))
+addGamsParams(db_preAC, 'Q_shunt_0', 'Initial shunt reactive outputs', [i_shunt], list(Q_AC_shunt.values()))
+addGamsParams(db_preAC, 'Q_pv_0', 'Initial pv reactive outputs', [i_pv], list(Q_AC_pv.values()))
+addGamsParams(db_preAC, 'Q_wind_0', 'Initial wind reactive outputs', [i_wind], list(Q_AC_wind.values()))
+addGamsParams(db_preAC, 'Qpf_0', 'Initial line active power flows', [i_branch], Q1)
+addGamsParams(db_preAC, 'V_0', 'Initial voltages', [i_bus], list(V_AC.values()))
+addGamsParams(db_preAC, 'theta_0', 'Initial angles', [i_bus], list(theta_AC.values()))
 
 db_preAC.export('PreACOPF.gdx')
 t = ws.add_job_from_file('../ACOPF.gms')
+print('Launching GAMS')
 t.run()
 
 db_postAC = ws.add_database_from_gdx("PostACOPF.gdx")
@@ -426,6 +696,7 @@ db_postAC = ws.add_database_from_gdx("PostACOPF.gdx")
 solve_status = int(db_postAC["sol"].first_record().value)
 if solve_status != 1 and solve_status != 2 and solve_status != 7:
     raise RuntimeError('ACOPF: no solution found, error code:', solve_status)
+print('ACOPF solution found')
 
 P_AC_thermal = {rec.keys[0]:rec.level for rec in db_postAC["P_thermal"]}
 P_AC_hydro = {rec.keys[0]:rec.level for rec in db_postAC["P_hydro"]}
@@ -435,6 +706,7 @@ P_AC_wind = {rec.keys[0]:rec.level for rec in db_postAC["P_wind"]}
 Q_AC_thermal = {rec.keys[0]:rec.level for rec in db_postAC["Q_thermal"]}
 Q_AC_hydro = {rec.keys[0]:rec.level for rec in db_postAC["Q_hydro"]}
 Q_AC_syncon = {rec.keys[0]:rec.level for rec in db_postAC["Q_syncon"]}
+Q_AC_shunt = {rec.keys[0]:rec.level for rec in db_postAC["Q_shunt"]}
 Q_AC_pv = {rec.keys[0]:rec.level for rec in db_postAC["Q_pv"]}
 Q_AC_wind = {rec.keys[0]:rec.level for rec in db_postAC["Q_wind"]}
 
@@ -458,48 +730,32 @@ print('Deviation:', round(deviation, 2))
 #####
 print('\nPSCACOPF')
 
-network = pp.network.load('../RTS-Data/RTS.iidm')
+network = pp.network.load(f'../{network_name}-Data/{network_name}.iidm')  # Reload network, this remove static var compensators that are now represented as loads
 
-connected = [True if on == 1 else False for on in on_DC.values()]
-network.update_generators(id=thermal_gens['GEN UID'], connected=connected,
-                          target_p=np.array(list(P_AC_thermal.values())) * baseMVA,
-                          target_q=np.array(list(Q_AC_thermal.values())) * baseMVA)
-network.update_generators(id=hydro_gens['GEN UID'],
-                          target_p=np.array(list(P_AC_hydro.values())) * baseMVA,
-                          target_q=np.array(list(Q_AC_hydro.values())) * baseMVA,
-                          max_p=hydro_max * baseMVA)
-network.update_generators(id=wind_gens['GEN UID'],
-                          target_p=np.array(list(P_AC_wind.values())) * baseMVA,
-                          target_q=np.array(list(Q_AC_wind.values())) * baseMVA,
-                          max_p=wind_max * baseMVA)
-network.update_generators(id=pv_gens['GEN UID'],
-                          target_p=np.array(list(P_AC_pv.values())) * baseMVA,
-                          target_q=np.array(list(Q_AC_pv.values())) * baseMVA,
-                          max_p=pv_max * baseMVA,
-                          voltage_regulator_on=[True] * N_pv_gens)
-network.update_generators(id=rtpv_gens['GEN UID'],
-                          target_p=rtpv_max * baseMVA,
-                          max_p=rtpv_max * baseMVA,
-                          voltage_regulator_on=[False] * N_rtpv_gens)
-network.update_generators(id=syncon_gens['GEN UID'], target_q=np.array(list(Q_AC_syncon.values())) * baseMVA)
-
-# Disconnect PV generators at night
-for i in range(N_pv_gens):
-    network.update_generators(id=pv_gens['GEN UID'][i], connected = pv_max[i] > 0)
-for i in range(N_rtpv_gens):
-    network.update_generators(id=rtpv_gens['GEN UID'][i], connected = rtpv_max[i] > 0)
-
+# Model shunts as negative loads
 load_ids = ['L-'+str(int(buses['Bus ID'][i])) for i in range(N_buses)]
-network.update_loads(id=load_ids, p0=demand_bus * baseMVA, q0=demand_bus_Q * baseMVA)
+Q_bus_shunt = np.array(list(Q_AC_shunt.values())) @ shunt_map
+for i in range(N_buses):
+    if loads_P[i] != 0:
+        demand_bus_Q[i] = loads_Q[i]/loads_P[i] * demand_bus[i]
+    else:
+        demand_bus_Q[i] = 0
+    demand_bus_Q[i] += - Q_bus_shunt[i]
+
+thermal_connected = [True if on == 1 else False for on in on_DC.values()]
+
+opf_results_to_powsybl(network, thermal_gens, thermal_connected, P_AC_thermal, Q_AC_thermal,
+                           hydro_gens, P_AC_hydro, Q_AC_hydro, hydro_max,
+                           wind_gens, P_AC_wind, Q_AC_wind, wind_max,
+                           pv_gens, P_AC_pv, Q_AC_pv, pv_max,
+                           rtpv_gens, rtpv_max,
+                           syncon_gens, Q_AC_syncon,
+                           buses, demand_bus, demand_bus_Q,
+                           gens, V_AC)
+
 
 critical_contingencies = []  # Contingencies that lead to issues and have to be included in the PSCACOPF (iteratively added to the problem)
 while True:
-    for i in range(N_gens):
-        bus_id = gens['Bus ID'][i]
-        index = buses['Bus ID'].index(bus_id)
-        V = list(V_AC.values())[index] * buses['BaseKV'][index]
-        network.update_generators(id=gens['GEN UID'][i], target_v=V)
-
     print(pp.loadflow.run_ac(network))
     P1 = np.zeros(N_branches)
     Q1 = np.zeros(N_branches)
@@ -534,7 +790,8 @@ while True:
 
     # Compute power flows for each N-1 contingency
     current_critical_contingencies = []
-    for j in range(N_branches):
+    for j in considered_contingencies:
+        print('Running load flow for contingency of line', branches['UID'][j])
         # Disconnect line (or transformer)
         if branches['Tr Ratio'][j] == 0:
             network.update_lines(id=branches['UID'][j], connected1=False, connected2=False)
@@ -622,6 +879,7 @@ while True:
             Q2_cont[i][i] = 0
 
         gen_results = network.get_generators()
+        np.nan_to_num(gen_results['q'], copy=False)  # Set 0 Q output for disconnected generators instead of nan
         for i in range(N_thermal_gens):
             Q_thermal_cont[i][j] = -gen_results['q'][thermal_gens['GEN UID'][i]] / baseMVA  # Receptor convention
         for i in range(N_hydro_gens):
@@ -646,20 +904,13 @@ while True:
         V_cont[:,j] = np.array(V)
         theta_cont[:,j] = np.array(theta)
 
-    # Replace NaN's with zeroes for disconnected elements
-    np.nan_to_num(Q_thermal_cont, copy=False)
-    np.nan_to_num(Q_hydro_cont, copy=False)
-    np.nan_to_num(Q_syncon_cont, copy=False)
-    np.nan_to_num(Q_pv_cont, copy=False)
-    np.nan_to_num(Q_wind_cont, copy=False)
-
     # Check contingencies that lead to issues with the current dispatch
     for j in range(N_branches):
         for i in range(N_branches):
-            if (P1_cont[i][j]**2 + Q1_cont[i][j]**2)**0.5 > 1.05 * branches['LTE Rating'][i] / baseMVA:
+            if (P1_cont[i][j]**2 + Q1_cont[i][j]**2)**0.5 > 1.05 * lte_rating[i] / baseMVA:
                 if j not in current_critical_contingencies:
                     current_critical_contingencies.append(j)
-                    print('Critical contingency', branches['UID'][j], ': high current in branch', branches['UID'][i], ':', (P1_cont[i][j]**2 + Q1_cont[i][j]**2)**0.5 * baseMVA,  '>', branches['LTE Rating'][i])
+                    print('Critical contingency', branches['UID'][j], ': high current in branch', branches['UID'][i], ':', (P1_cont[i][j]**2 + Q1_cont[i][j]**2)**0.5 * baseMVA,  '>', lte_rating[i])
         for i in range(N_buses):
             if V_cont[i,j] < 0.8499:
                 if j not in current_critical_contingencies:
@@ -728,8 +979,8 @@ while True:
     addGamsParams(db_prePSCAC, 'Btf', 'line susceptance (to-from)', [i_branch], B_branch_ToFrom)
     addGamsParams(db_prePSCAC, 'Gtt', 'line conductance (to-to)', [i_branch], G_branch_ToTo)
     addGamsParams(db_prePSCAC, 'Btt', 'line susceptance (to-to)', [i_branch], B_branch_ToTo)
-    addGamsParams(db_prePSCAC, 'branch_max_N', 'Normal branch max power', [i_branch], np.array(branches['Cont Rating']) / baseMVA)
-    addGamsParams(db_prePSCAC, 'branch_max_E', 'Emergency branch max power', [i_branch], np.array(branches['LTE Rating']) / baseMVA)
+    addGamsParams(db_prePSCAC, 'branch_max_N', 'Normal branch max power', [i_branch], cont_rating / baseMVA)
+    addGamsParams(db_prePSCAC, 'branch_max_E', 'Emergency branch max power', [i_branch], lte_rating / baseMVA)
 
     addGamsParams(db_prePSCAC, 'contingency_states', 'Line states in the considered contingencies', [i_branch, i_contingency], contingency_states[:, critical_contingencies])
 
@@ -773,6 +1024,7 @@ while True:
 
     db_prePSCAC.export('PrePSCACOPF.gdx')
     t = ws.add_job_from_file('../PSCACOPF.gms')
+    print('Launching GAMS')
     t.run()
 
     db_postPSCAC = ws.add_database_from_gdx("PostPSCACOPF.gdx")
@@ -799,10 +1051,10 @@ while True:
 
     print('Demand + estimated losses', sum(demand_bus) * (1 + losses))
     print('Total generation',
-        sum(np.array(prescient_thermal_dispatch['Output']) / baseMVA) +
-        sum(np.array(prescient_hydro_dispatch['Output']) / baseMVA) +
-        sum(np.array(prescient_pv_dispatch['Output']) / baseMVA) +
-        sum(np.array(prescient_wind_dispatch['Output']) / baseMVA) +
+        sum(P_AC_thermal.values()) +
+        sum(P_AC_hydro.values()) +
+        sum(P_AC_pv.values()) +
+        sum(P_AC_wind.values()) +
         sum(rtpv_max))
 
     print('Deviation:', round(deviation, 2))
@@ -821,25 +1073,14 @@ while True:
             raise RuntimeError('Slack variable', rec.keys, 'is not zero') """
 
     # Send dispatch to Powsybl
-    network.update_generators(id=thermal_gens['GEN UID'],
-                              target_p=np.array(list(P_AC_thermal.values())) * baseMVA,
-                              target_q=np.array(list(Q_AC_thermal.values())) * baseMVA)
-    network.update_generators(id=hydro_gens['GEN UID'],
-                              target_p=np.array(list(P_AC_hydro.values())) * baseMVA,
-                              target_q=np.array(list(Q_AC_hydro.values())) * baseMVA)
-    network.update_generators(id=wind_gens['GEN UID'],
-                              target_p=np.array(list(P_AC_wind.values())) * baseMVA,
-                              target_q=np.array(list(Q_AC_wind.values())) * baseMVA)
-    network.update_generators(id=pv_gens['GEN UID'],
-                              target_p=np.array(list(P_AC_pv.values())) * baseMVA,
-                              target_q=np.array(list(Q_AC_pv.values())) * baseMVA)
-    network.update_generators(id=syncon_gens['GEN UID'], target_q=np.array(list(Q_AC_syncon.values())) * baseMVA)
-
-    for i in range(N_gens):
-        bus_id = gens['Bus ID'][i]
-        index = buses['Bus ID'].index(bus_id)
-        V = list(V_AC.values())[index] * buses['BaseKV'][index]
-        network.update_generators(id=gens['GEN UID'][i], target_v=V)
+    opf_results_to_powsybl(network, thermal_gens, thermal_connected, P_AC_thermal, Q_AC_thermal,
+                           hydro_gens, P_AC_hydro, Q_AC_hydro, hydro_max,
+                           wind_gens, P_AC_wind, Q_AC_wind, wind_max,
+                           pv_gens, P_AC_pv, Q_AC_pv, pv_max,
+                           rtpv_gens, rtpv_max,
+                           syncon_gens, Q_AC_syncon,
+                           buses, demand_bus, demand_bus_Q,
+                           gens, V_AC)
 # end while
 
 # Check if the PSCACOPF solution satisfy all criteria (N-1 cases)
@@ -867,11 +1108,11 @@ for j in range(N_branches):
             continue
         UID = branches['UID'][i]
         if branches['Tr Ratio'][i] == 0:
-            if (line_results['p1'][UID]**2 + line_results['q1'][UID]**2)**0.5 > 1.05 * branches['LTE Rating'][i]:
+            if (line_results['p1'][UID]**2 + line_results['q1'][UID]**2)**0.5 > 1.05 * lte_rating[i]:
                 raise RuntimeError('Overcurrent in branch', UID, 'following contingency of branch',
-                                   branches['UID'][j], (line_results['p1'][UID]**2 + line_results['q1'][UID]**2)**0.5, '>', 1.05 * branches['LTE Rating'][i])
+                                   branches['UID'][j], (line_results['p1'][UID]**2 + line_results['q1'][UID]**2)**0.5, '>', 1.05 * lte_rating[i])
         else:
-            if (transformer_results['p1'][UID]**2 + transformer_results['q1'][UID]**2)**0.5 > 1.05 * branches['LTE Rating'][i]:
+            if (transformer_results['p1'][UID]**2 + transformer_results['q1'][UID]**2)**0.5 > 1.05 * lte_rating[i]:
                 raise RuntimeError('Overcurrent in branch', UID)
 
     V = []

@@ -2,7 +2,8 @@ from prescient.simulator import Prescient
 import sys
 
 case = sys.argv[1]
-output_dir = case + '_week_output_N_1'
+network_name = sys.argv[2]
+output_dir = f'{case}_{network_name}_week_output_N_1'
 
 if case == 'january':
     start = "01-01-2020"
@@ -17,7 +18,7 @@ else:
     raise NotImplementedError()
 
 Prescient().simulate(
-    data_path = "data",
+    data_path = f"data-{network_name}",
     input_format = "rts-gmlc",
     simulate_out_of_sample = True, # This option directs the simulator to use different forecasts from actuals.
     run_sced_with_persistent_forecast_errors = True,    # This option directs the simulator to use forecasts

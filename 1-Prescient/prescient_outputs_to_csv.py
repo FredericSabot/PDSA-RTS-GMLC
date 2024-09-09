@@ -5,9 +5,10 @@ from pathlib import Path
 import sys
 
 case = sys.argv[1]
+network_name = sys.argv[2]
 
-folder_in = case + '_week_output_N_1'
-folder_out = 'PrescientDispatch_' + case
+folder_in = f'{case}_{network_name}_week_output_N_1'
+folder_out = f'PrescientDispatch_{case}_{network_name}'
 Path(folder_out).mkdir(parents=True, exist_ok=True)
 
 # Check init and end times

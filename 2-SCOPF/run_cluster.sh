@@ -21,8 +21,9 @@ cd PDSA-RTS-GMLC/2-SCOPF
 ID=`expr $SLURM_ARRAY_TASK_ID + 1000`
 
 case="year"
+network="Texas"
 echo 'Running case' $case $ID
-time -p python PSCACOPF.py $ID $case
+time -p python PSCACOPF.py $ID $case $network
 
 # Delete temporary files
 rm -r a-PSCDCOPF/$ID/

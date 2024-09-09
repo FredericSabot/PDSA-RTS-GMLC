@@ -1,6 +1,7 @@
 # Changes compared to the RTS-GMLC
 
 * Data
+    * Line lengths converted to km
     * Removed generators that are not handled by PRESCIENT (storage and CSP).
     * (PRESCIENT does not handle storage, so all hydro units are implicitly converted to run-of-the-river)
     * Increase spinning reserves to 500 MW (total for the three areas) to be able to handle the sudden loss of nuclear power plant (400 MW) or the loss of a wind plant to some extent (847 MW peak)

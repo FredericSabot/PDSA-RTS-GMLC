@@ -1,4 +1,4 @@
-1-Prescient/data/*
+1-Prescient/data*/*
 1-Prescient/*output*/*
 1-Prescient/*output/*
 1-Prescient/PrescientDispatch*/*
@@ -27,3 +27,6 @@
 *.pyc
 *.pickle
 *.pdf
+Texas-Data/*.csv
+Texas-Data/**/*.csv
+Texas-Data/timeseries_data_files/weather_data/*
