@@ -157,8 +157,6 @@ line_capacity(i_branch) line capacitiy limit;
 *** SETTINGS
 ***************************************************************
 
-*setting the reference bus
-theta.fx ('1') = 0;
 theta.l(i_bus)=theta_0(i_bus);
 V.l(i_bus)=V_0(i_bus);
 
