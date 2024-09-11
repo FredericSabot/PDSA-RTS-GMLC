@@ -8,10 +8,11 @@ from cmath import pi
 import pypowsybl as pp
 from pathlib import Path
 import shutil
+import pickle
 
 baseMVA = 100
 
-# sys.argv = ['PSCACOPF.py', '167', 'january']  # Don't uncomment, copy paste to interpreter if needed (avoid mistakes)
+# sys.argv = ['PSCACOPF.py', '167', 'january', 'Texas']  # Don't uncomment, copy paste to interpreter if needed (avoid mistakes)
 hour = int(sys.argv[1])
 case = sys.argv[2]
 network_name = sys.argv[3]
@@ -113,6 +114,50 @@ def opf_results_to_powsybl(network:pp.network.Network, thermal_gens, thermal_con
         network.update_generators(id=gens['GEN UID'][i], target_v=V)
 
 
+def compute_PTDFs(branch_map, branch_admittances):
+    # Long to compute and independent of operating conditions, so save to file
+    PTDF_path = f'PTDFs_{network_name}.pickle'
+    if os.path.exists(PTDF_path):
+        with open(PTDF_path, 'rb') as file:
+            PTDFs = pickle.load(file)
+    else:
+        # Actual computation
+
+        # branch_map = np.zeros((N_branches, N_buses))
+        branch_map = branch_map.T  # (N_branches, N_buses) to (N_buses, N_branches)
+        branch_admittances = np.diag(branch_admittances)  # (N_branches, 1) to (N_branches, N_branches)
+        B = branch_map @ branch_admittances @ branch_map.T
+        PTDFs = branch_admittances @ branch_map.T @ np.linalg.inv(B)
+
+        with open(PTDF_path, 'wb') as file:
+            pickle.dump(PTDFs, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+    return PTDFs  # N_branches, N_buses
+
+
+def compute_LODFs(PTDFs, branch_map, cont_rating):
+    # Compute line outage distribution factor, i.e. change in flow in line i if line j is disconnected (to be multiplied by pre-fault flow in line j)
+
+    LODF_path = f'LODFs_{network_name}.pickle'
+    if os.path.exists(LODF_path):
+        with open(LODF_path, 'rb') as file:
+            LODFs = pickle.load(file)
+    else:
+        branch_map = branch_map.T  # (N_branches, N_buses) to (N_buses, N_branches)
+        LODFs = -PTDFs @ branch_map
+
+        N_branches = len(cont_rating)
+        for i in range(N_branches):
+            for j in range(N_branches):
+                if abs(LODFs[i][j]) * cont_rating[i] < 0.01 * cont_rating[j]:
+                    LODFs[i][j] = 0  # Neglect LODF if contingency of line i at max power flow (cont_rating[i]) impact line j by less than 1% of its rating
+
+        with open(LODF_path, 'wb') as file:
+            pickle.dump(LODFs, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+    return LODFs
+
+
 data_dir = f'../{network_name}-Data'
 timeseries_dir = f'../{network_name}-Data/timeseries_data_files'
 prescient_dir = f'../1-Prescient/PrescientDispatch' + '_' + case
@@ -173,7 +218,12 @@ for i in range(N_branches):  # Only consider contingencies at the highest voltag
     if buses['BaseKV'][from_] < LOWEST_CONTINGENCY_VOLTAGE or buses['BaseKV'][to] < LOWEST_CONTINGENCY_VOLTAGE:
         continue
     considered_contingencies.append(i)
-print('Case with', len(considered_contingencies), 'considered contingencies')
+N_contingencies = len(considered_contingencies)
+print('Case with', N_contingencies, 'considered contingencies')
+
+considered_contingencies_map = np.zeros((N_branches, N_contingencies))
+for cont, branch in enumerate(considered_contingencies):
+    considered_contingencies_map[branch][cont] = 1
 
 thermal_gens = {}
 hydro_gens = {}
@@ -309,6 +359,8 @@ def addGamsParams(db, name, description, sets, values):
                 if values[i][j] != 0:  # Only store non-zero values for performance
                     m.add_record((str(i+1),str(j+1))).value = values[i][j]
 
+PTDFs = compute_PTDFs(branch_map, admit)
+LODFs = compute_LODFs(PTDFs, branch_map, cont_rating)
 
 # DCOPF: Send data to GAMS
 print('\nPSCDCOPF')
@@ -342,13 +394,15 @@ addGamsParams(db_preDC, 'pv_max', 'pv generator maximum generation', [i_pv], pv_
 addGamsParams(db_preDC, 'wind_max', 'wind generator maximum generation', [i_wind], wind_max)
 addGamsParams(db_preDC, 'rtpv_max', 'rtpv generator maximum generation', [i_rtpv], rtpv_max)
 
-addGamsParams(db_preDC, 'branch_admittance', 'branch admittance', [i_branch], 1 / np.array(branches['X']))
+addGamsParams(db_preDC, 'branch_admittance', 'branch admittance', [i_branch], admit)
 addGamsParams(db_preDC, 'branch_max_N', 'Normal branch max power', [i_branch], cont_rating / baseMVA)
 addGamsParams(db_preDC, 'branch_max_E', 'Emergency branch max power', [i_branch], lte_rating / baseMVA)
 
-considered_contingency_states = contingency_states[:, considered_contingencies]
-i_contingency = addGamsSet(db_preDC, 'i_contingency', 'contingencies', range(1, 1 + len(considered_contingencies)))
-addGamsParams(db_preDC, 'contingency_states', 'Line states in the considered contingencies', [i_branch, i_contingency], contingency_states)
+# considered_contingency_states = contingency_states[:, considered_contingencies]
+i_contingency = addGamsSet(db_preDC, 'i_contingency', 'contingencies', range(1, 1 + N_contingencies))
+# addGamsParams(db_preDC, 'contingency_states', 'Line states in the considered contingencies', [i_branch, i_contingency], contingency_states)
+addGamsParams(db_preDC, 'considered_contingencies_map', 'contingencies map', [i_branch, i_contingency], considered_contingencies_map)
+addGamsParams(db_preDC, 'LODFs', 'Line outage distribution factors', [i_branch, i_contingency], LODFs[:, considered_contingencies])
 
 addGamsParams(db_preDC, 'demand', 'demand at each bus', [i_bus], demand_bus * (1 + losses))
 
