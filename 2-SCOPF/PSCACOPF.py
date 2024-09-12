@@ -16,6 +16,9 @@ baseMVA = 100
 hour = int(sys.argv[1])
 case = sys.argv[2]
 network_name = sys.argv[3]
+tmp_path = None
+if len(sys.argv) > 4:
+    tmp_path = sys.argv[4]
 print('Running PSCACOPF for case', case, 'hour:', hour, 'network:', network_name)
 
 if network_name == 'RTS':
@@ -364,9 +367,12 @@ LODFs = compute_LODFs(PTDFs, branch_map, cont_rating)
 
 # DCOPF: Send data to GAMS
 print('\nPSCDCOPF')
-dcopf_path = os.path.join('a-PSCDCOPF', str(hour))
+if tmp_path is None:
+    dcopf_path = os.path.join(os.getcwd(), 'a-PSCDCOPF', str(hour))
+else:
+    dcopf_path = os.path.join(tmp_path, 'a-PSCDCOPF', str(hour))
 Path(dcopf_path).mkdir(parents=True, exist_ok=True)
-ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), dcopf_path), debug=gams.DebugLevel.Off)
+ws = gams.GamsWorkspace(working_directory=dcopf_path, debug=gams.DebugLevel.Off)
 db_preDC = ws.add_database()
 shutil.copy(os.path.join('a-PSCDCOPF', 'cplex.opt'), dcopf_path)
 
@@ -434,9 +440,9 @@ if WITH_PRESCIENT:
 
 db_preDC.export('PrePSCDCOPF.gdx')
 if WITH_PRESCIENT:
-    t = ws.add_job_from_file('../PSCDCOPF.gms')
+    t = ws.add_job_from_file(os.path.join(os.getcwd(), 'a-PSCDCOPF', 'PSCDCOPF.gms'))
 else:
-    t = ws.add_job_from_file('../PSCDCOPF_no_init.gms')
+    t = ws.add_job_from_file(os.path.join(os.getcwd(), 'a-PSCDCOPF', 'PSCDCOPF_no_init.gms'))
 print('Launching GAMS')
 t.run()
 
@@ -654,9 +660,12 @@ for i in range(N_branches):
         Q1[i] = transformer_results['q1'][UID] / baseMVA
 
 
-acopf_path = os.path.join('b-ACOPF', str(hour))
+if tmp_path is None:
+    acopf_path = os.path.join(os.getcwd(), 'b-ACOPF', str(hour))
+else:
+    acopf_path = os.path.join(tmp_path, 'b-ACOPF', str(hour))
 Path(acopf_path).mkdir(parents=True, exist_ok=True)
-ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), acopf_path), debug=gams.DebugLevel.Off) # Off, KeepFilesOnError, KeepFiles, ShowLog, Verbose
+ws = gams.GamsWorkspace(working_directory=acopf_path, debug=gams.DebugLevel.Off) # Off, KeepFilesOnError, KeepFiles, ShowLog, Verbose
 db_preAC = ws.add_database()
 shutil.copy(os.path.join('b-ACOPF', 'ipopt.opt'), acopf_path)
 
@@ -741,7 +750,7 @@ addGamsParams(db_preAC, 'V_0', 'Initial voltages', [i_bus], list(V_AC.values()))
 addGamsParams(db_preAC, 'theta_0', 'Initial angles', [i_bus], list(theta_AC.values()))
 
 db_preAC.export('PreACOPF.gdx')
-t = ws.add_job_from_file('../ACOPF.gms')
+t = ws.add_job_from_file(os.path.join(os.getcwd(), 'b-ACOPF', 'ACOPF.gms'))
 print('Launching GAMS')
 t.run()
 
@@ -987,9 +996,12 @@ while True:
     print()
     print('Running PSCACOPF for contingencies of lines: ', [branches['UID'][i] for i in critical_contingencies])
 
-    pscacopf_path = os.path.join('c-PSCACOPF', str(hour))
+    if tmp_path is None:
+        pscacopf_path = os.path.join(os.getcwd(), 'c-PSCACOPF', str(hour))
+    else:
+        pscacopf_path = os.path.join(tmp_path, 'c-PSCACOPF', str(hour))
     Path(pscacopf_path).mkdir(parents=True, exist_ok=True)
-    ws = gams.GamsWorkspace(working_directory=os.path.join(os.getcwd(), pscacopf_path), debug=gams.DebugLevel.Off)
+    ws = gams.GamsWorkspace(working_directory=pscacopf_path, debug=gams.DebugLevel.Off)
     db_prePSCAC = ws.add_database()
     shutil.copy(os.path.join('c-PSCACOPF', 'ipopt.opt'), pscacopf_path)
 
@@ -1081,7 +1093,7 @@ while True:
     addGamsParams(db_prePSCAC, 'Q2_ck_0', 'Reactive flows (to-from) after contingency', [i_branch, i_contingency], Q2_cont[:, critical_contingencies])
 
     db_prePSCAC.export('PrePSCACOPF.gdx')
-    t = ws.add_job_from_file('../PSCACOPF.gms')
+    t = ws.add_job_from_file(os.path.join(os.getcwd(), 'c-PSCACOPF', 'PSCACOPF.gms'))
     print('Launching GAMS')
     t.run()
 
