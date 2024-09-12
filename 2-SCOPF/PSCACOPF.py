@@ -469,7 +469,7 @@ else:
 if network_name == 'RTS':
     on_DC = {rec.keys[0]:rec.level for rec in db_postDC["on"]}
 elif network_name == 'Texas':  # Network too large to run a mixed-integer DCOPF, so all generators are considered on
-    on_DC = {i+1: 1 if P_DC_thermal[i] > 1e-3 else 0 for i in range(N_thermal_gens)}
+    on_DC = {i+1: 1 if P_DC_thermal[str(i+1)] > 1e-3 else 0 for i in range(N_thermal_gens)}
 else:
     raise
 
@@ -1211,7 +1211,7 @@ for bus_id in bus_results.index:
         network.update_generators(id=gen_id, target_q=Q)
 
 # Write final dispatch
-output_path = os.path.join('d-Final-dispatch', case)
+output_path = os.path.join('d-Final-dispatch', f'{case}_{network_name}')
 Path(output_path).mkdir(parents=True, exist_ok=True)
 
 output_name = os.path.join(output_path, str(hour) + '.iidm')
