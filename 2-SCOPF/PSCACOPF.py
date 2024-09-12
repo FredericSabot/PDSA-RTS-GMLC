@@ -959,14 +959,14 @@ while True:
         theta_cont[:,j] = np.array(theta)
 
     # Check contingencies that lead to issues with the current dispatch
-    for j in range(N_branches):
+    for j in considered_contingencies:
         for i in range(N_branches):
             if (P1_cont[i][j]**2 + Q1_cont[i][j]**2)**0.5 > 1.05 * lte_rating[i] / baseMVA:
                 if j not in current_critical_contingencies:
                     current_critical_contingencies.append(j)
                     print('Critical contingency', branches['UID'][j], ': high current in branch', branches['UID'][i], ':', (P1_cont[i][j]**2 + Q1_cont[i][j]**2)**0.5 * baseMVA,  '>', lte_rating[i])
         for i in range(N_buses):
-            if V_cont[i,j] < 0.8499:
+            if V_cont[i,j] < 0.8499:  # Note: this neglects buses with nan voltage (disconnected)
                 if j not in current_critical_contingencies:
                     current_critical_contingencies.append(j)
                     print('Critical contingency', branches['UID'][j], ': low voltage at bus', int(buses['Bus ID'][i]), V_cont[i,j])
