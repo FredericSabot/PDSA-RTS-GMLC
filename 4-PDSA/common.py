@@ -11,15 +11,21 @@ class INIT_EVENT_CATEGORIES(Enum):
     LINE_DISC = 2
     GEN_DISC = 3
 
-JOB_TIMEOUT_S = 300  # Timeout for a single job in seconds
-
 # DYNAWO_PATH = '/home/fsabot/Desktop/dynawo_new/myEnvDynawo.sh'
 DYNAWO_PATH = '/home/ulb/beams_energy/fsabot/dynawo/dynawo.sh'
 DYNAWO_NAMESPACE = 'http://www.rte-france.com/dynawo'
 
 RANDOMISE_DYN_DATA = True  # Whether or not to account for protection-related uncertainty
-NETWORK_NAME = 'RTS'
+NETWORK_NAME = 'Texas'
 CASE = 'year'
+if NETWORK_NAME == 'RTS':
+    CONTINGENCY_MINIMUM_VOLTAGE_LEVEL = 220e3  # Lines with a base voltage lower than 220kV are not considered in the security assessment
+    JOB_TIMEOUT_S = 300  # Timeout for a single job in seconds
+elif NETWORK_NAME == 'Texas':
+    CONTINGENCY_MINIMUM_VOLTAGE_LEVEL = 340e3
+    JOB_TIMEOUT_S = 900  # Timeout for a single job in seconds
+else:
+    raise NotImplementedError
 
 REUSE_RESULTS = True  # If true, don't rerun cases already simulated, note that setting this to False does not delete old versions of saved_results.pickle and saved_results_bak.pickle
 REUSE_RESULTS_FAST_FORWARD = True  # If True, load all results from saved_results.pickle even if not relevant
@@ -32,7 +38,13 @@ NB_RUNS_PER_INDICATOR_EVALUATION = 5000  # Number of simulations performed betwe
 DOUBLE_MC_LOOP = True  # Whether to use an indicator to predict the scenarios that are sensitive the protection-related uncertainties
 # and run multiple (MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED) MC simulations for them. Otherwise, a single sample of protection parameters
 # is taken per sample of operating conditions
-MAX_CONSEQUENCES = 500  # Average consequences of a full blackout, i.e. result of load_shedding_to_cost(100, average_load), with average load = 4348 MW
+
+if NETWORK_NAME == 'RTS':
+    MAX_CONSEQUENCES = 500  # Average consequences of a full blackout, i.e. result of load_shedding_to_cost(100, average_load), with average load = 4348 MW
+elif NETWORK_NAME == 'Texas':
+    MAX_CONSEQUENCES = 5000
+else:
+    raise NotImplementedError
 
 if not RANDOMISE_DYN_DATA:
     DOUBLE_MC_LOOP = False

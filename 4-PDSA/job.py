@@ -24,7 +24,7 @@ class Job:
         self.contingency = contingency
         self.completed = False
         self.timed_out = False
-        self.working_dir = os.path.join('./simulations', CASE, str(self.static_id), str(self.dynamic_seed), self.contingency.id)
+        self.working_dir = os.path.join('./simulations', f'{CASE}_{NETWORK_NAME}', str(self.static_id), str(self.dynamic_seed), self.contingency.id)
 
     def complete(self, elapsed_time):
         self.elapsed_time = elapsed_time
@@ -83,7 +83,7 @@ class Job:
         self.complete(delta_t)
 
     def stability_screening(self):
-        network_path = os.path.join('../2-SCOPF/d-Final-dispatch', CASE, str(self.static_id) + '.iidm')
+        network_path = os.path.join('../2-SCOPF/d-Final-dispatch', f'{CASE}_{NETWORK_NAME}', str(self.static_id) + '.iidm')
         network = pp.network.load(network_path)
         disconnected_elements = [event.element for event in self.contingency.init_events if not isinstance(event, contingencies.InitFault)]
         lines = network.get_lines()

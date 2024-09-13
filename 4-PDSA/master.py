@@ -195,7 +195,7 @@ class JobQueue:
         self.contingencies_skipped = []
 
         self.static_samples = []
-        static_files = natsorted(glob.glob('../2-SCOPF/d-Final-dispatch/' + CASE + '/*.iidm'))  # glob gives files in arbitrary order, sort them to be deterministic
+        static_files = natsorted(glob.glob(f'../2-SCOPF/d-Final-dispatch/{CASE}_{NETWORK_NAME}/*.iidm'))  # glob gives files in arbitrary order, sort them to be deterministic
         for file in static_files:
             self.static_samples.append(os.path.basename(file).split('.')[0])
         self.static_samples_per_contingency = {}

@@ -11,7 +11,8 @@ simulations per contingency type, etc.
 
 # TODO: clean up this mess
 
-n = pp.network.load('../../RTS-Data/RTS.iidm')
+NETWORK_NAME = 'RTS'
+n = pp.network.load(f'../../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
 lines = n.get_lines()
 buses = n.get_buses()
 gens = n.get_generators()

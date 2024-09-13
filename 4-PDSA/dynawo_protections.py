@@ -45,7 +45,7 @@ def add_protections(dyd_root, par_root, iidm_file, seed):
     # Line/distance protection
     dyd_root.append(etree.Comment('Line protection'))
     bus2lines = get_buses_to_lines(network)
-    lines_csv = pd.read_csv('../RTS-Data/branch.csv').to_dict()
+    lines_csv = pd.read_csv(f'../{NETWORK_NAME}-Data/branch.csv').to_dict()
 
     for i in range(len(lines_csv['UID'])):
         line_id = lines_csv['UID'][i]

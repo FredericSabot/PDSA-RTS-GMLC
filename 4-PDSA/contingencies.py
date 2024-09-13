@@ -39,8 +39,8 @@ class Contingency:
     as OUTAGE_RATE_PER_KM * length. If substation configurations were considered, this should be updated, i.e. a topology computation
     should be done to identify which contingencies are equivalent
     """
-    line_lengths = pd.read_csv('../RTS-Data/branch.csv', index_col=0).Length
-    n = pp.network.load('../RTS-Data/RTS.iidm')
+    line_lengths = pd.read_csv(f'../{NETWORK_NAME}-Data/branch.csv', index_col=0).Length
+    n = pp.network.load(f'../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
     lines = n.get_lines()
     unique_lines = []
     for line_id in lines.index:
@@ -66,7 +66,7 @@ class Contingency:
     def create_N_1_contingencies(with_lines = True, with_generators = False, with_normal_clearing = True, with_delayed_clearing = True):
         contingencies = []
         # Read network
-        n = pp.network.load('../RTS-Data/RTS.iidm')
+        n = pp.network.load(f'../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
         lines = n.get_lines()
         vl = n.get_voltage_levels()
 
@@ -75,7 +75,7 @@ class Contingency:
             for line_id in Contingency.unique_lines:
                 voltage_level = lines.at[line_id, 'voltage_level1_id']
                 Vb = float(vl.at[voltage_level, 'nominal_v']) * 1e3
-                if Vb < 220e3:
+                if Vb < CONTINGENCY_MINIMUM_VOLTAGE_LEVEL:
                     continue
                 frequency = OUTAGE_RATE_PER_KM * Contingency.line_lengths.at[line_id]
                 bus_ids = ['@' + line_id + '@@NODE1@', '@' + line_id + '@@NODE2@']
@@ -149,7 +149,7 @@ class Contingency:
         """
         contingencies = []
         # Read network
-        n = pp.network.load('../RTS-Data/RTS.iidm')
+        n = pp.network.load(f'../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
         lines = n.get_lines()
         vl = n.get_voltage_levels()
 
@@ -158,7 +158,7 @@ class Contingency:
         for line_id in Contingency.unique_lines:
             voltage_level = lines.at[line_id, 'voltage_level1_id']
             Vb = float(vl.at[voltage_level, 'nominal_v']) * 1e3
-            if Vb < 220e3:
+            if Vb < CONTINGENCY_MINIMUM_VOLTAGE_LEVEL:
                 continue
             Sb = 100e6  # 100MW is default base in Dynawo
             Zb = Vb**2/Sb

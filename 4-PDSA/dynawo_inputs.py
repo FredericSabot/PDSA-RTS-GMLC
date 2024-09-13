@@ -19,7 +19,7 @@ def write_job_files(job : job.Job):
     Path(job.working_dir).mkdir(parents=True, exist_ok=True)
 
     # Copy static file for the considered sample
-    static_data_path = os.path.join('../2-SCOPF/d-Final-dispatch', CASE)
+    static_data_path = os.path.join('../2-SCOPF/d-Final-dispatch', f'{CASE}_{NETWORK_NAME}')
     iidm_file = os.path.join(static_data_path, str(job.static_id) + '.iidm')
     shutil.copy(iidm_file, os.path.join(job.working_dir, NETWORK_NAME + '.iidm'))
 

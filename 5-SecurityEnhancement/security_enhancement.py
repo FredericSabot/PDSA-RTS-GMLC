@@ -41,7 +41,7 @@ critical_contingency_list = [
 
 def get_features(path):
     global feature_names
-    par_root = etree.parse('../3-DynData/{}.par'.format(NETWORK_NAME)).getroot()
+    par_root = etree.parse(f'../3-DynData/{NETWORK_NAME}.par').getroot()
     n = pp.network.load(path)
 
     features = np.array(n.get_generators().p) * -1  # Sign change from receptor convention
