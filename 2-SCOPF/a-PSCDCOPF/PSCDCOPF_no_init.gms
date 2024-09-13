@@ -166,7 +166,7 @@ voltage_angles_max_0(i_bus)..  theta0(i_bus) =l= pi;
 
 model test /all/;
 
-*option reslim = 60;
+option reslim = 1800;
 *option Savepoint=1;
 option optcr=1e-3;
 

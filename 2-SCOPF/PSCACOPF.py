@@ -212,6 +212,7 @@ lte_rating  = np.array(branches['LTE Rating'])
 if network_name == 'Texas':
     cont_rating *= 1.1
     lte_rating *= 1.1
+    lte_rating = np.maximum(lte_rating, cont_rating * 1.2)  # LTE rating at least equal to 120% of normal rating, because inconsistencies in Texas data
 
 contingency_states = np.diag(np.full(N_branches, 1.0))  # Diagonal matrix of ones
 considered_contingencies = []

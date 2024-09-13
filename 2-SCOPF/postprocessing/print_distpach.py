@@ -7,6 +7,8 @@ Generate a csv with the total power generation for each generation category (win
 Used to generate stackplots in LaTeX/Tikz.
 """
 
+network_name = 'Texas'
+
 def csvToDict(csv_file, dir='.'):
     with open(os.path.join(dir, csv_file), 'r') as file:
         reader = csv.reader(file)
@@ -28,7 +30,7 @@ def csvToDict(csv_file, dir='.'):
                     dic[headers[i]].append(row[i])
     return dic
 
-gens_csv = csvToDict('gen.csv', '../../RTS-Data')
+gens_csv = csvToDict('gen.csv', f'../../{network_name}-Data')
 keys = gens_csv['GEN UID']
 values = gens_csv['Fuel']
 gen_fuel_map = dict(zip(keys, values))
@@ -46,7 +48,7 @@ wind_gen = []
 
 for h in hours:
     h += 182 * 24
-    n = pp.network.load('../d-Final-dispatch/year/{}.iidm'.format(h))
+    n = pp.network.load(f'../d-Final-dispatch/year_{network_name}/{h}.iidm')
     gens = n.get_generators()
 
     coal = 0
@@ -69,6 +71,8 @@ for h in hours:
             elif gen_fuel_map[gen_id] == 'Oil':
                 oil += -gens.at[gen_id, 'p']
             elif gen_fuel_map[gen_id] == 'Solar':
+                solar += -gens.at[gen_id, 'p']
+            elif gen_fuel_map[gen_id] == 'PV':
                 solar += -gens.at[gen_id, 'p']
             elif gen_fuel_map[gen_id] == 'Wind':
                 wind += -gens.at[gen_id, 'p']
