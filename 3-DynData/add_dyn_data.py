@@ -14,46 +14,82 @@ References
 - Generic inverter-based generation models: Gilles Chaspierre's PhD thesis
 """
 
-def unit_group_translation(unit_group):
-    match unit_group:
-        case 'PV':
-            return 'PV'
-        case 'RTPV':
-            return 'RTPV'
-        case 'WIND':
-            return 'Wind'
-        case 'Sync_Cond':
-            return 'Syncon'
-        case 'U12':
-            return 'Oil_12'
-        case 'U20':
-            return 'Oil_20'
-        case 'U50':
-            return 'Hydro_50'
-        case 'U55':
-            return 'CT_55'
-        case 'U76':
-            return 'Coal_76'
-        case 'U155':
-            return 'Coal_155'
-        case 'U350':
-            return 'Coal_350'
-        case 'U355':
-            return 'CC_355'
-        case 'U400':
-            return 'Nuclear_400'
-        case _:
-            raise NotImplementedError(unit_group, 'is not considered')
+def unit_group_translation(network_name, unit_group, P_max):
+    if network_name == 'RTS':
+        match unit_group:
+            case 'PV':
+                return 'PV'
+            case 'RTPV':
+                return 'RTPV'
+            case 'WIND':
+                return 'Wind'
+            case 'Sync_Cond':
+                return 'Syncon'
+            case 'U12':
+                return 'Oil_12'
+            case 'U20':
+                return 'Oil_20'
+            case 'U50':
+                return 'Hydro_50'
+            case 'U55':
+                return 'CT_55'
+            case 'U76':
+                return 'Coal_76'
+            case 'U155':
+                return 'Coal_155'
+            case 'U350':
+                return 'Coal_350'
+            case 'U355':
+                return 'CC_355'
+            case 'U400':
+                return 'Nuclear_400'
+            case _:
+                raise NotImplementedError(unit_group, 'is not considered')
 
-def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3):
+    elif network_name == 'Texas':
+        match unit_group:
+            case 'PV':
+                return 'PV'
+            case 'Wind':
+                return 'Wind'
+            case 'Oil':
+                if P_max < 15:
+                    return 'Oil_12'
+                else:
+                    return 'Oil_20'
+            case 'Hydro':
+                return 'Hydro_50'
+            case 'U55':
+                return 'CT_55'
+            case 'Coal':
+                if P_max < 100:
+                    return 'Coal_76'
+                elif P_max < 250:
+                    return 'Coal_155'
+                else:
+                    return 'Coal_350'
+            case 'NG':
+                return 'CC_355'
+            case 'Nuclear':
+                return 'Nuclear_400'
+            case _:
+                raise NotImplementedError(unit_group, 'is not considered')
+    else:
+        raise NotImplementedError(network_name, 'is not considered')
+
+
+def add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_share = 0.3):
     # Loads
     loads = network.get_loads()
     for loadID in loads.index:
         if abs(loads.at[loadID, 'p']) <= 1e-3 and abs(loads.at[loadID, 'q']) <= 1e-3:  # Dummy load
-            load_attrib = {'id': 'Dummy_' +  loadID, 'lib': 'LoadAlphaBeta', 'parFile': name + '.par', 'parId': 'DummyLoad', 'staticId': loadID}
+            load_attrib = {'id': 'Dummy_' +  loadID, 'lib': 'LoadAlphaBeta', 'parFile': network_name + '.par', 'parId': 'DummyLoad', 'staticId': loadID}
             loadID = 'Dummy_' + loadID
         else:
-            load_attrib = {'id': loadID, 'lib': 'LoadAlphaBetaMotorSimplified', 'parFile': name + '.par', 'parId': 'GenericLoadAlphaBetaMotor', 'staticId': loadID}
+            if motor_share != 0:
+                load_attrib = {'id': loadID, 'lib': 'LoadAlphaBetaMotorSimplified', 'parFile': network_name + '.par', 'parId': 'GenericLoadAlphaBetaMotor', 'staticId': loadID}
+            else:
+                load_attrib = {'id': loadID, 'lib': 'LoadAlphaBeta', 'parFile': network_name + '.par', 'parId': 'GenericLoadAlphaBetaMotor', 'staticId': loadID}
         load = etree.SubElement(dyd_root, etree.QName(namespace, 'blackBoxModel'), load_attrib)
 
         etree.SubElement(load, etree.QName(namespace, 'macroStaticRef'), {'id': 'LOAD'})
@@ -91,12 +127,12 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
 
 
     # Omegaref
-    omega_attrib = {'id': 'OMEGA_REF', 'lib': 'DYNModelOmegaRef', 'parFile': name + '.par', 'parId': 'OmegaRef'}
+    omega_attrib = {'id': 'OMEGA_REF', 'lib': 'DYNModelOmegaRef', 'parFile': network_name + '.par', 'parId': 'OmegaRef'}
     etree.SubElement(dyd_root, etree.QName(namespace, 'blackBoxModel'), omega_attrib)
     omega_par_set = etree.SubElement(par_root, etree.QName(namespace, 'set'), {'id' : 'OmegaRef'})
 
 
-    gens_csv = pd.read_csv('../RTS-Data/gen.csv').to_dict()
+    gens_csv = pd.read_csv(f'../{network_name}-Data/gen.csv').to_dict()
     N_gens = len(gens_csv['GEN UID'])
     omega_index = 0
     gens = network.get_generators()
@@ -104,7 +140,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
 
     for i in range(N_gens):
         unit_group = gens_csv['Unit Group'][i]
-        unit_group = unit_group_translation(unit_group)
+        unit_group = unit_group_translation(network_name, unit_group, gens_csv['PMax MW'][i])
         genID = gens_csv['GEN UID'][i]
 
         if not gens.at[genID, 'connected']:
@@ -129,7 +165,7 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
             lib = 'GeneratorSynchronousFourWindingsRtsThermal'
             synchronous = True
 
-        gen_attrib = {'id': genID, 'lib': lib, 'parFile': name + '.par', 'parId': genID, 'staticId': genID}
+        gen_attrib = {'id': genID, 'lib': lib, 'parFile': network_name + '.par', 'parId': genID, 'staticId': genID}
         gen = etree.SubElement(dyd_root, etree.QName(namespace, 'blackBoxModel'), gen_attrib)
 
         if synchronous:
@@ -146,13 +182,13 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
 
         p_max = gens.at[genID, 'max_p']
         q_max = gens.at[genID, 'max_q']
+        SNom = (p_max**2 + q_max**2)**0.5
         p_min = gens.at[genID, 'min_p']
         u_nom = vl['nominal_v'][gens['voltage_level_id'][genID]]
 
         gen_par_set = etree.SubElement(par_root, etree.QName(namespace, 'set'), {'id' : genID})
 
         if synchronous:
-            SNom = (p_max**2 + q_max**2)**0.5
             par_attribs = [
                 {'type': 'BOOL', 'name': 'generator_UseApproximation', 'value': 'false'},
                 {'type': 'INT', 'name': 'generator_ExcitationPu', 'value': '1'},
@@ -219,7 +255,6 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                     {'type': 'DOUBLE', 'name': 'governor_tW', 'value': '1.3'},
                 ]
             elif unit_group == 'Syncon':
-                SNom = gens.at[genID, 'max_q']
                 par_attribs += [  # Reference machine SC5 from Vijay Vittal book
                     {'type': 'DOUBLE', 'name': 'generator_SNom', 'value': str(SNom)},
                     {'type': 'DOUBLE', 'name': 'generator_SnTfo', 'value': str(SNom)},
@@ -487,9 +522,8 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
 
         else:  # Not synchronous (PV, wind, RTPV)
             if unit_group == 'Wind':
-                SNom = gens_csv['PMax MW'][i]
                 par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis
-                    {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.2'},
+                    {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_US1', 'value': '0.94'},
                     {'type': 'DOUBLE', 'name': 'ibg_US2', 'value': '1.06'},
@@ -531,7 +565,6 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                 ]
 
             elif unit_group == 'PV':
-                SNom = gens_csv['PMax MW'][i]
                 par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis
                     {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
@@ -575,7 +608,6 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
                 ]
 
             elif unit_group == 'RTPV':
-                SNom = gens_csv['PMax MW'][i]
                 par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis, no voltage/frequency support from rooftop solar (LV connected)
                     {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
@@ -630,18 +662,21 @@ def add_dyn_data(name, network, dyd_root, par_root, namespace, motor_share = 0.3
     # return dyd_root, par_root  # Unecessary since they are mutable
 
 if __name__ == '__main__':
-    input_file = '../RTS-Data/RTS.iidm'
-    network = pp.network.load(input_file)
+    for network_name in ['RTS', 'Texas']:
+        input_file = f'../{network_name}-Data/{network_name}.iidm'
+        network = pp.network.load(input_file)
 
-    name = 'RTS'
-    XMLparser = etree.XMLParser(remove_blank_text=True)  # Necessary for pretty_print to work
-    dyd_root = etree.parse('base.dyd', XMLparser).getroot()
-    par_root = etree.parse('base.par', XMLparser).getroot()
-    namespace = 'http://www.rte-france.com/dynawo'
+        XMLparser = etree.XMLParser(remove_blank_text=True)  # Necessary for pretty_print to work
+        dyd_root = etree.parse('base.dyd', XMLparser).getroot()
+        par_root = etree.parse('base.par', XMLparser).getroot()
+        namespace = 'http://www.rte-france.com/dynawo'
 
-    add_dyn_data(name, network, dyd_root, par_root, namespace)
+        if network_name == 'RTS':
+            add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_share=0.3)
+        else:
+            add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_share=0)
 
-    with open(name + '.dyd', 'wb') as doc:
-        doc.write(etree.tostring(dyd_root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
-    with open(name + '.par', 'wb') as doc:
-        doc.write(etree.tostring(par_root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
+        with open(network_name + '.dyd', 'wb') as doc:
+            doc.write(etree.tostring(dyd_root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
+        with open(network_name + '.par', 'wb') as doc:
+            doc.write(etree.tostring(par_root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))

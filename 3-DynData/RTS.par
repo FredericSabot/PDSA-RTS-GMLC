@@ -7144,7 +7144,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="51.6"/>
+    <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7181,7 +7181,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="51.6"/>
+    <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7218,7 +7218,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="51.6"/>
+    <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7255,7 +7255,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="95.1"/>
+    <par type="DOUBLE" name="ibg_SNom" value="99.5703771209088"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7292,7 +7292,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="92.7"/>
+    <par type="DOUBLE" name="ibg_SNom" value="97.04112530262621"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7329,7 +7329,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="51.6"/>
+    <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7366,7 +7366,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="93.3"/>
+    <par type="DOUBLE" name="ibg_SNom" value="97.9739761365231"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7403,7 +7403,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="51.7"/>
+    <par type="DOUBLE" name="ibg_SNom" value="54.119220245676125"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7440,7 +7440,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="49.7"/>
+    <par type="DOUBLE" name="ibg_SNom" value="52.03124061561477"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7477,7 +7477,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="94.1"/>
+    <par type="DOUBLE" name="ibg_SNom" value="98.52639240325406"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7514,7 +7514,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="51.6"/>
+    <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7551,7 +7551,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="51.6"/>
+    <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7588,7 +7588,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="51.0"/>
+    <par type="DOUBLE" name="ibg_SNom" value="53.39138507287482"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7625,7 +7625,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="93.6"/>
+    <par type="DOUBLE" name="ibg_SNom" value="97.9895912839726"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7662,7 +7662,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="188.2"/>
+    <par type="DOUBLE" name="ibg_SNom" value="197.0231712261276"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7699,7 +7699,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="125.1"/>
+    <par type="DOUBLE" name="ibg_SNom" value="130.97881508091297"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7736,7 +7736,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="25.6"/>
+    <par type="DOUBLE" name="ibg_SNom" value="26.791229908311415"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7773,7 +7773,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="25.9"/>
+    <par type="DOUBLE" name="ibg_SNom" value="27.10737906917598"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7810,7 +7810,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="25.3"/>
+    <par type="DOUBLE" name="ibg_SNom" value="26.475082624989106"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7847,7 +7847,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="26.8"/>
+    <par type="DOUBLE" name="ibg_SNom" value="28.055837182304863"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7884,7 +7884,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="26.7"/>
+    <par type="DOUBLE" name="ibg_SNom" value="27.960329039551734"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7921,7 +7921,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="26.2"/>
+    <par type="DOUBLE" name="ibg_SNom" value="27.42353004264768"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7958,7 +7958,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="25.8"/>
+    <par type="DOUBLE" name="ibg_SNom" value="27.011849251763568"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -7995,7 +7995,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="61.5"/>
+    <par type="DOUBLE" name="ibg_SNom" value="64.36808215257"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -8032,7 +8032,7 @@
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="66.6"/>
+    <par type="DOUBLE" name="ibg_SNom" value="69.71312645406171"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -8057,8 +8057,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8094,8 +8094,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8131,8 +8131,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8168,8 +8168,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8205,8 +8205,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8242,8 +8242,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8279,8 +8279,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8316,8 +8316,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8353,8 +8353,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8390,8 +8390,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8427,8 +8427,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8464,8 +8464,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8501,8 +8501,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8538,8 +8538,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8575,8 +8575,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8612,8 +8612,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8649,8 +8649,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8686,8 +8686,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8723,8 +8723,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8760,8 +8760,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8797,8 +8797,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8834,8 +8834,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8871,8 +8871,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8908,8 +8908,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8945,8 +8945,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -8982,8 +8982,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -9019,8 +9019,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -9056,8 +9056,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -9093,8 +9093,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -9130,8 +9130,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -9167,8 +9167,8 @@
     <par type="DOUBLE" name="ibg_tLVRTInt" value="0.3"/>
     <par type="DOUBLE" name="ibg_tLVRTMax" value="1.5"/>
     <par type="DOUBLE" name="ibg_ULVRTMinPu" value="0"/>
-    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.9"/>
+    <par type="DOUBLE" name="ibg_ULVRTIntPu" value="0.25"/>
+    <par type="DOUBLE" name="ibg_ULVRTArmingPu" value="0.85"/>
     <par type="DOUBLE" name="ibg_OmegaMaxPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaDeadBandPu" value="1.05"/>
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
@@ -9188,7 +9188,7 @@
     <reference name="ibg_UPhase0" origData="IIDM" origName="angle_pu" type="DOUBLE"/>
   </set>
   <set id="309_WIND_1">
-    <par type="DOUBLE" name="ibg_IMaxPu" value="1.2"/>
+    <par type="DOUBLE" name="ibg_IMaxPu" value="1.1"/>
     <par type="DOUBLE" name="ibg_UQPrioPu" value="0.1"/>
     <par type="DOUBLE" name="ibg_US1" value="0.94"/>
     <par type="DOUBLE" name="ibg_US2" value="1.06"/>
@@ -9211,12 +9211,12 @@
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
     <par type="DOUBLE" name="ibg_tFilterOmega" value="0.1"/>
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
-    <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
+    <par type="DOUBLE" name="ibg_UMaxPu" value="1.4"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.5"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="148.3"/>
+    <par type="DOUBLE" name="ibg_SNom" value="155.3595185368441"/>
     <par type="DOUBLE" name="ibg_Kf" value="0.5"/>
     <par type="DOUBLE" name="ibg_tf" value="0.1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -9225,7 +9225,7 @@
     <reference name="ibg_UPhase0" origData="IIDM" origName="angle_pu" type="DOUBLE"/>
   </set>
   <set id="317_WIND_1">
-    <par type="DOUBLE" name="ibg_IMaxPu" value="1.2"/>
+    <par type="DOUBLE" name="ibg_IMaxPu" value="1.1"/>
     <par type="DOUBLE" name="ibg_UQPrioPu" value="0.1"/>
     <par type="DOUBLE" name="ibg_US1" value="0.94"/>
     <par type="DOUBLE" name="ibg_US2" value="1.06"/>
@@ -9248,12 +9248,12 @@
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
     <par type="DOUBLE" name="ibg_tFilterOmega" value="0.1"/>
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
-    <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
+    <par type="DOUBLE" name="ibg_UMaxPu" value="1.4"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.5"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="799.1"/>
+    <par type="DOUBLE" name="ibg_SNom" value="837.1445872727124"/>
     <par type="DOUBLE" name="ibg_Kf" value="0.5"/>
     <par type="DOUBLE" name="ibg_tf" value="0.1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -9262,7 +9262,7 @@
     <reference name="ibg_UPhase0" origData="IIDM" origName="angle_pu" type="DOUBLE"/>
   </set>
   <set id="303_WIND_1">
-    <par type="DOUBLE" name="ibg_IMaxPu" value="1.2"/>
+    <par type="DOUBLE" name="ibg_IMaxPu" value="1.1"/>
     <par type="DOUBLE" name="ibg_UQPrioPu" value="0.1"/>
     <par type="DOUBLE" name="ibg_US1" value="0.94"/>
     <par type="DOUBLE" name="ibg_US2" value="1.06"/>
@@ -9285,12 +9285,12 @@
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
     <par type="DOUBLE" name="ibg_tFilterOmega" value="0.1"/>
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
-    <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
+    <par type="DOUBLE" name="ibg_UMaxPu" value="1.4"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.5"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="847.0"/>
+    <par type="DOUBLE" name="ibg_SNom" value="887.338295127625"/>
     <par type="DOUBLE" name="ibg_Kf" value="0.5"/>
     <par type="DOUBLE" name="ibg_tf" value="0.1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>
@@ -9299,7 +9299,7 @@
     <reference name="ibg_UPhase0" origData="IIDM" origName="angle_pu" type="DOUBLE"/>
   </set>
   <set id="122_WIND_1">
-    <par type="DOUBLE" name="ibg_IMaxPu" value="1.2"/>
+    <par type="DOUBLE" name="ibg_IMaxPu" value="1.1"/>
     <par type="DOUBLE" name="ibg_UQPrioPu" value="0.1"/>
     <par type="DOUBLE" name="ibg_US1" value="0.94"/>
     <par type="DOUBLE" name="ibg_US2" value="1.06"/>
@@ -9322,12 +9322,12 @@
     <par type="DOUBLE" name="ibg_OmegaMinPu" value="0.95"/>
     <par type="DOUBLE" name="ibg_tFilterOmega" value="0.1"/>
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
-    <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
+    <par type="DOUBLE" name="ibg_UMaxPu" value="1.4"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.5"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
-    <par type="DOUBLE" name="ibg_SNom" value="713.5"/>
+    <par type="DOUBLE" name="ibg_SNom" value="747.477150152431"/>
     <par type="DOUBLE" name="ibg_Kf" value="0.5"/>
     <par type="DOUBLE" name="ibg_tf" value="0.1"/>
     <reference name="ibg_P0Pu" origData="IIDM" origName="p_pu" type="DOUBLE"/>

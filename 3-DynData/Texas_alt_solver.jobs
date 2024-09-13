@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<dyn:jobs xmlns:dyn="http://www.rte-france.com/dynawo">
+  <dyn:job name="Texas">
+    <dyn:solver lib="dynawo_SolverIDA" parFile="Texas.par" parId="IDAOrder2"/>
+    <dyn:modeler compileDir="outputs/compilation">
+      <dyn:network iidmFile="Texas.iidm" parFile="Texas.par" parId="Network"/>
+      <dyn:dynModels dydFile="Texas.dyd"/>
+      <dyn:precompiledModels useStandardModels="true"/>
+      <dyn:modelicaModels useStandardModels="true"/>
+    </dyn:modeler>
+    <dyn:simulation startTime="0" stopTime="20"/>
+    <dyn:outputs directory="outputs">
+      <dyn:timeline exportMode="TXT" filter="true"/>
+      <!-- <dyn:curves inputFile="Texas.crv" exportMode="CSV"/> -->
+      <dyn:finalStateValues inputFile="Texas.fsv" exportMode="CSV"/>
+      <dyn:logs>
+        <dyn:appender tag="" file="dynawo.log" lvlFilter="INFO"/>
+      </dyn:logs>
+    </dyn:outputs>
+  </dyn:job>
+</dyn:jobs>
