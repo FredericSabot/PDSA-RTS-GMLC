@@ -135,7 +135,6 @@ with open('branch.csv', 'w') as f:
 
     for branch in branches:
         from_bus = int(branch[0])
-        bus_id_to_name[from_bus]
         to_bus = int(branch[1])
         branch_id = f'{from_bus}-{to_bus}'
         if branch_id in parallel_line_count:
@@ -159,6 +158,17 @@ with open('branch.csv', 'w') as f:
         location_from = substation_locations[bus_name_to_substation_name(bus_id_to_name[from_bus])]
         location_to   = substation_locations[bus_name_to_substation_name(bus_id_to_name[to_bus])]
         length = geopy.distance.geodesic(location_from, location_to).km
+        if from_bus < 10000 or to_bus < 10000:
+            if ratio == 0:
+                ratio = 1
+                print(f'Warning: new element {branch_id} for 2030 version is considered to be a transformer (no new lines have been modelled)')
+            if length != 0:
+                length = 0
+                print(f'Warning: new element {branch_id} for 2030 version is considered to be a transformer (no new lines have been modelled)')
+        if length == 0:
+            if ratio == 0:
+                ratio = 1
+                print(f'Warning: line {branch_id} has zero length and has thus been replaced by a transformer')
         writer.writerow([branch_id, from_bus, to_bus, r, x, b, rate_A, rate_B, rate_C, permanent_outage_rate, outage_duration, ratio, transient_outage_rate, length])
 
 with open('bus.csv', 'w') as f:
@@ -170,6 +180,10 @@ with open('bus.csv', 'w') as f:
         bus_id = int(bus[0])
         bus_name = bus_names[i]
         base_kv = bus[9]
+        if bus_id < 10000:
+            if base_kv == 345:
+                print(f'Warning: new bus {bus_id} for 2030 version is considered to be at a low voltage level (no new lines have been added, only generators)')
+                base_kv = 138
         if bus[1] == 1:
             bus_type = 'PQ'
         else:
