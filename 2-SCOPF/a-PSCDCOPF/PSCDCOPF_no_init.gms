@@ -85,6 +85,9 @@ variable pfcontingency(i_branch, i_contingency) power flow after a contingency
 variable theta0(i_bus) bus voltage angles
 variable power_balance(i_bus)
 
+positive variable relax(i_branch) line limit relaxation
+positive variable relax_contingency(i_contingency) line limit relaxation following contingencies
+
 ***************************************************************
 *** EQUATION DECLARATION
 ***************************************************************
@@ -127,7 +130,9 @@ total_cost =e=
 sum(i_thermal, P_thermal(i_thermal) * lincost_thermal(i_thermal)) +
 sum(i_hydro, P_hydro(i_hydro) * lincost_hydro(i_hydro)) +
 sum(i_pv, P_pv(i_pv) * lincost_pv(i_pv)) +
-sum(i_wind, P_wind(i_wind) * lincost_wind(i_wind));
+sum(i_wind, P_wind(i_wind) * lincost_wind(i_wind)) +
+1e6 * sum(i_contingency, relax_contingency(i_contingency)) +
+1e6 * sum(i_branch, relax(i_branch));
 
 thermal_minP(i_thermal)..   P_thermal(i_thermal) =g= 0 * thermal_min(i_thermal);
 
@@ -148,13 +153,13 @@ line_flow_0(i_branch)..         pf0(i_branch) =e= -branch_admittance(i_branch)*s
 
 line_flow_contingency(i_branch, i_contingency)..   pfcontingency(i_branch, i_contingency) =e= pf0(i_branch) + LODFs(i_branch, i_contingency) * sum(j_branch$(considered_contingencies_map(j_branch, i_contingency)), pf0(j_branch));
 
-line_capacity_min_0(i_branch)..   pf0(i_branch) =g= -0.95 * branch_max_N(i_branch);
+line_capacity_min_0(i_branch)..   pf0(i_branch) =g= -0.95 * branch_max_N(i_branch) - relax(i_branch);
 
-line_capacity_max_0(i_branch)..   pf0(i_branch) =l= 0.95 * branch_max_N(i_branch);
+line_capacity_max_0(i_branch)..   pf0(i_branch) =l= 0.95 * branch_max_N(i_branch) + relax(i_branch);
 
-line_capacity_min_contingency(i_branch, i_contingency)..   pfcontingency(i_branch, i_contingency) =g= -0.95 * branch_max_E(i_branch);
+line_capacity_min_contingency(i_branch, i_contingency)..   pfcontingency(i_branch, i_contingency) =g= -0.95 * branch_max_E(i_branch) - relax_contingency(i_contingency);
 
-line_capacity_max_contingency(i_branch, i_contingency)..   pfcontingency(i_branch, i_contingency) =l= 0.95 * branch_max_E(i_branch);
+line_capacity_max_contingency(i_branch, i_contingency)..   pfcontingency(i_branch, i_contingency) =l= 0.95 * branch_max_E(i_branch) + relax_contingency(i_contingency);
 
 voltage_angles_min_0(i_bus)..  theta0(i_bus) =g= -pi;
 
@@ -180,4 +185,4 @@ solve test using lp minimizing total_cost;
 scalar sol;
 sol = test.modelstat;
 
-execute_unload 'PostPSCDCOPF' total_cost, P_thermal, P_hydro, P_pv, P_wind, pf0, theta0, sol;
+execute_unload 'PostPSCDCOPF' total_cost, P_thermal, P_hydro, P_pv, P_wind, pf0, theta0, sol, relax_contingency, relax;
