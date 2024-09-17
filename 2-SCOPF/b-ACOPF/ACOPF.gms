@@ -292,6 +292,7 @@ pf(i_branch) =l= branch_max_N(i_branch) * branch_max_N(i_branch);
 
 model test /all/;
 option nlp=ipopt;
+option reslim = 1800;
 test.optfile=1;
 solve test using nlp minimizing deviation;
 

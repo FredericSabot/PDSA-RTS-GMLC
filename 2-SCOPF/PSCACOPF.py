@@ -596,7 +596,11 @@ sol = pp.loadflow.run_ac(network)
 print(sol)
 
 if str(sol[0].status) == 'ComponentStatus.MAX_ITERATION_REACHED' or str(sol[0].status) == 'ComponentStatus.FAILED':
-    raise RuntimeError('Non convergence of initial load flow')
+    parameters = pp.loadflow.Parameters(no_generator_reactive_limits = True)
+    sol = pp.loadflow.run_ac(network, parameters)
+    print('Warning: Non convergence of initial load flow, retrying without reactive limits')
+    if str(sol[0].status) == 'ComponentStatus.MAX_ITERATION_REACHED' or str(sol[0].status) == 'ComponentStatus.FAILED':
+        raise RuntimeError('Non convergence of initial load flow, even without reactive limits')
 
 gen_results = network.get_generators()
 np.nan_to_num(gen_results['p'], copy=False)  # Set 0 output for disconnected generators instead of nan
