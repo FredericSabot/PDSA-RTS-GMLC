@@ -149,10 +149,6 @@ def add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_sha
         if (unit_group == 'PV' or unit_group == 'RTPV') and gens.at[genID, 'max_p'] == 0:  # Turn of PV at night (and dawn and morning)
             continue
 
-        if abs(gens.at[genID, 'max_p']) < 1e-3 and abs(gens.at[genID, 'min_p']) < 1e-3 and \
-           abs(gens.at[genID, 'max_q']) < 1e-3 and abs(gens.at[genID, 'min_q']) < 1e-3:
-            continue  # Disable plants without active or reactive support (typically old wind plants when there is no wind)
-
         if unit_group == 'PV' or unit_group == 'RTPV':
             lib = 'GenericIBG'
             synchronous = False

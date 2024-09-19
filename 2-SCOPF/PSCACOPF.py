@@ -1189,6 +1189,8 @@ for bus_id in bus_results.index:
         if abs(Q) < 1e-4:
             Q = 0  # Helps with initialisation of dynamic simulations (avoids div by almost 0)
         network.update_generators(id=gen_id, q=Q, target_q=Q)
+        if abs(float(connected_gen_results.loc[gen_id, 'max_p'])) < 1e-3 and Q == 0:
+            network.update_generators(id=gen_id, connected=False)
 
 # Write final dispatch
 output_path = os.path.join('d-Final-dispatch', f'{case}_{network_name}')
