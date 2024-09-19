@@ -42,8 +42,15 @@ class Contingency:
     line_lengths = pd.read_csv(f'../{NETWORK_NAME}-Data/branch.csv', index_col=0).Length
     n = pp.network.load(f'../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
     lines = n.get_lines()
+    vl = n.get_voltage_levels()
+
     unique_lines = []
     for line_id in lines.index:
+        voltage_level = lines.at[line_id, 'voltage_level1_id']
+        Vb = float(vl.at[voltage_level, 'nominal_v']) * 1e3
+        if Vb < CONTINGENCY_MINIMUM_VOLTAGE_LEVEL:
+            continue
+
         found = False
         for unique_line_id in unique_lines:
             if (lines.loc[line_id] == lines.loc[unique_line_id]).all():
@@ -172,7 +179,7 @@ class Contingency:
 
             for fault_side in [1, 2]:
                 for CB_fail_side in [1, 2]:
-                    for adj_line_id in get_adjacent_lines(bus2lines, n, line_id, CB_fail_side):
+                    for adj_line_id in get_adjacent_lines(bus2lines, lines, line_id, CB_fail_side):
                         contingency_id = line_id + '_end{}-BREAKER_end{}-'.format(fault_side, CB_fail_side) + adj_line_id
 
                         # Initial fault

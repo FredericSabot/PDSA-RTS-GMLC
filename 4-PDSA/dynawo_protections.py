@@ -47,12 +47,13 @@ def add_protections(dyd_root, par_root, iidm_file, seed):
     bus2lines = get_buses_to_lines(network)
     lines_csv = pd.read_csv(f'../{NETWORK_NAME}-Data/branch.csv').to_dict()
 
+    voltage_levels = network.get_voltage_levels()
     for i in range(len(lines_csv['UID'])):
         line_id = lines_csv['UID'][i]
         line_rating = lines_csv['Cont Rating'][i]
         if lines_csv['Tr Ratio'][i] != 0:
             continue  # Consider lines, not transformers
-        add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, line_rating, CB_time, CB_max_error, special)
+        add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2lines, line_id, line_rating, CB_time, CB_max_error, special)
 
 
 def get_buses_to_lines(network):
@@ -66,18 +67,20 @@ def get_buses_to_lines(network):
 
     for bus_id in buses.index:
         out[bus_id] = []
-        for line_id in lines.index:
-            if lines.at[line_id, 'bus1_id'] == bus_id or lines.at[line_id, 'bus2_id'] == bus_id:
-                out[bus_id].append(line_id)
+
+    for line_id in lines.index:
+        bus_1 = lines.at[line_id, 'bus1_id']
+        bus_2 = lines.at[line_id, 'bus2_id']
+        out[bus_1].append(line_id)
+        out[bus_2].append(line_id)
     return out
 
 
-def get_adjacent_lines(bus_to_lines, network, line_id, side):
+def get_adjacent_lines(bus_to_lines, lines, line_id, side):
     """
     Get the list of lines that are connected to the side 'side' (1 or 2) or the line with ID 'line_id'. 'bus_to_lines' is the dict that
     maps buses to the lines that are connected to them (computed with function get_buses_to_lines(network))
     """
-    lines = network.get_lines()
     common_bus = lines.at[line_id, 'bus{}_id'.format(side)]
 
     adj_lines = bus_to_lines[common_bus].copy()
@@ -231,11 +234,10 @@ def add_UFLS(dyd_root, par_root, network):
         etree.SubElement(ufls_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
 
 
-def add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, line_rating, CB_time, CB_max_error, special, measurement_max_error = 0.1):
+def add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2lines, line_id, line_rating, CB_time, CB_max_error, special, measurement_max_error = 0.1):
     """
     Add protection model to Dynawo input files
     """
-    lines = network.get_lines()
     for side in [1,2]:
         opposite_side = 3-side  # 2 if side == 1, 1 if side == 2
         protection_id = line_id + '_side{}'.format(side) + '_Distance'
@@ -256,7 +258,7 @@ def add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, li
         dist_par_set = etree.SubElement(par_root, etree.QName(DYNAWO_NAMESPACE, 'set'), {'id' : protection_id})
 
         voltage_level = lines.at[line_id, 'voltage_level1_id']
-        Ub = float(network.get_voltage_levels().at[voltage_level, 'nominal_v']) * 1000
+        Ub = float(voltage_levels.at[voltage_level, 'nominal_v']) * 1000
         Sb = 100e6  # 100MW is the default base in Dynawo
         Zb = Ub**2/Sb
 
@@ -266,7 +268,7 @@ def add_line_dist_protection(dyd_root, par_root, network, bus2lines, line_id, li
         X1 = 0.8 * X
         R1 = X1
 
-        adj_lines = get_adjacent_lines(bus2lines, network, line_id, opposite_side)  # Only the adjacent lines that can be "seen" from a forward looking distance relay
+        adj_lines = get_adjacent_lines(bus2lines, lines, line_id, opposite_side)  # Only the adjacent lines that can be "seen" from a forward looking distance relay
         adj_lines_X = [lines.at[adj_line, 'x'] for adj_line in adj_lines]
         if not adj_lines_X: # is empty
             adj_lines_X = [0]

@@ -30,17 +30,22 @@ def write_job_files(job : job.Job):
     dyd_root = etree.parse(os.path.join(dyn_data_path, 'base.dyd'), XMLparser).getroot()
     par_root = etree.parse(os.path.join(dyn_data_path, 'base.par'), XMLparser).getroot()
 
-    if CASE == 'january':
-        motor_share = 0.3
-    elif CASE == 'july':
-        motor_share = 0.5
-    elif CASE == 'year':
-        if int(job.static_id) > 3600 and int(job.static_id) < 6480:  # Around June to September
-            motor_share = 0.5
-        else:
+    if NETWORK_NAME == 'RTS':
+        if CASE == 'january':
             motor_share = 0.3
+        elif CASE == 'july':
+            motor_share = 0.5
+        elif CASE == 'year':
+            if int(job.static_id) > 3600 and int(job.static_id) < 6480:  # Around June to September
+                motor_share = 0.5
+            else:
+                motor_share = 0.3
+        else:
+            raise NotImplementedError
+    elif NETWORK_NAME == 'Texas':
+        motor_share = 0
     else:
-        raise NotImplementedError('')
+        raise NotImplementedError
 
     add_dyn_data.add_dyn_data(NETWORK_NAME, network, dyd_root, par_root, DYNAWO_NAMESPACE, motor_share)
     dynawo_init_events.add_init_events(dyd_root, par_root, job.contingency.init_events)
