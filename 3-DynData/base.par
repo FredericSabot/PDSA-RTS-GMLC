@@ -49,7 +49,7 @@
   <set id="SolverSIM">
     <par type="DOUBLE" name="hMin" value="1e-7"/>
     <par type="DOUBLE" name="minimalAcceptableStep" value="1e-7"/>
-    <par type="DOUBLE" name="hMax" value="0.001"/>
+    <par type="DOUBLE" name="hMax" value="0.01"/>
     <par type="DOUBLE" name="kReduceStep" value="0.5"/>
     <par type="INT" name="maxNewtonTry" value="20"/>
     <par type="STRING" name="linearSolverName" value="KLU"/>
