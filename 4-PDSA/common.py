@@ -20,9 +20,11 @@ NETWORK_NAME = 'Texas'
 CASE = 'year'
 if NETWORK_NAME == 'RTS':
     CONTINGENCY_MINIMUM_VOLTAGE_LEVEL = 220e3  # Lines with a base voltage lower than 220kV are not considered in the security assessment
+    PROTECTION_MINIMUM_VOLTAGE_LEVEL = 0
     JOB_TIMEOUT_S = 300  # Timeout for a single job in seconds
 elif NETWORK_NAME == 'Texas':
     CONTINGENCY_MINIMUM_VOLTAGE_LEVEL = 340e3
+    PROTECTION_MINIMUM_VOLTAGE_LEVEL = 340e3  # To computationally expensive to model distance protection everywhere (model could be improved)
     JOB_TIMEOUT_S = 900  # Timeout for a single job in seconds
 else:
     raise NotImplementedError

@@ -238,6 +238,14 @@ def add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2line
     """
     Add protection model to Dynawo input files
     """
+    voltage_level = lines.at[line_id, 'voltage_level1_id']
+    Ub = float(voltage_levels.at[voltage_level, 'nominal_v']) * 1000
+    Sb = 100e6  # 100MW is the default base in Dynawo
+    Zb = Ub**2/Sb
+
+    if Ub < PROTECTION_MINIMUM_VOLTAGE_LEVEL:
+        return
+
     for side in [1,2]:
         opposite_side = 3-side  # 2 if side == 1, 1 if side == 2
         protection_id = line_id + '_side{}'.format(side) + '_Distance'
@@ -256,11 +264,6 @@ def add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2line
 
         # Parameters
         dist_par_set = etree.SubElement(par_root, etree.QName(DYNAWO_NAMESPACE, 'set'), {'id' : protection_id})
-
-        voltage_level = lines.at[line_id, 'voltage_level1_id']
-        Ub = float(voltage_levels.at[voltage_level, 'nominal_v']) * 1000
-        Sb = 100e6  # 100MW is the default base in Dynawo
-        Zb = Ub**2/Sb
 
         X = lines.at[line_id, 'x'] / Zb
         # R = lines.at[line_id, 'r'] / Zb
