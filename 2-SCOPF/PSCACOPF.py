@@ -1181,13 +1181,14 @@ for bus_id in bus_results.index:
         total_min_q += connected_gen_results.loc[gen_id, 'min_q']
         total_q += -connected_gen_results.loc[gen_id, 'q']
     if total_min_q == total_max_q:
-        continue
-    ratio = (total_q - total_min_q) / (total_max_q - total_min_q)
+        ratio = 0
+    else:
+        ratio = (total_q - total_min_q) / (total_max_q - total_min_q)
     for gen_id in gen_ids:
         Q = connected_gen_results.loc[gen_id, 'min_q'] + ratio * (connected_gen_results.loc[gen_id, 'max_q'] - connected_gen_results.loc[gen_id, 'min_q'])
         if abs(Q) < 1e-4:
             Q = 0  # Helps with initialisation of dynamic simulations (avoids div by almost 0)
-        network.update_generators(id=gen_id, target_q=Q)
+        network.update_generators(id=gen_id, q=Q, target_q=Q)
 
 # Write final dispatch
 output_path = os.path.join('d-Final-dispatch', f'{case}_{network_name}')
