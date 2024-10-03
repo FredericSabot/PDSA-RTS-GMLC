@@ -12,6 +12,7 @@
 2-SCOPF/**/*.log
 2-SCOPF/*/*/*.opt
 2-SCOPF/d-Final-dispatch/*
+2-SCOPF/postprocessing/*.txt
 3-DynData/outputs/*
 3-DynData/*.dyd
 3-DynData/*.iidm
