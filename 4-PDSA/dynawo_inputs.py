@@ -47,7 +47,7 @@ def write_job_files(job : job.Job):
     else:
         raise NotImplementedError
 
-    add_dyn_data.add_dyn_data(NETWORK_NAME, network, dyd_root, par_root, DYNAWO_NAMESPACE, motor_share)
+    add_dyn_data.add_dyn_data(NETWORK_NAME, network, dyd_root, par_root, DYNAWO_NAMESPACE, motor_share, CONTINGENCY_MINIMUM_VOLTAGE_LEVEL)
     dynawo_init_events.add_init_events(dyd_root, par_root, job.contingency.init_events)
     dynawo_protections.add_protections(dyd_root, par_root, iidm_file, job.dynamic_seed)
 

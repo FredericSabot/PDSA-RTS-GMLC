@@ -166,11 +166,17 @@ def select_gfm_generators(network_name, buses_csv, gens_csv, gens, min_gfm_share
     return gfm_generators
 
 
-def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, namespace, motor_share = 0.3):
+def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, namespace, motor_share = 0.3, contingency_minimum_voltage_level = 0):
     # Loads
     loads = network.get_loads()
+    voltage_levels = network.get_voltage_levels()
     for loadID in loads.index:
         if abs(loads.at[loadID, 'p']) <= 1e-3 and abs(loads.at[loadID, 'q']) <= 1e-3:  # Dummy load
+            voltage_level = loads.at[loadID, 'voltage_level_id']
+            Ub = float(voltage_levels.at[voltage_level, 'nominal_v'])
+            if Ub < contingency_minimum_voltage_level:  # Dummy loads are only useful to make the bus they are connected to "connectable" such that Dynawo can apply faults on them. They do not need to be added if no faults will be performed on their bus (reduces number of variables in dynamic simulation)
+                continue
+
             load_attrib = {'id': 'Dummy_' +  loadID, 'lib': 'LoadAlphaBeta', 'parFile': network_name + '.par', 'parId': 'DummyLoad', 'staticId': loadID}
             loadID = 'Dummy_' + loadID
         else:
