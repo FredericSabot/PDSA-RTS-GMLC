@@ -59,8 +59,6 @@ def unit_group_translation(network_name, unit_group, P_max):
                     return 'Oil_20'
             case 'Hydro':
                 return 'Hydro_50'
-            case 'U55':
-                return 'CT_55'
             case 'Coal':
                 if P_max < 100:
                     return 'Coal_76'
@@ -69,7 +67,12 @@ def unit_group_translation(network_name, unit_group, P_max):
                 else:
                     return 'Coal_350'
             case 'NG':
-                return 'CC_355'
+                if P_max < 100:
+                    return 'CT_55'
+                elif P_max < 200:
+                    return 'CC_150'
+                else:
+                    return 'CC_355'
             case 'Nuclear':
                 return 'Nuclear_400'
             case _:
@@ -404,7 +407,7 @@ def add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_sha
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_Kf', 'value': '0'},
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_tF', 'value': '1.00'},
                     ]
-                elif unit_group == 'Coal_155':  # Reference machine F8 from Vijay Vittal book
+                elif unit_group == 'Coal_155' or 'CC_150':  # Reference machine F8 from Vijay Vittal book (no data on combined cycle gas turbines)
                     pf = 0.85
                     par_attribs +=[
                         {'type': 'DOUBLE', 'name': 'generator_SNom', 'value': str(SNom)},
