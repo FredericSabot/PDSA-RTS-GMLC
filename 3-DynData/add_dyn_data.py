@@ -81,7 +81,92 @@ def unit_group_translation(network_name, unit_group, P_max):
         raise NotImplementedError(network_name, 'is not considered')
 
 
-def add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_share = 0.3):
+def select_gfm_generators(network_name, buses_csv, gens_csv, gens, min_gfm_share_per_area = 0.4):
+    """
+    Select a minimum number of inverter-based generators to be set to grid-forming mode such that the share of grid-forming units (considering
+    both GFM inverters and synchronous machines) is higher than min_gfm_share_per_area
+    """
+    gfm_generators = []
+    if network_name == 'RTS':
+        return []
+    elif network_name == 'Texas':
+        pass
+    else:
+        raise NotImplementedError()
+
+    buses_to_area = {}
+    area_list = []
+    for i in range(len(buses_csv['Bus ID'])):
+        bus_id = buses_csv['Bus ID'][i]
+        area = buses_csv['Area'][i]
+
+        if network_name == 'Texas':
+            if area == 2:
+                longitude = buses_csv['lng'][i]
+                if longitude > -98:
+                    area = 5  # Area 2 is too spread out for the purpose of guaranteeing minimum level of inertia per zone, makes more sense to merge its east side with area 5 (that is closer electrically/geographically)
+
+            # Manually fixes buses with obviously incorrect area
+            if bus_id in [23, 174, 175, 176]:
+                area = 8
+            if bus_id in [32, 207, 208, 209, 210]:
+                area = 4
+            if bus_id in [67, 340, 341, 342]:
+                area = 7
+
+        buses_to_area[bus_id] = area
+        if area not in area_list:
+            area_list.append(area)
+
+    generators_per_area = {area: [] for area in area_list}
+    generators_per_area_synchronous = {area: [] for area in area_list}
+    generators_per_area_inverter = {area: [] for area in area_list}
+
+    N_gens = len(gens_csv['GEN UID'])
+    for i in range(N_gens):
+        unit_group = gens_csv['Unit Group'][i]
+        unit_group = unit_group_translation(network_name, unit_group, gens_csv['PMax MW'][i])
+        gen_id = gens_csv['GEN UID'][i]
+
+        if not gens.at[gen_id, 'connected']:
+            continue
+
+        bus_id = gens_csv['Bus ID'][i]
+        area = buses_to_area[bus_id]
+
+        generators_per_area[area].append(gen_id)
+        if unit_group == 'PV' or unit_group == 'RTPV' or unit_group == 'Wind':
+            generators_per_area_inverter[area].append(gen_id)
+        else:
+            generators_per_area_synchronous[area].append(gen_id)
+
+    for area in area_list:
+        total_capacity = 0
+        total_gfm_capacity = 0
+
+        for gen_id in generators_per_area_synchronous[area]:
+            s = gens.at[gen_id, 'rated_s']
+            total_capacity += s
+            total_gfm_capacity += s
+        for gen_id in generators_per_area_inverter[area]:
+            s = gens.at[gen_id, 'rated_s']
+            total_capacity += s
+
+        gfm_capacity_to_add = total_capacity * min_gfm_share_per_area - total_gfm_capacity
+
+        for gen_id in sorted(generators_per_area_inverter[area], key=lambda id: gens.at[id, 'rated_s'] , reverse=True):
+            if gfm_capacity_to_add < 0:
+                break
+            if gen_id in ['186_PV_2', '134_WIND_1', '135_WIND_2', '245_WIND_1', '246_WIND_2', '247_WIND_3', '248_WIND_4']:  # These generators tend to cause issues when operated as GFM
+                continue
+            s = gens.at[gen_id, 'rated_s']
+            gfm_capacity_to_add -= s
+            gfm_generators.append(gen_id)
+
+    return gfm_generators
+
+
+def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, namespace, motor_share = 0.3):
     # Loads
     loads = network.get_loads()
     for loadID in loads.index:
@@ -136,10 +221,12 @@ def add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_sha
 
 
     gens_csv = pd.read_csv(f'../{network_name}-Data/gen.csv').to_dict()
+    buses_csv = pd.read_csv(f'../{network_name}-Data/bus.csv').to_dict()
     N_gens = len(gens_csv['GEN UID'])
     omega_index = 0
     gens = network.get_generators()
     vl = network.get_voltage_levels()
+    gfm_generators = select_gfm_generators(network_name, buses_csv, gens_csv, gens, min_gfm_share_per_area=0.4)
 
     for i in range(N_gens):
         unit_group = gens_csv['Unit Group'][i]
@@ -168,6 +255,12 @@ def add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_sha
             lib = 'GeneratorSynchronousFourWindingsRtsThermal'
             synchronous = True
 
+        GFM = False
+        if network_name == 'Texas':
+            if genID in gfm_generators:
+                GFM = True
+                lib = 'GridFormingConverterDroopControl'  # Note: P is only limited by the converter rating (through virtual impedance), so it can be higher than available power (pv or wind source) after a transient. This assumes an energy buffer sufficient for the simulated period.
+
         gen_attrib = {'id': genID, 'lib': lib, 'parFile': network_name + '.par', 'parId': genID, 'staticId': genID}
         gen = etree.SubElement(dyd_root, etree.QName(namespace, 'blackBoxModel'), gen_attrib)
 
@@ -176,7 +269,12 @@ def add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_sha
             etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'GEN'})
             etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'GEN-CONNECTOR'})
         else:
-            if unit_group == 'PV' or unit_group == 'RTPV' or unit_group == 'Wind':
+            if GFM:
+                etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'GFM'})
+                etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'GFM-CONNECTOR'})
+                etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'OMEGA_REF', 'connector': 'OmegaRefToGFM', 'index2': str(omega_index)})
+                etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': 'OMEGA_REF', 'id2': 'NETWORK', 'connector': 'OmegaRefToNumCCMachine', 'index1': str(omega_index), 'name2': genID})
+            elif unit_group == 'PV' or unit_group == 'RTPV' or unit_group == 'Wind':
                 etree.SubElement(dyd_root, etree.QName(namespace, 'connect'), {'id1': genID, 'var1': 'ibg_omegaRefPu', 'id2': 'OMEGA_REF', 'var2': 'omegaRef_0_value'})
                 etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'PV'})
                 etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'PV-CONNECTOR'})
@@ -185,7 +283,7 @@ def add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_sha
 
         p_max = gens.at[genID, 'max_p']
         q_max = gens.at[genID, 'max_q']
-        SNom = (p_max**2 + q_max**2)**0.5
+        SNom = gens.at[genID, 'rated_s']
         p_min = gens.at[genID, 'min_p']
         u_nom = vl['nominal_v'][gens['voltage_level_id'][genID]]
 
@@ -524,7 +622,45 @@ def add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_sha
             omega_index += 1
 
         else:  # Not synchronous (PV, wind, RTPV)
-            if unit_group == 'Wind':
+            if GFM:
+                etree.SubElement(omega_par_set, etree.QName(namespace, 'par'), {'type': 'DOUBLE', 'name': 'weight_gen_' + str(omega_index), 'value': str(max(p_max, q_max))})  # Use q_max instead of p_max for syncons/statcoms
+                omega_index += 1
+
+                par_attribs = [  # Parameters from Dynawo grid forming example
+                    {'type': 'DOUBLE', 'name': 'converter_SNom', 'value': str(SNom)},
+                    {'type': 'DOUBLE', 'name': 'converter_Cdc', 'value': '0.01'},
+                    {'type': 'DOUBLE', 'name': 'converter_RFilter', 'value': '0.005'},
+                    {'type': 'DOUBLE', 'name': 'converter_LFilter', 'value': '0.1'},  # Reduced to not limit transfer capacity
+                    {'type': 'DOUBLE', 'name': 'converter_CFilter', 'value': '0.066'},
+                    {'type': 'DOUBLE', 'name': 'converter_RTransformer', 'value': '0.01'},
+                    {'type': 'DOUBLE', 'name': 'converter_LTransformer', 'value': '0.1'},  # Transformer already modelled in the static data, so reduced to not limit transfer capacity too much (still non-zero because the transformer inductance is modelled in a dynamic way (U = L der(i)) in the dynamic model but not in the static data (U = Z I))
+                    {'type': 'DOUBLE', 'name': 'control_KpVI', 'value': '0.67'},
+                    {'type': 'DOUBLE', 'name': 'control_XRratio', 'value': '5'},
+                    {'type': 'DOUBLE', 'name': 'control_Kpc', 'value': '0.7388'},
+                    {'type': 'DOUBLE', 'name': 'control_Kic', 'value': '1.19'},
+                    {'type': 'DOUBLE', 'name': 'control_Kpv', 'value': '0.52'},
+                    {'type': 'DOUBLE', 'name': 'control_Kiv', 'value': '1.161022'},
+                    {'type': 'DOUBLE', 'name': 'control_Mq', 'value': '0.000'},
+                    {'type': 'DOUBLE', 'name': 'control_Wf', 'value': '60'},
+                    {'type': 'DOUBLE', 'name': 'control_Mp', 'value': '0.02'},
+                    {'type': 'DOUBLE', 'name': 'control_Wff', 'value': '16.66'},
+                    {'type': 'DOUBLE', 'name': 'control_Kff', 'value': '0.1'},
+                    {'type': 'DOUBLE', 'name': 'control_RFilter', 'value': '0.005'},
+                    {'type': 'DOUBLE', 'name': 'control_LFilter', 'value': '0.1'},
+                    {'type': 'DOUBLE', 'name': 'control_CFilter', 'value': '0.066'},
+                    {'type': 'DOUBLE', 'name': 'control_Kpdc', 'value': '50'},
+                    {'type': 'DOUBLE', 'name': 'control_IMaxVI', 'value': '1.5'}
+                ]
+
+                references = [
+                    {'name': 'converter_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
+                    # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
+                    {'name': 'converter_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
+                    {'name': 'converter_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
+                    {'name': 'converter_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
+                ]
+
+            elif unit_group == 'Wind':
                 par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis
                     {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
                     {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
@@ -555,9 +691,14 @@ def add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_sha
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_', 'value': '3'},
                     {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
-                    {'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'ibg_tf', 'value': '0.1'},
                 ]
+
+                if network_name == 'RTS':
+                    par_attribs += [{'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0.5'}]
+                else:
+                    par_attribs += [{'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0'}]
+
 
                 references = [
                     {'name': 'ibg_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
