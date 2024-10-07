@@ -173,7 +173,7 @@ def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, 
     for loadID in loads.index:
         if abs(loads.at[loadID, 'p']) <= 1e-3 and abs(loads.at[loadID, 'q']) <= 1e-3:  # Dummy load
             voltage_level = loads.at[loadID, 'voltage_level_id']
-            Ub = float(voltage_levels.at[voltage_level, 'nominal_v'])
+            Ub = float(voltage_levels.at[voltage_level, 'nominal_v']) * 1000
             if Ub < contingency_minimum_voltage_level:  # Dummy loads are only useful to make the bus they are connected to "connectable" such that Dynawo can apply faults on them. They do not need to be added if no faults will be performed on their bus (reduces number of variables in dynamic simulation)
                 continue
 
