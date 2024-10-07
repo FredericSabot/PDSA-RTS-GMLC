@@ -360,6 +360,7 @@ def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, 
                     {'type': 'DOUBLE', 'name': 'governor_tG', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'governor_tR', 'value': '5.2'},
                     {'type': 'DOUBLE', 'name': 'governor_tW', 'value': '1.3'},
+                    {'type': 'DOUBLE', 'name': 'governor_VelMaxPu', 'value': '999'},
                 ]
             elif unit_group == 'Syncon':
                 par_attribs += [  # Reference machine SC5 from Vijay Vittal book
@@ -414,6 +415,8 @@ def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, 
                     {'type': 'DOUBLE', 'name': 'governor_t5', 'value': '5'},
                     {'type': 'DOUBLE', 'name': 'governor_t6', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'governor_t7', 'value': '0.001'},
+                    {'type': 'DOUBLE', 'name': 'governor_Uc', 'value': '-999'},
+                    {'type': 'DOUBLE', 'name': 'governor_Uo', 'value': '999'},
                 ]
                 if unit_group == 'Oil_12' or unit_group == 'Oil_20':  # Reference machine F1 from Vijay Vittal book
                     pf = 0.8
