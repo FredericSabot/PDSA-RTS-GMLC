@@ -407,9 +407,13 @@ addGamsParams(db_preDC, 'branch_max_E', 'Emergency branch max power', [i_branch]
 
 # considered_contingency_states = contingency_states[:, considered_contingencies]
 i_contingency = addGamsSet(db_preDC, 'i_contingency', 'contingencies', range(1, 1 + N_contingencies))
-# addGamsParams(db_preDC, 'contingency_states', 'Line states in the considered contingencies', [i_branch, i_contingency], contingency_states)
-addGamsParams(db_preDC, 'considered_contingencies_map', 'contingencies map', [i_branch, i_contingency], considered_contingencies_map)
-addGamsParams(db_preDC, 'LODFs', 'Line outage distribution factors', [i_branch, i_contingency], LODFs[:, considered_contingencies])
+if network_name == 'RTS':
+    addGamsParams(db_preDC, 'contingency_states', 'Line states in the considered contingencies', [i_branch, i_contingency], contingency_states)
+elif network_name == 'Texas':
+    addGamsParams(db_preDC, 'considered_contingencies_map', 'contingencies map', [i_branch, i_contingency], considered_contingencies_map)
+    addGamsParams(db_preDC, 'LODFs', 'Line outage distribution factors', [i_branch, i_contingency], LODFs[:, considered_contingencies])
+else:
+    raise
 
 addGamsParams(db_preDC, 'demand', 'demand at each bus', [i_bus], demand_bus * (1 + losses))
 
