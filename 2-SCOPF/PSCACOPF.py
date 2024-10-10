@@ -140,6 +140,8 @@ def compute_PTDFs(branch_map, branch_admittances):
 
 def compute_LODFs(PTDFs, branch_map, cont_rating):
     # Compute line outage distribution factor, i.e. change in flow in line i if line j is disconnected (to be multiplied by pre-fault flow in line j)
+    # i: line index
+    # j: failed line index
 
     LODF_path = f'LODFs_{network_name}.pickle'
     if os.path.exists(LODF_path):
@@ -147,9 +149,12 @@ def compute_LODFs(PTDFs, branch_map, cont_rating):
             LODFs = pickle.load(file)
     else:
         branch_map = branch_map.T  # (N_branches, N_buses) to (N_buses, N_branches)
-        LODFs = -PTDFs @ branch_map
+        LODFs = PTDFs @ branch_map
 
         N_branches = len(cont_rating)
+        for j in range(N_branches):
+            LODFs[:][j] /= (-1 * LODFs[j][j])  # LODF of line on itself is -1
+
         for i in range(N_branches):
             for j in range(N_branches):
                 if abs(LODFs[i][j]) * cont_rating[i] < 0.01 * cont_rating[j]:
