@@ -83,12 +83,13 @@ def get_admittance_matrix(n: pp.network.Network, disconnected_elements = [], inv
     tfos = n.get_2_windings_transformers()
     gens = n.get_generators()
     loads = n.get_loads()
+    bus_id_to_index = {bus_id: index for index, bus_id in enumerate(list(buses.index))}
 
     for disconnected_element in disconnected_elements:
         if (list(lines.index) + list(tfos.index) + list(gens.index)).count(disconnected_element) < 1:
-            raise NotImplementedError(disconnected_element, 'does not exist in network')
+            raise RuntimeError(disconnected_element, 'does not exist in network')
         elif (list(lines.index) + list(tfos.index) + list(gens.index)).count(disconnected_element) > 1:
-            raise NotImplementedError(disconnected_element, 'is ambiguous (multiple elements of different types with same name)')
+            raise RuntimeError(disconnected_element, 'is ambiguous (multiple elements of different types with same name)')
 
     sync_gens = []
     for gen_id in gens.index:
@@ -104,13 +105,13 @@ def get_admittance_matrix(n: pp.network.Network, disconnected_elements = [], inv
     N_gens = len(sync_gens)  # Create additonal buses to connect the generator Emf behind their transient reactances
     Y = np.zeros((N_buses + N_gens, N_buses + N_gens), complex)
 
-    for line_id in (lines.index):
+    for line_id in lines.index:
         if not (lines.at[line_id, 'connected1'] and lines.at[line_id, 'connected2']):
             continue
         if line_id in disconnected_elements:
             continue
-        from_ = list(buses.index).index(lines.at[line_id, 'bus1_id'])
-        to = list(buses.index).index(lines.at[line_id, 'bus2_id'])
+        from_ = bus_id_to_index[lines.at[line_id, 'bus1_id']]
+        to = bus_id_to_index[lines.at[line_id, 'bus2_id']]
         vl_id = lines.at[line_id, 'voltage_level1_id']
         Ub = vl.at[vl_id, 'nominal_v']
         Zb = Ub**2 / BASEMVA
@@ -130,8 +131,8 @@ def get_admittance_matrix(n: pp.network.Network, disconnected_elements = [], inv
             continue
         if tfo_id in disconnected_elements:
             continue
-        from_ = list(buses.index).index(tfos.at[tfo_id, 'bus1_id'])
-        to = list(buses.index).index(tfos.at[tfo_id, 'bus2_id'])
+        from_ = bus_id_to_index[tfos.at[tfo_id, 'bus1_id']]
+        to = bus_id_to_index[tfos.at[tfo_id, 'bus2_id']]
         vl_id = tfos.at[tfo_id, 'voltage_level2_id']  # Impedances given in secondary base
         Ub = vl.at[vl_id, 'nominal_v']
         Zb = Ub**2 / BASEMVA
@@ -153,7 +154,7 @@ def get_admittance_matrix(n: pp.network.Network, disconnected_elements = [], inv
 
         if not loads.at[load_id, 'connected']:
             continue
-        from_ = list(buses.index).index(loads.at[load_id, 'bus_id'])
+        from_ = bus_id_to_index[loads.at[load_id, 'bus_id']]
         vl_id = loads.at[load_id, 'voltage_level_id']
         Ub = vl.at[vl_id, 'nominal_v']
         Zb = Ub**2 / BASEMVA
@@ -167,7 +168,7 @@ def get_admittance_matrix(n: pp.network.Network, disconnected_elements = [], inv
     if fault_location is not None:
         Ub_fault = vl.at[buses.at[fault_location, 'voltage_level_id'], 'nominal_v']
         Zb = Ub_fault**2 / BASEMVA
-        from_ = list(buses.index).index(fault_location)
+        from_ = bus_id_to_index[fault_location]
         Y[from_, from_] += 1 / ((R_FAULT + 1j * X_FAULT) / Zb)
 
     # Inverter based generators
@@ -180,9 +181,9 @@ def get_admittance_matrix(n: pp.network.Network, disconnected_elements = [], inv
             continue  # Inverter based generators
 
         if inverter_model == 'None':
-            continue
+            break
         elif inverter_model == 'Load':
-            from_ = list(buses.index).index(gens.at[gen_id, 'bus_id'])
+            from_ = bus_id_to_index[gens.at[gen_id, 'bus_id']]
             vl_id = gens.at[gen_id, 'voltage_level_id']
             Ub = vl.at[vl_id, 'nominal_v']
             Zb = Ub**2 / BASEMVA
@@ -195,10 +196,12 @@ def get_admittance_matrix(n: pp.network.Network, disconnected_elements = [], inv
         else:
             raise NotImplementedError()
 
+
+    # Synchronous generators
     par_root = etree.parse('../3-DynData/{}.par'.format(NETWORK_NAME)).getroot()
     for i, gen_id in enumerate(sync_gens):
         from_ = N_buses + i
-        to = list(buses.index).index(gens.at[gen_id, 'bus_id'])
+        to = bus_id_to_index[gens.at[gen_id, 'bus_id']]
 
         par_set = par_root.find("{{{}}}set[@id='{}']".format(DYNAWO_NAMESPACE, gen_id))
         if par_set is None:
@@ -230,10 +233,14 @@ def voltage_screening(n: pp.network.Network, disconnected_elements = []):
     """
     buses = n.get_buses()
     loads = n.get_loads()
+    bus_id_to_index = {bus_id: index for index, bus_id in enumerate(list(buses.index))}
 
+    # Compute the impedance matrix as Z = 1/Y
+    Y = get_admittance_matrix(n, disconnected_elements, inverter_model='None', generator_model='VoltageSource', with_loads=True)
     try:
-        Z = np.linalg.inv(get_admittance_matrix(n, disconnected_elements, inverter_model='None', generator_model='VoltageSource', with_loads=False))
+        Z = np.linalg.inv(Y)
     except np.linalg.LinAlgError:  # Matrix can be singular, typically if an isolated part of the grid has no load nor generators
+        print('Warning: singular matrix')
         return False, 0
     min_shc_ratio = 1e9
 
@@ -243,7 +250,7 @@ def voltage_screening(n: pp.network.Network, disconnected_elements = []):
         S_load = (loads.at[load_id, 'p0']**2 + loads.at[load_id, 'q0']**2)**0.5 / BASEMVA
         if S_load == 0:
             continue
-        from_ = list(buses.index).index(loads.at[load_id, 'bus_id'])
+        from_ = bus_id_to_index[loads.at[load_id, 'bus_id']]
         S_shc = abs(-1 / Z[from_, from_])
         if S_shc / S_load < min_shc_ratio:
             min_shc_ratio = S_shc / S_load
@@ -531,14 +538,9 @@ def angle_to_time(OMIB: OMIBData, M, delta_f, delta_i, w_i):
 
     if len(positive_real_roots) == 0:
         positive_real_roots.append(0)
-    # print()
-    # print(delta_f, delta_i)
-    # print(gamma_der, gamma_der2, gamma_der3)
-    # print(delta_der, delta_der2, delta_der3, delta_der4, delta_der5)
+
     t_f = min(positive_real_roots)
     w_f = w_i + 1/w0 * (delta_der2 * t_f + 1/2 * delta_der3 * t_f**2 + 1/6 * delta_der4 * t_f**3 + 1/24 * delta_der5 * t_f**4)
-    # print(t_f, w_f)
-    # print()
     return t_f, w_f
 
 
