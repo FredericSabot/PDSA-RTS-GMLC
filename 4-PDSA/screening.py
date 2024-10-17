@@ -76,6 +76,178 @@ def get_generator_data(n: pp.network.Network, disconnected_elements = []) -> lis
     return generator_data
 
 
+def get_impedance_matrix(n: pp.network.Network, disconnected_elements = [], inverter_model='None', generator_model='None', with_loads=False, fault_location=None):
+    return NotImplementedError('The code below works (only tested it for voltage screening), but it is actually faster to inverse the admittance matrix (np.linalg.inv(get_admittance_matrix(...)))')
+    buses = n.get_buses()
+    vl = n.get_voltage_levels()
+    lines = n.get_lines()
+    tfos = n.get_2_windings_transformers()
+    gens = n.get_generators()
+    loads = n.get_loads()
+    bus_id_to_index = {bus_id: index for index, bus_id in enumerate(list(buses.index))}
+
+    for disconnected_element in disconnected_elements:
+        if (list(lines.index) + list(tfos.index) + list(gens.index)).count(disconnected_element) < 1:
+            raise RuntimeError(disconnected_element, 'does not exist in network')
+        elif (list(lines.index) + list(tfos.index) + list(gens.index)).count(disconnected_element) > 1:
+            raise RuntimeError(disconnected_element, 'is ambiguous (multiple elements of different types with same name)')
+
+    sync_gens = []
+    for gen_id in gens.index:
+        if not gens.at[gen_id, 'connected']:
+            continue
+        if gens.at[gen_id, 'energy_source'] in ['SOLAR', 'WIND']:
+            continue
+        if gen_id in disconnected_elements:
+            continue
+        sync_gens.append(gen_id)
+
+    N_buses = len(buses)
+    N_gens = len(sync_gens)
+
+    bus_shunt_admittances = np.zeros(N_buses + N_gens, complex)  # Create additonal buses to connect the generator Emf behind their transient reactances
+    branch_admittances = {}
+
+    for branch_type in ['line', 'tfo']:
+        if branch_type == 'line':
+            branches = lines
+        else:
+            branches = tfos
+
+        for branch_id in branches.index:
+            if not (branches.at[branch_id, 'connected1'] and branches.at[branch_id, 'connected2']):
+                continue
+            if branch_id in disconnected_elements:
+                continue
+            from_ = bus_id_to_index[branches.at[branch_id, 'bus1_id']]
+            to = bus_id_to_index[branches.at[branch_id, 'bus2_id']]
+            vl_id = branches.at[branch_id, 'voltage_level2_id']  # Transformer impedances given in secondary base (no impact for lines)
+            Ub = vl.at[vl_id, 'nominal_v']
+            Zb = Ub**2 / BASEMVA
+            r = branches.at[branch_id, 'r'] / Zb
+            x = branches.at[branch_id, 'x'] / Zb
+            z = r + 1j*x
+
+            if branch_type == 'line':
+                b1 = 1j * branches.at[branch_id, 'b1'] * Zb
+                b2 = 1j * branches.at[branch_id, 'b2'] * Zb
+                bus_shunt_admittances[from_] += b1
+                bus_shunt_admittances[to   ] += b2
+            else:
+                b = branches.at[branch_id, 'b'] * Zb
+                tap = 1
+
+                bus_shunt_admittances[from_] += b/2 * tap**2
+                bus_shunt_admittances[to   ] += b/2
+
+            branch_admittances[f"{from_}-{to}"] = branch_admittances.get(f"{from_}-{to}", 0) + 1/z  # TODO: more logic if tfo tap != 1
+
+
+    for load_id in loads.index:
+        if not with_loads:
+            break
+
+        if not loads.at[load_id, 'connected']:
+            continue
+        from_ = bus_id_to_index[loads.at[load_id, 'bus_id']]
+        vl_id = loads.at[load_id, 'voltage_level_id']
+        Ub = vl.at[vl_id, 'nominal_v']
+        Zb = Ub**2 / BASEMVA
+        S = loads.at[load_id, 'p0'] + 1j * loads.at[load_id, 'q0']
+        if S == 0:
+            continue
+        U = buses.at[loads.at[load_id, 'bus_id'], 'v_mag']
+        z = U**2 / np.conj(S) / Zb
+        bus_shunt_admittances[from_] += 1/z
+
+    if fault_location is not None:
+        Ub_fault = vl.at[buses.at[fault_location, 'voltage_level_id'], 'nominal_v']
+        Zb = Ub_fault**2 / BASEMVA
+        from_ = bus_id_to_index[fault_location]
+        bus_shunt_admittances[from_] += 1 / ((R_FAULT + 1j * X_FAULT) / Zb)
+
+
+    # Inverter based generators
+    for gen_id in gens.index:
+        if not gens.at[gen_id, 'connected']:
+            continue
+        if gen_id in disconnected_elements:
+            continue
+        if gens.at[gen_id, 'energy_source'] not in ['SOLAR', 'WIND']:
+            continue  # Inverter based generators
+
+        if inverter_model == 'None':
+            break
+        elif inverter_model == 'Load':
+            from_ = bus_id_to_index[gens.at[gen_id, 'bus_id']]
+            vl_id = gens.at[gen_id, 'voltage_level_id']
+            Ub = vl.at[vl_id, 'nominal_v']
+            Zb = Ub**2 / BASEMVA
+            S = gens.at[gen_id, 'p'] + 1j * gens.at[gen_id, 'q']
+            if S == 0:
+                continue
+            U = buses.at[gens.at[gen_id, 'bus_id'], 'v_mag']
+            z = U**2 / np.conj(S) / Zb
+            bus_shunt_admittances[from_] += 1/z
+        else:
+            raise NotImplementedError()
+
+
+    # Synchronous generators
+    par_root = etree.parse('../3-DynData/{}.par'.format(NETWORK_NAME)).getroot()
+    for i, gen_id in enumerate(sync_gens):
+        from_ = N_buses + i
+        to = bus_id_to_index[gens.at[gen_id, 'bus_id']]
+
+        par_set = par_root.find("{{{}}}set[@id='{}']".format(DYNAWO_NAMESPACE, gen_id))
+        if par_set is None:
+            raise ValueError(gen_id, 'parameters not found')
+        Snom = float(par_set.find("{{{}}}par[@name='generator_SNom']".format(DYNAWO_NAMESPACE)).get('value'))
+        Xd = 1j * float(par_set.find("{{{}}}par[@name='generator_XpdPu']".format(DYNAWO_NAMESPACE)).get('value')) / (Snom / BASEMVA)
+        Snom_tfo = float(par_set.find("{{{}}}par[@name='generator_SnTfo']".format(DYNAWO_NAMESPACE)).get('value'))
+        zTFO = (float(par_set.find("{{{}}}par[@name='generator_RTfPu']".format(DYNAWO_NAMESPACE)).get('value')) + 1j *
+                float(par_set.find("{{{}}}par[@name='generator_XTfPu']".format(DYNAWO_NAMESPACE)).get('value'))) / (Snom_tfo / BASEMVA)
+        z = Xd + zTFO
+
+        branch_admittances[f"{from_}-{to}"] = branch_admittances.get(f"{from_}-{to}", 0) + 1/z
+
+        if generator_model == 'None':
+            continue
+        elif generator_model == 'VoltageSource':
+            bus_shunt_admittances[from_] += 1e9
+
+    BIG_Z = 1e9
+    bus_shunt_impedances = []
+    for i in range(len(bus_shunt_admittances)):
+        if bus_shunt_admittances[i] == 0:
+            bus_shunt_impedances.append(BIG_Z)
+        else:
+            bus_shunt_impedances.append(1/bus_shunt_admittances[i])
+
+
+    # Step 1 of Z construction: add all buses with shunt to ground (shunt set to BIG_Z if none) (rule #1 of https://home.engineering.iastate.edu/~jdm/ee457/Zbus.pdf)
+    Z = np.diag(bus_shunt_impedances)
+
+    # Step 2 of Z construction: add all branches between buses (rule #4 of https://home.engineering.iastate.edu/~jdm/ee457/Zbus.pdf)
+    N = len(branch_admittances)
+    i = 0
+    for index in branch_admittances:
+        from_, to = index.split('-')
+        from_ = int(from_)
+        to = int(to)
+        z = 1/branch_admittances[index]
+
+        gamma = 1 / (z + Z[from_][from_] - 2*Z[to][from_] + Z[to][to])
+        b = Z[from_] - Z[to]
+
+        Z -= gamma * np.outer(b, b)
+
+        i += 1
+        print(f'{i}/{N}', end='\r')
+
+    return Z
+
+
 def get_admittance_matrix(n: pp.network.Network, disconnected_elements = [], inverter_model='None', generator_model='None', with_loads=False, fault_location=None):
     buses = n.get_buses()
     vl = n.get_voltage_levels()
@@ -231,6 +403,9 @@ def voltage_screening(n: pp.network.Network, disconnected_elements = []):
     Return False (insecure) if the short-circuit level at any bus is lower than 4 times the load at said bus.
     Also returns the minimum Shc to load ratio
     """
+    if NETWORK_NAME == 'Texas':
+        return False, 0  # Takes too much computation time for a screening indicator, so skipped
+
     buses = n.get_buses()
     loads = n.get_loads()
     bus_id_to_index = {bus_id: index for index, bus_id in enumerate(list(buses.index))}
@@ -242,8 +417,11 @@ def voltage_screening(n: pp.network.Network, disconnected_elements = []):
     except np.linalg.LinAlgError:  # Matrix can be singular, typically if an isolated part of the grid has no load nor generators
         print('Warning: singular matrix')
         return False, 0
-    min_shc_ratio = 1e9
 
+    # Could also build the impedance matrix directly instead of computing the inverse of Y, but for some reason, it takes even more time
+    # Z = get_impedance_matrix(n, disconnected_elements, inverter_model='None', generator_model='VoltageSource', with_loads=True)
+
+    min_shc_ratio = 1e9
     for load_id in loads.index:
         if not loads.at[load_id, 'connected']:
             continue
@@ -276,6 +454,7 @@ def extended_equal_area_criterion(n: pp.network.Network, fault_location, disconn
     g = list(range(N_buses, Y_pre.shape[0]))
     # @ is numpy's matrix multiplication operator
     try:
+        # TODO: replace np.linalg.inv(Y) by Z to reduce computation time, although tests for voltage screening show that inverting Y is actually faster
         Y_pre_red = Y_pre[g,:][:,g] - Y_pre[g,:][:,b] @ np.linalg.inv(Y_pre[b,:][:,b]) @ Y_pre[b,:][:,g]
         Y_dur_red = Y_dur[g,:][:,g] - Y_dur[g,:][:,b] @ np.linalg.inv(Y_dur[b,:][:,b]) @ Y_dur[b,:][:,g]
         g = list(range(N_buses, Y_post.shape[0]))
@@ -548,6 +727,9 @@ def transient_screening(n: pp.network.Network, clearing_time, fault_location, di
     """
     Return true if estimated CCT is smaller than 0.8 * the clearing time. Assumes all disconnected elements are disconnected at the clearing time
     """
+    if NETWORK_NAME == 'Texas':
+        return False, 0  # Takes too much computation time for a screening indicator, so skipped
+
     if fault_location is None:
         return True, 999
 
@@ -598,9 +780,9 @@ def frequency_screening(n: pp.network.Network, disconnected_elements):
 
 
 if __name__ == '__main__':
-    n = pp.network.load('/home/fsabot/Desktop/PDSA-RTS-GMLC/4-PDSA/simulations/year/7330/0/CA-2_end1_DELAYED/RTS.iidm')
+    n = pp.network.load('/home/fsabot/Desktop/PDSA-RTS-GMLC/4-PDSA/simulations/year_Texas/8000/0/110126-111216_1_end1_DELAYED/Texas.iidm')
+    # n = pp.network.load('/home/fsabot/Desktop/PDSA-RTS-GMLC/4-PDSA/simulations/year_RTS/2000/0/Base/RTS.iidm')
     print(voltage_screening(n, []))
-    print(transient_screening(n, 0.15, 'V-122_0', ['121_NUCLEAR_1']))
-    print(frequency_screening(n, ['320_RTPV_1', '320_RTPV_2', '320_RTPV_3', '320_RTPV_4', '320_RTPV_5', '320_RTPV_6',
-                                  '313_RTPV_1', '313_RTPV_2', '313_RTPV_3', '313_RTPV_4', '313_RTPV_5', '313_RTPV_6',
-                                  '313_RTPV_7', '313_RTPV_8', '313_RTPV_9', '313_RTPV_10', '313_RTPV_11', '313_RTPV_12', '313_RTPV_13']))
+    print(transient_screening(n, 0.15, 'V-240195_0', ['240195_NG_4']))
+    # print(transient_screening(n, 0.15, 'V-121_0', ['121_NUCLEAR_1']))
+    print(frequency_screening(n, ['240195_NG_4']))
