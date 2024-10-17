@@ -183,7 +183,7 @@ def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, 
             if motor_share != 0:
                 load_attrib = {'id': loadID, 'lib': 'LoadAlphaBetaMotorSimplified', 'parFile': network_name + '.par', 'parId': 'GenericLoadAlphaBetaMotor', 'staticId': loadID}
             else:
-                load_attrib = {'id': loadID, 'lib': 'LoadAlphaBeta', 'parFile': network_name + '.par', 'parId': 'GenericLoadAlphaBetaMotor', 'staticId': loadID}
+                load_attrib = {'id': loadID, 'lib': 'LoadAlphaBeta', 'parFile': network_name + '.par', 'parId': 'GenericLoadAlphaBeta', 'staticId': loadID}
         load = etree.SubElement(dyd_root, etree.QName(namespace, 'blackBoxModel'), load_attrib)
 
         etree.SubElement(load, etree.QName(namespace, 'macroStaticRef'), {'id': 'LOAD'})
@@ -393,8 +393,8 @@ def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, 
                 ]
             else:  # Thermal unit
                 par_attribs += [  # Default parameters of IEEEG1
-                    {'type': 'DOUBLE', 'name': 'governor_DerPMaxPu', 'value': '1'},
-                    {'type': 'DOUBLE', 'name': 'governor_DerPMinPu', 'value': '-10'},
+                    {'type': 'DOUBLE', 'name': 'governor_Uo', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'governor_Uc', 'value': '-10'},
                     {'type': 'DOUBLE', 'name': 'governor_K', 'value': '25'},
                     {'type': 'DOUBLE', 'name': 'governor_K1', 'value': '0.2'},
                     {'type': 'DOUBLE', 'name': 'governor_K2', 'value': '0'},
@@ -415,8 +415,6 @@ def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, 
                     {'type': 'DOUBLE', 'name': 'governor_t5', 'value': '5'},
                     {'type': 'DOUBLE', 'name': 'governor_t6', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'governor_t7', 'value': '0.001'},
-                    {'type': 'DOUBLE', 'name': 'governor_Uc', 'value': '-999'},
-                    {'type': 'DOUBLE', 'name': 'governor_Uo', 'value': '999'},
                 ]
                 if unit_group == 'Oil_12' or unit_group == 'Oil_20':  # Reference machine F1 from Vijay Vittal book
                     pf = 0.8
@@ -698,7 +696,6 @@ def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, 
                     {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.5'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
                     {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_', 'value': '3'},
                     {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
                     {'type': 'DOUBLE', 'name': 'ibg_tf', 'value': '0.1'},
                 ]
