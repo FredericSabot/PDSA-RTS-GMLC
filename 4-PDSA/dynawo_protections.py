@@ -54,6 +54,7 @@ def add_protections(dyd_root, par_root, iidm_file, seed):
         if lines_csv['Tr Ratio'][i] != 0:
             continue  # Consider lines, not transformers
         add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2lines, line_id, line_rating, CB_time, CB_max_error, special)
+        add_line_overload_protection(dyd_root, par_root, lines, voltage_levels, line_id, line_rating)
 
 
 def get_buses_to_lines(network):
@@ -90,7 +91,7 @@ def get_adjacent_lines(bus_to_lines, lines, line_id, side):
 
 def add_gen_speed_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error, omega_max_error=0.01):
     """
-    Add protection model to Dynawo input files
+    Add generator speed protection model to Dynawo input files
     """
     protection_id = gen_id + '_Speed'
     speed_attrib = {'id': protection_id, 'lib': 'SpeedProtection', 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
@@ -124,7 +125,7 @@ def add_gen_speed_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error, 
 
 def add_gen_UVA_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error):
     """
-    Add protection model to Dynawo input files
+    Add generator under-voltage protection model to Dynawo input files
     """
     protection_id = gen_id + '_UVA'
     uva_attrib = {'id': protection_id, 'lib': 'UnderVoltageAutomaton', 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
@@ -155,7 +156,7 @@ def add_gen_UVA_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error):
 
 def add_gen_OOS_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error, angle_max_error=10):
     """
-    Add protection model to Dynawo input files
+    Add generator out-of-step protection model to Dynawo input files
     """
     protection_id = gen_id + '_InternalAngle'
     oos_attrib = {'id': protection_id, 'lib': 'LossOfSynchronismProtection', 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
@@ -186,7 +187,7 @@ def add_gen_OOS_protection(dyd_root, par_root, gen_id, CB_time, CB_max_error, an
 
 def add_UFLS(dyd_root, par_root, network):
     """
-    Add protection model to Dynawo input files
+    Add under-frequency load shedding model to Dynawo input files
     """
     protection_id = 'UFLS'
     ufls_attrib = {'id': protection_id, 'lib': 'UFLS10Steps', 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
@@ -236,14 +237,14 @@ def add_UFLS(dyd_root, par_root, network):
 
 def add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2lines, line_id, line_rating, CB_time, CB_max_error, special, measurement_max_error = 0.1):
     """
-    Add protection model to Dynawo input files
+    Add line distance protection model to Dynawo input files
     """
     voltage_level = lines.at[line_id, 'voltage_level1_id']
     Ub = float(voltage_levels.at[voltage_level, 'nominal_v']) * 1000
     Sb = 100e6  # 100MW is the default base in Dynawo
     Zb = Ub**2/Sb
 
-    if Ub < PROTECTION_MINIMUM_VOLTAGE_LEVEL:
+    if Ub < DISTANCE_PROTECTION_MINIMUM_VOLTAGE_LEVEL:
         return
 
     for side in [1,2]:
@@ -359,3 +360,43 @@ def add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2line
             ]
         for par_attrib in par_attribs:
             etree.SubElement(dist_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
+
+
+def add_line_overload_protection(dyd_root, par_root, lines, voltage_levels, line_id, line_rating):
+    """
+    Add line distance protection model to Dynawo input files
+    """
+    voltage_level = lines.at[line_id, 'voltage_level1_id']
+    Ub = float(voltage_levels.at[voltage_level, 'nominal_v']) * 1000
+
+    if Ub >= DISTANCE_PROTECTION_MINIMUM_VOLTAGE_LEVEL:  # Use distance protection instead
+        return
+
+    protection_id = line_id + '_Overload'
+    lib = 'CurrentLimitAutomaton'
+    dist_attrib = {'id': protection_id, 'lib': lib, 'parFile': NETWORK_NAME + '.par', 'parId': protection_id}
+    etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), dist_attrib)
+
+    connect_attribs = [
+        {'id1': protection_id, 'var1': 'currentLimitAutomaton_IMonitored', 'id2': 'NETWORK', 'var2': line_id + '_iSide1'},
+        {'id1': protection_id, 'var1': 'currentLimitAutomaton_order', 'id2': 'NETWORK', 'var2': line_id + '_state'},
+        {'id1': protection_id, 'var1': 'currentLimitAutomaton_AutomatonExists', 'id2': 'NETWORK', 'var2': line_id + '_desactivate_currentLimits'}
+    ]
+    for connect_attrib in connect_attribs:
+        etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'connect'), connect_attrib)
+
+    # Parameters
+    dist_par_set = etree.SubElement(par_root, etree.QName(DYNAWO_NAMESPACE, 'set'), {'id' : protection_id})
+    P_max = 1.5 * line_rating
+    I_max = (P_max * 1e6) / (Ub * 3**0.5)
+
+    par_attribs = [
+
+        {'type':'INT', 'name':'currentLimitAutomaton_OrderToEmit', 'value':'1'},
+        {'type':'BOOL', 'name':'currentLimitAutomaton_Running', 'value':'true'},
+        {'type':'DOUBLE', 'name':'currentLimitAutomaton_IMax', 'value':str(I_max)},
+        {'type':'DOUBLE', 'name':'currentLimitAutomaton_tLagBeforeActing', 'value':'1'},
+    ]
+
+    for par_attrib in par_attribs:
+        etree.SubElement(dist_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
