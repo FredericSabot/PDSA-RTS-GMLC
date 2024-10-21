@@ -53,6 +53,10 @@ def add_protections(dyd_root, par_root, iidm_file, seed):
         line_rating = lines_csv['Cont Rating'][i]
         if lines_csv['Tr Ratio'][i] != 0:
             continue  # Consider lines, not transformers
+
+        if NETWORK_NAME == 'Texas':
+            line_rating *= 1.5  # Necessary for OPF to converge during summer
+
         add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2lines, line_id, line_rating, CB_time, CB_max_error, special)
         add_line_overload_protection(dyd_root, par_root, lines, voltage_levels, line_id, line_rating)
 
