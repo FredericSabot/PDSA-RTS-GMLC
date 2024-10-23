@@ -51,16 +51,17 @@ class Job:
         t0 = time.time()
 
         dynawo_inputs.write_job_files(self)
-        cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '.jobs')]
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        # Launch cmd and interrupt it if last longer than JOB_TIMEOUT_S
+        cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '.jobs')]
+        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, start_new_session=True)
         try:
             _, stderr = proc.communicate(timeout=JOB_TIMEOUT_S)
         except subprocess.TimeoutExpired:
             stderr = ''
-            proc.send_signal(signal.SIGINT)
-            time.sleep(10)  # Give time to interupt and create output files
-            proc.kill()
+            os.killpg(os.getpgid(proc.pid), signal.SIGINT)  # Send ctrl+c signal to Dynawo (https://stackoverflow.com/a/4791612, but setsid replaced by start_new_session according to https://docs.python.org/3/library/subprocess.html)
+            time.sleep(10)  # Let some time for Dynawo to gracefully interrupt and write output files
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)  # Kill if needed
             self.timed_out = True
 
         if 'Error' in str(stderr) or self.timed_out:  # Simulation failed, so retry with another solver
@@ -70,14 +71,14 @@ class Job:
             # Retry with another solver
             cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '_alt_solver.jobs')]
             logger.logger.log(logger.logging.TRACE, 'Launching job %s with alternative solver' % self)
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
 
             try:
                 proc.communicate(timeout=JOB_TIMEOUT_S)
             except subprocess.TimeoutExpired:
-                proc.send_signal(signal.SIGINT)
-                time.sleep(10)
-                proc.kill()
+                os.killpg(os.getpgid(proc.pid), signal.SIGINT)
+                time.sleep(10)  # Let some time for Dynawo to gracefully interrupt and write output files
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
 
         delta_t = time.time() - t0
         self.complete(delta_t)
