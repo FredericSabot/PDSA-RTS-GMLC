@@ -4,6 +4,7 @@ from math import pi
 from common import *
 from dataclasses import dataclass
 from lxml import etree
+import multiprocessing
 
 @dataclass
 class GeneratorData:
@@ -31,7 +32,16 @@ class OMIBData:
         self.Pm = -self.Pm
         self.angle_shift = -self.angle_shift
 
+
 def get_generator_data(n: pp.network.Network, disconnected_elements = []) -> list[GeneratorData]:
+    # Workaround lxml memory leak https://www.reddit.com/r/Python/comments/j0gl8t/psa_pythonlxml_memory_leaks_and_a_solution/
+    def function():
+        __get_generator_data__(n, disconnected_elements)
+    process = multiprocessing.Process(target=function, daemon=True)
+    process.start()
+    process.join()
+
+def __get_generator_data__(n: pp.network.Network, disconnected_elements = []) -> list[GeneratorData]:
     generator_data = []
     gens = n.get_generators()
     buses = n.get_buses()
@@ -77,6 +87,14 @@ def get_generator_data(n: pp.network.Network, disconnected_elements = []) -> lis
 
 
 def get_impedance_matrix(n: pp.network.Network, disconnected_elements = [], inverter_model='None', generator_model='None', with_loads=False, fault_location=None):
+    # Workaround lxml memory leak https://www.reddit.com/r/Python/comments/j0gl8t/psa_pythonlxml_memory_leaks_and_a_solution/
+    def function():
+        __get_impedance_matrix__(n, disconnected_elements, inverter_model, generator_model, with_loads, fault_location)
+    process = multiprocessing.Process(target=function, daemon=True)
+    process.start()
+    process.join()
+
+def __get_impedance_matrix__(n: pp.network.Network, disconnected_elements = [], inverter_model='None', generator_model='None', with_loads=False, fault_location=None):
     return NotImplementedError('The code below works (only tested it for voltage screening), but it is actually faster to inverse the admittance matrix (np.linalg.inv(get_admittance_matrix(...)))')
     buses = n.get_buses()
     vl = n.get_voltage_levels()
@@ -249,6 +267,14 @@ def get_impedance_matrix(n: pp.network.Network, disconnected_elements = [], inve
 
 
 def get_admittance_matrix(n: pp.network.Network, disconnected_elements = [], inverter_model='None', generator_model='None', with_loads=False, fault_location=None):
+    # Workaround lxml memory leak https://www.reddit.com/r/Python/comments/j0gl8t/psa_pythonlxml_memory_leaks_and_a_solution/
+    def function():
+        __get_admittance_matrix__(n, disconnected_elements, inverter_model, generator_model, with_loads, fault_location)
+    process = multiprocessing.Process(target=function, daemon=True)
+    process.start()
+    process.join()
+
+def __get_admittance_matrix__(n: pp.network.Network, disconnected_elements = [], inverter_model='None', generator_model='None', with_loads=False, fault_location=None):
     buses = n.get_buses()
     vl = n.get_voltage_levels()
     lines = n.get_lines()
@@ -738,6 +764,14 @@ def transient_screening(n: pp.network.Network, clearing_time, fault_location, di
 
 
 def frequency_screening(n: pp.network.Network, disconnected_elements):
+    # Workaround lxml memory leak https://www.reddit.com/r/Python/comments/j0gl8t/psa_pythonlxml_memory_leaks_and_a_solution/
+    def function():
+        __frequency_screening__(n, disconnected_elements)
+    process = multiprocessing.Process(target=function, daemon=True)
+    process.start()
+    process.join()
+
+def __frequency_screening__(n: pp.network.Network, disconnected_elements):
     """
     Returns False (insecure) if the power loss caused by the "disconnected elements" causes a RoCoF > 0.4Hz.s or loss higher than 70% of primary reserve.
     Also, returns said RoCoF

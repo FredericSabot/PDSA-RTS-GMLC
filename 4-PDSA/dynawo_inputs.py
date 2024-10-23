@@ -11,10 +11,23 @@ import pypowsybl as pp
 import sys
 sys.path.insert(1, '../3-DynData')
 import add_dyn_data
+import multiprocessing
 
 def write_job_files(job : job.Job):
     """
     Write the input files for a given scenario
+    """
+    # Workaround lxml memory leak https://www.reddit.com/r/Python/comments/j0gl8t/psa_pythonlxml_memory_leaks_and_a_solution/
+    def function():
+        __write_job_files__(job)
+    process = multiprocessing.Process(target=function, daemon=True)
+    process.start()
+    process.join()
+
+
+def __write_job_files__(job : job.Job):
+    """
+    Write the input files for a given scenario. Leaks memory due to lxml.
     """
     Path(job.working_dir).mkdir(parents=True, exist_ok=True)
 
