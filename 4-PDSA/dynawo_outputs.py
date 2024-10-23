@@ -121,7 +121,7 @@ def get_job_results(working_dir):
     load_shedding = (total_load - remaining_load) / total_load * 100
 
     if convergence_issue:
-        if t_end >= T_END - 0.01:  # Disregard simplified solver failure at last time step
+        if t_end >= T_END - 1:  # Disregard simplified solver failure at last time step
             pass
         elif t_end < T_BACKUP + 0.1:  # Disregard non-convergence issues during the fault, TODO: fix them
             pass

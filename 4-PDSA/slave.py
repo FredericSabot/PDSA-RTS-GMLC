@@ -20,9 +20,9 @@ class Slave:
 
                 if tag == MPI_TAGS.START.value:
                     logger.logger.log(logger.logging.TRACE, 'Slave {}: received input job {}'.format(self.rank, job))
-                    result = self.do_work(job)
+                    self.do_work(job)
                     logger.logger.info('Slave {} completed job {}'.format(self.rank, job))
-                    self.comm.send(result, dest=0, tag=MPI_TAGS.DONE.value)  # Blocking, otherwise job might be modified in buffer before being sent
+                    self.comm.send(job, dest=0, tag=MPI_TAGS.DONE.value)  # Blocking, otherwise job might be modified in buffer before being sent
                 elif tag == MPI_TAGS.EXIT.value:
                     break
 
@@ -34,4 +34,3 @@ class Slave:
 
     def do_work(self, job: Job):
         job.run()
-        return job

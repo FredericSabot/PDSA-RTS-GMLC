@@ -32,6 +32,9 @@ fi
 # cd $GLOBALSCRATCH/PDSA-RTS-GMLC/4-PDSA
 # cd PDSA-RTS-GMLC/4-PDSA
 
+export OMPI_MCA_btl='^ofi' # https://servicedesk.surf.nl/wiki/display/WIKI/Snellius+known+issues
+export OMPI_MCA_mtl='^ofi'
+
 # timeout 3550
 # mpiexec -n $SLURM_NTASKS -env I_MPI_JOB_SIGNAL_PROPAGATION=enable python main.py  # Intel MPI flags to propagate signals to subprocesses
 mpiexec --verbose -mca orte_abort_on_non_zero_status 1 -n $SLURM_NTASKS python -m mpi4py main.py
