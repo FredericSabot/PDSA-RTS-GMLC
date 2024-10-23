@@ -4,6 +4,9 @@ from math import pi
 from common import *
 from dataclasses import dataclass
 from lxml import etree
+import scipy.sparse
+import scipy.sparse.linalg
+import scipy.linalg
 import multiprocessing
 
 @dataclass
@@ -439,8 +442,10 @@ def voltage_screening(n: pp.network.Network, disconnected_elements = []):
     # Compute the impedance matrix as Z = 1/Y
     Y = get_admittance_matrix(n, disconnected_elements, inverter_model='None', generator_model='VoltageSource', with_loads=True)
     try:
-        Z = np.linalg.inv(Y)
-    except np.linalg.LinAlgError:  # Matrix can be singular, typically if an isolated part of the grid has no load nor generators
+        Y = scipy.sparse.csc_matrix(Y)
+        lu = scipy.sparse.linalg.splu(Y)
+        Z = lu.solve(np.eye(Y.shape[0]))  # Inverse matrix
+    except scipy.linalg.LinAlgError:  # Matrix can be singular, typically if an isolated part of the grid has no load nor generators
         print('Warning: singular matrix')
         return False, 0
 
@@ -476,15 +481,20 @@ def extended_equal_area_criterion(n: pp.network.Network, fault_location, disconn
     Y_dur = get_admittance_matrix(n, disconnected_elements=[], inverter_model='Load', generator_model='None', with_loads=True, fault_location=fault_location)
     Y_post = get_admittance_matrix(n, disconnected_elements=disconnected_elements, inverter_model='Load', generator_model='None', with_loads=True, fault_location=None)
 
+    def fast_inverse(Y):
+        Y = scipy.sparse.csc_matrix(Y)
+        lu = scipy.sparse.linalg.splu(Y)
+        return lu.solve(np.eye(Y.shape[0]))  # Inverse matrix
+
     b = list(range(N_buses))
     g = list(range(N_buses, Y_pre.shape[0]))
     # @ is numpy's matrix multiplication operator
     try:
         # TODO: replace np.linalg.inv(Y) by Z to reduce computation time, although tests for voltage screening show that inverting Y is actually faster
-        Y_pre_red = Y_pre[g,:][:,g] - Y_pre[g,:][:,b] @ np.linalg.inv(Y_pre[b,:][:,b]) @ Y_pre[b,:][:,g]
-        Y_dur_red = Y_dur[g,:][:,g] - Y_dur[g,:][:,b] @ np.linalg.inv(Y_dur[b,:][:,b]) @ Y_dur[b,:][:,g]
+        Y_pre_red = Y_pre[g,:][:,g] - Y_pre[g,:][:,b] @ fast_inverse(Y_pre[b,:][:,b]) @ Y_pre[b,:][:,g]
+        Y_dur_red = Y_dur[g,:][:,g] - Y_dur[g,:][:,b] @ fast_inverse(Y_dur[b,:][:,b]) @ Y_dur[b,:][:,g]
         g = list(range(N_buses, Y_post.shape[0]))
-        Y_post_red = Y_post[g,:][:,g] - Y_post[g,:][:,b] @ np.linalg.inv(Y_post[b,:][:,b]) @ Y_post[b,:][:,g]
+        Y_post_red = Y_post[g,:][:,g] - Y_post[g,:][:,b] @ fast_inverse(Y_post[b,:][:,b]) @ Y_post[b,:][:,g]
     except np.linalg.LinAlgError:
         return 0, [], [], 0, 0, 0
 
