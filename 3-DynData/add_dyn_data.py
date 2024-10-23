@@ -641,7 +641,7 @@ def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, 
                     {'type': 'DOUBLE', 'name': 'converter_CFilter', 'value': '0.066'},
                     {'type': 'DOUBLE', 'name': 'converter_RTransformer', 'value': '0.01'},
                     {'type': 'DOUBLE', 'name': 'converter_LTransformer', 'value': '0.1'},  # Transformer already modelled in the static data, so reduced to not limit transfer capacity too much (still non-zero because the transformer inductance is modelled in a dynamic way (U = L der(i)) in the dynamic model but not in the static data (U = Z I))
-                    {'type': 'DOUBLE', 'name': 'control_KpVI', 'value': '0.67'},
+                    {'type': 'DOUBLE', 'name': 'control_KpVI', 'value': '0.37'},  # Changed from 0.67, leads to a 1.2pu current if directly feeds a short-circuit (without considering transformer, and assuming a voltage of 1)
                     {'type': 'DOUBLE', 'name': 'control_XRratio', 'value': '5'},
                     {'type': 'DOUBLE', 'name': 'control_Kpc', 'value': '0.7388'},
                     {'type': 'DOUBLE', 'name': 'control_Kic', 'value': '1.19'},
