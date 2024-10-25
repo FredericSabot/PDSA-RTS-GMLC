@@ -1,7 +1,10 @@
 from results import Results
 from common import *
 from dataclasses import dataclass
-from lxml import etree
+if WITH_LXML:
+    from lxml import etree
+else:
+    import xml.etree.ElementTree as etree
 import pypowsybl as pp
 import os
 import csv

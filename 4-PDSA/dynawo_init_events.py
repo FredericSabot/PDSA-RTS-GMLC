@@ -1,5 +1,8 @@
 from common import *
-from lxml import etree
+if WITH_LXML:
+    from lxml import etree
+else:
+    import xml.etree.ElementTree as etree
 
 def add_init_events(dyd_root, par_root, init_events):
     """

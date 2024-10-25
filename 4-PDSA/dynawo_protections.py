@@ -1,8 +1,11 @@
-from lxml import etree
+from common import *
+if WITH_LXML:
+    from lxml import etree
+else:
+    import xml.etree.ElementTree as etree
 import pypowsybl as pp
 from math import pi
 import random
-from common import *
 import pandas as pd
 
 

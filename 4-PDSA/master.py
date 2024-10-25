@@ -8,7 +8,10 @@ import random
 import logger
 import hashlib
 from math import sqrt, ceil
-from lxml import etree
+if WITH_LXML:
+    from lxml import etree
+else:
+    import xml.etree.ElementTree as etree
 import numpy as np
 from natsort import natsorted
 import time
@@ -663,8 +666,14 @@ class JobQueue:
             contingency_element.set('RoCoF', '{:.4g}'.format(max_RoCoF))
             contingency_element.set('dP_over_reserves', '{:.4g}'.format(max_power_loss_over_reserve))
 
-        with open('AnalysisOutput.xml', 'wb') as doc:
-            doc.write(etree.tostring(root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
+        if WITH_LXML:
+            with open('AnalysisOutput.xml', 'wb') as doc:
+                doc.write(etree.tostring(root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
+        else:
+            tree = etree.ElementTree(root)
+            etree.indent(tree, space="\t")  # Pretty-print
+            tree.write('AnalysisOutput.xml', xml_declaration=True, encoding='UTF-8')
+
         delta_t = time.time() - t0
         logger.logger.info('Write analysis output completed in {}s'.format(delta_t))
 

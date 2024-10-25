@@ -166,7 +166,11 @@ def select_gfm_generators(network_name, buses_csv, gens_csv, gens, min_gfm_share
     return gfm_generators
 
 
-def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, namespace, motor_share = 0.3, contingency_minimum_voltage_level = 0):
+def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root, par_root, namespace, motor_share = 0.3, contingency_minimum_voltage_level = 0):
+    if with_lxml:
+        from lxml import etree
+    else:
+        import xml.etree.ElementTree as etree
     # Loads
     loads = network.get_loads()
     voltage_levels = network.get_voltage_levels()
@@ -822,9 +826,9 @@ if __name__ == '__main__':
         namespace = 'http://www.rte-france.com/dynawo'
 
         if network_name == 'RTS':
-            add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_share=0.3)
+            add_dyn_data(network_name, network, True, dyd_root, par_root, namespace, motor_share=0.3)
         else:
-            add_dyn_data(network_name, network, dyd_root, par_root, namespace, motor_share=0)
+            add_dyn_data(network_name, network, True, dyd_root, par_root, namespace, motor_share=0)
 
         with open(network_name + '.dyd', 'wb') as doc:
             doc.write(etree.tostring(dyd_root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))

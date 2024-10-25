@@ -3,7 +3,10 @@ import numpy as np
 from math import pi
 from common import *
 from dataclasses import dataclass
-from lxml import etree
+if WITH_LXML:
+    from lxml import etree
+else:
+    import xml.etree.ElementTree as etree
 import scipy.sparse
 import scipy.sparse.linalg
 import scipy.linalg
@@ -796,3 +799,6 @@ if __name__ == '__main__':
     print(transient_screening(n, 0.15, 'V-240195_0', ['240195_NG_4']))
     # print(transient_screening(n, 0.15, 'V-121_0', ['121_NUCLEAR_1']))
     print(frequency_screening(n, ['240195_NG_4']))
+
+    # TODO: could precompute some stuff. No, Z matrix takes 800Mo and need to save 8000 cases
+    # TODO: compute Z_post first and modify it to get Z_pre and Z_dur (Z_dur with additional rule from course)

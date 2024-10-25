@@ -14,6 +14,7 @@ class INIT_EVENT_CATEGORIES(Enum):
 # DYNAWO_PATH = '/home/fsabot/Desktop/dynawo_new/myEnvDynawo.sh'
 DYNAWO_PATH = '/home/ulb/beams_energy/fsabot/dynawo/dynawo.sh'
 DYNAWO_NAMESPACE = 'http://www.rte-france.com/dynawo'
+WITH_LXML = False  # Use lxml instead of the default python xml handler, better looking prints but leaks memory
 
 RANDOMISE_DYN_DATA = True  # Whether or not to account for protection-related uncertainty
 NETWORK_NAME = 'Texas'
