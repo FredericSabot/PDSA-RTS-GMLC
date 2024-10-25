@@ -6,7 +6,7 @@ from common import *
 import pandas as pd
 
 
-def add_protections(dyd_root, par_root, iidm_file, seed):
+def add_protections(dyd_root, par_root, network: pp.network.Network, seed):
     """
     Add all protection models to Dynawo input files
     """
@@ -20,7 +20,6 @@ def add_protections(dyd_root, par_root, iidm_file, seed):
     random.seed(seed)
 
     # Read iidm
-    network = pp.network.load(iidm_file)
     lines = network.get_lines()
     gens = network.get_generators()
 

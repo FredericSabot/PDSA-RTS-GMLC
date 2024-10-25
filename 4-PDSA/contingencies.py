@@ -51,16 +51,23 @@ class Contingency:
         if Vb < CONTINGENCY_MINIMUM_VOLTAGE_LEVEL:
             continue
 
-        found = False
-        for unique_line_id in unique_lines:
-            if (lines.loc[line_id] == lines.loc[unique_line_id]).all():
-                found = True
-                break
-        if found:
-            line_lengths.loc[unique_line_id] += line_lengths.loc[line_id]
+        duplicate = False
+        if NETWORK_NAME == 'RTS':
+            separator = '-'
+        elif NETWORK_NAME == 'Texas':
+            separator = '_'
+        else:
+            raise
+
+        if separator in line_id:
+            base_line, copy_id = line_id.split(separator)
+            if int(copy_id) > 1:
+                duplicate = True
+
+        if duplicate:
+            line_lengths.loc[base_line + separator + '1'] += line_lengths.loc[line_id]
         else:
             unique_lines.append(line_id)
-
 
     """ def __eq__(self, other) -> bool:
         return set(self.events) == set(other.events) """

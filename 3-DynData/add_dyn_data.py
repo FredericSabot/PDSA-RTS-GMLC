@@ -404,7 +404,7 @@ def add_dyn_data(network_name, network: pp.network.Network, dyd_root, par_root, 
                     {'type': 'DOUBLE', 'name': 'governor_K6', 'value': '0'},
                     {'type': 'DOUBLE', 'name': 'governor_K7', 'value': '0'},
                     {'type': 'DOUBLE', 'name': 'governor_K8', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'governor_PMinPu', 'value': str(p_min / p_max)},
+                    {'type': 'DOUBLE', 'name': 'governor_PMinPu', 'value': str(p_min / max(p_max, 1))},  # Avoid division by 0 for syncons
                     {'type': 'DOUBLE', 'name': 'governor_PMaxPu', 'value': '1'},
                     {'type': 'DOUBLE', 'name': 'governor_PNomTurb', 'value': '1'},  # Base, might be removed from the model
                     {'type': 'DOUBLE', 'name': 'governor_SNom', 'value': '1'},  # Base, might be removed from the model

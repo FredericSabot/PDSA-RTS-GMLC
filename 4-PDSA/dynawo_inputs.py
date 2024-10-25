@@ -11,18 +11,17 @@ import pypowsybl as pp
 import sys
 sys.path.insert(1, '../3-DynData')
 import add_dyn_data
-import multiprocessing
+import mpi4py.futures
 
 def write_job_files(job : job.Job):
     """
     Write the input files for a given scenario
     """
-    # Workaround lxml memory leak https://www.reddit.com/r/Python/comments/j0gl8t/psa_pythonlxml_memory_leaks_and_a_solution/
-    def function():
-        __write_job_files__(job)
-    process = multiprocessing.Process(target=function, daemon=True)
-    process.start()
-    process.join()
+    # Workaround lxml memory leak https://www.reddit.com/r/Python/comments/j0gl8t/psa_pythonlxml_memory_leaks_and_a_solution/ (but use MPI compatible solution)
+    executor = mpi4py.futures.MPIPoolExecutor(max_workers=1)
+    executor.submit(__write_job_files__, job)
+    executor.shutdown()
+
 
 
 def __write_job_files__(job : job.Job):
@@ -62,7 +61,7 @@ def __write_job_files__(job : job.Job):
 
     add_dyn_data.add_dyn_data(NETWORK_NAME, network, dyd_root, par_root, DYNAWO_NAMESPACE, motor_share, CONTINGENCY_MINIMUM_VOLTAGE_LEVEL)
     dynawo_init_events.add_init_events(dyd_root, par_root, job.contingency.init_events)
-    dynawo_protections.add_protections(dyd_root, par_root, iidm_file, job.dynamic_seed)
+    dynawo_protections.add_protections(dyd_root, par_root, network, job.dynamic_seed)
 
     # Write dyd and par files
     with open(os.path.join(job.working_dir, NETWORK_NAME + '.dyd'), 'wb') as doc:
