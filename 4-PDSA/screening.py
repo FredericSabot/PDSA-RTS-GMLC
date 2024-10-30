@@ -422,7 +422,7 @@ def voltage_screening(n: pp.network.Network, disconnected_elements = []):
         Y = scipy.sparse.csc_matrix(Y)
         lu = scipy.sparse.linalg.splu(Y)
         Z = lu.solve(np.eye(Y.shape[0]))  # Inverse matrix
-    except scipy.linalg.LinAlgError:  # Matrix can be singular, typically if an isolated part of the grid has no load nor generators
+    except (scipy.linalg.LinAlgError, RuntimeError):  # Matrix can be singular, typically if an isolated part of the grid has no load nor generators
         print('Warning: singular matrix')
         return False, 0
 
@@ -472,7 +472,7 @@ def extended_equal_area_criterion(n: pp.network.Network, fault_location, disconn
         Y_dur_red = Y_dur[g,:][:,g] - Y_dur[g,:][:,b] @ fast_inverse(Y_dur[b,:][:,b]) @ Y_dur[b,:][:,g]
         g = list(range(N_buses, Y_post.shape[0]))
         Y_post_red = Y_post[g,:][:,g] - Y_post[g,:][:,b] @ fast_inverse(Y_post[b,:][:,b]) @ Y_post[b,:][:,g]
-    except np.linalg.LinAlgError:
+    except (np.linalg.LinAlgError, RuntimeError):
         return 0, [], [], 0, 0, 0
 
     S = get_generator_data(n, disconnected_elements=[])
