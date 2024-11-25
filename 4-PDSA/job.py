@@ -64,7 +64,7 @@ class Job:
             os.killpg(os.getpgid(proc.pid), signal.SIGKILL)  # Kill if needed
             self.timed_out = True
 
-        if 'Error' in str(stderr) or self.timed_out:  # Simulation failed, so retry with another solver
+        if ('Error' in str(stderr) or self.timed_out) and NETWORK_NAME != 'Texas':  # Simulation failed, so retry with another solver (not for Texas case because IDA not performant enough on large networks)
             # Delete output files of failed attempt
             output_dir = os.path.join(self.working_dir, 'outputs')
             shutil.rmtree(output_dir, ignore_errors=True)

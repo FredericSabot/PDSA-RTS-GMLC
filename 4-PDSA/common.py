@@ -17,7 +17,7 @@ DYNAWO_NAMESPACE = 'http://www.rte-france.com/dynawo'
 WITH_LXML = False  # Use lxml instead of the default python xml handler, better looking prints but leaks memory
 
 RANDOMISE_DYN_DATA = True  # Whether or not to account for protection-related uncertainty
-NETWORK_NAME = 'Texas'
+NETWORK_NAME = 'RTS'
 CASE = 'year'
 if NETWORK_NAME == 'RTS':
     CONTINGENCY_MINIMUM_VOLTAGE_LEVEL = 220e3  # Lines with a base voltage lower than 220kV are not considered in the security assessment
@@ -26,7 +26,7 @@ if NETWORK_NAME == 'RTS':
 elif NETWORK_NAME == 'Texas':
     CONTINGENCY_MINIMUM_VOLTAGE_LEVEL = 340e3
     DISTANCE_PROTECTION_MINIMUM_VOLTAGE_LEVEL = 340e3  # To computationally expensive to model distance protection everywhere (model could be improved)
-    JOB_TIMEOUT_S = 900  # Timeout for a single job in seconds
+    JOB_TIMEOUT_S = 1800  # Timeout for a single job in seconds
 else:
     raise NotImplementedError
 
