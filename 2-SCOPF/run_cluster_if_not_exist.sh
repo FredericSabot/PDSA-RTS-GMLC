@@ -26,7 +26,13 @@ do
 # Used to have IDs larger than the max job array size (default 1001, but 8735 hours in a year)
 ID=$(echo $SLURM_ARRAY_TASK_ID*50+$i | bc)
 echo 'Running case' $case $ID $network
-time -p python PSCACOPF.py $ID $case $network $LOCALSCRATCH
+
+if [ -e d-Final-dispatch/year_Texas/$ID.iidm ]
+then
+    echo "Case already run"
+else
+    time -p python PSCACOPF.py $ID $case $network $LOCALSCRATCH
+fi
 
 # Delete temporary files
 rm -r a-PSCDCOPF/$ID/ &> /dev/null
