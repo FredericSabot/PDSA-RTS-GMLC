@@ -169,7 +169,7 @@ def custom_feature_selection(model, X, y):
 
 if __name__ == '__main__':
     feature_path = 'features.pickle'
-    static_files = glob.glob('../2-SCOPF/d-Final-dispatch/year/*.iidm')
+    static_files = glob.glob(f'../2-SCOPF/d-Final-dispatch/year_{NETWORK_NAME}/*.iidm')
     if os.path.exists(feature_path):
         with open(feature_path, 'rb') as file:
             features = pickle.load(file)
