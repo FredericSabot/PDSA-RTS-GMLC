@@ -1,7 +1,6 @@
 import pypowsybl as pp
 import pandas as pd
 from lxml import etree
-from math import pi
 
 """
 References
@@ -267,11 +266,10 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
             synchronous = True
 
         GFM = False
-        # if network_name == 'Texas':
-        #     if genID in gfm_generators:
-        #         GFM = True
-        #         lib = 'GridFormingConverterDroopControl'  # Note: P is only limited by the converter rating (through virtual impedance), so it can be higher than available power (pv or wind source) after a transient. This assumes an energy buffer sufficient for the simulated period.
-        #         synchronous = True  # Model as synchronous generator instead of converter for numerical stability test
+        if network_name == 'Texas':
+            if genID in gfm_generators:
+                GFM = True
+                lib = 'GridFormingConverterDroopControl'  # Note: P is only limited by the converter rating (through virtual impedance), so it can be higher than available power (pv or wind source) after a transient. This assumes an energy buffer sufficient for the simulated period.
 
         gen_attrib = {'id': genID, 'lib': lib, 'parFile': network_name + '.par', 'parId': genID, 'staticId': genID}
         gen = etree.SubElement(dyd_root, etree.QName(namespace, 'blackBoxModel'), gen_attrib)
@@ -550,7 +548,7 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_Kf', 'value': '0.0896'},
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_tF', 'value': '0.35'},
                     ]
-                elif unit_group == 'Coal_350' or unit_group == 'CC_355' or unit_group in ['Wind', 'PV', 'RTPV']:  # Reference machine F13 from Vijay Vittal book (no data on combined cycle gas turbines)
+                elif unit_group == 'Coal_350' or unit_group == 'CC_355':  # Reference machine F13 from Vijay Vittal book (no data on combined cycle gas turbines)
                     pf = 0.85
                     par_attribs +=[
                         {'type': 'DOUBLE', 'name': 'generator_SNom', 'value': str(SNom)},
@@ -813,97 +811,6 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
                 etree.SubElement(gen_par_set, etree.QName(namespace, 'par'), par_attrib)
             for ref in references:
                 etree.SubElement(gen_par_set, etree.QName(namespace, 'reference'), ref)
-
-    # Add a synchronous condenser in parallel to all inverters marked at grid-forming (instead of using a grid-forming model that has numerical issue)
-    # Synchronous condenses are added with a initial reactive power of 0 because they were not included in the OPF (this is an academic test system, I do what I want)
-    buses = network.get_buses()
-    for i in range(N_gens):
-        # break
-        genID = gens_csv['GEN UID'][i]
-        if genID in gfm_generators:
-            lib = 'GeneratorSynchronousThreeWindingsRtsSyncon'
-            SNom = gens.at[genID, 'rated_s']
-            u_nom = vl['nominal_v'][gens['voltage_level_id'][genID]]
-            U = buses['v_mag'][gens['bus_id'][genID]] / u_nom
-            theta = buses['v_angle'][gens['bus_id'][genID]] * pi / 180
-            bus_id = 'B-' + genID.split('_')[0]
-
-            genID += '_Syncon'
-
-            gen_attrib = {'id': genID, 'lib': lib, 'parFile': network_name + '.par', 'parId': genID}
-            gen = etree.SubElement(dyd_root, etree.QName(namespace, 'blackBoxModel'), gen_attrib)
-            etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'OMEGA_REF', 'connector': 'MS_OMEGAREF_CONNECTOR', 'index2': str(omega_index)})
-            # etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'GEN'})
-            # etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'GEN-CONNECTOR'})
-            etree.SubElement(dyd_root, etree.QName(namespace, 'connect'), {'id1': genID, 'id2': 'NETWORK', 'var1': 'generator_switchOffSignal1', 'var2': f'{bus_id}_switchOff'})
-            etree.SubElement(dyd_root, etree.QName(namespace, 'connect'), {'id1': genID, 'id2': 'NETWORK', 'var1': 'generator_terminal', 'var2': f'{bus_id}_ACPIN'})
-
-            # <ns0:connect var1="generator_switchOffSignal1" var2="@STATIC_ID@@NODE@_switchOff" />
-		    # <ns0:connect var1="generator_terminal" var2="@STATIC_ID@@NODE@_ACPIN" />
-
-            gen_par_set = etree.SubElement(par_root, etree.QName(namespace, 'set'), {'id' : genID})
-
-            par_attribs = [
-                {'type': 'BOOL', 'name': 'generator_UseApproximation', 'value': 'false'},
-                {'type': 'INT', 'name': 'generator_ExcitationPu', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'generator_md', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'generator_mq', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'generator_nd', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'generator_nq', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'generator_MdPuEfd', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'generator_DPu', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'generator_UNom', 'value': str(u_nom)},
-                {'type': 'DOUBLE', 'name': 'generator_PNomTurb', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'generator_PNomAlt', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'generator_UNomHV', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'generator_UNomLV', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'generator_UBaseHV', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'generator_UBaseLV', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'generator_RTfPu', 'value': '0.0'},
-                {'type': 'DOUBLE', 'name': 'generator_XTfPu', 'value': '0.0'},
-            ]
-            par_attribs += [  # Reference machine SC5 from Vijay Vittal book
-                {'type': 'DOUBLE', 'name': 'generator_SNom', 'value': str(SNom)},
-                {'type': 'DOUBLE', 'name': 'generator_SnTfo', 'value': str(SNom)},
-                {'type': 'DOUBLE', 'name': 'generator_H', 'value': '4.5'},  # Use higher value than the SC5 reference machine (that only has H=1.1s)
-                {'type': 'DOUBLE', 'name': 'generator_XppdPu', 'value': '0.170'},
-                {'type': 'DOUBLE', 'name': 'generator_XpdPu', 'value': '0.320'},
-                {'type': 'DOUBLE', 'name': 'generator_XdPu', 'value': '1.560'},
-                {'type': 'DOUBLE', 'name': 'generator_XppqPu', 'value': '0.200'},
-                {'type': 'DOUBLE', 'name': 'generator_XqPu', 'value': '1.00'},
-                {'type': 'DOUBLE', 'name': 'generator_RaPu', 'value': '0.0017'},
-                {'type': 'DOUBLE', 'name': 'generator_XlPu', 'value': '0.0987'},
-                {'type': 'DOUBLE', 'name': 'generator_Tppd0', 'value': '0.039'},
-                {'type': 'DOUBLE', 'name': 'generator_Tpd0', 'value': '16.00'},
-                {'type': 'DOUBLE', 'name': 'generator_Tppq0', 'value': '0.235'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_tR', 'value': '0.001'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_Ka', 'value': '18'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_tA', 'value': '0.2'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_EfdRawMaxPu', 'value': '1'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_EfdRawMinPu', 'value': '-1'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_Ke', 'value': '-0.0138'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_tE', 'value': '0.0669'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_EfdLowPu', 'value': str(0.75 * 7.270)},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_EfdHighPu', 'value': '7.270'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_EfdSatLowPu', 'value': '0.0634'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_EfdSatHighPu', 'value': '0.1512'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_Kf', 'value': '0.0153'},
-                {'type': 'DOUBLE', 'name': 'voltageRegulator_tF', 'value': '1.00'},
-                ]
-
-            par_attribs += [
-                {'type': 'DOUBLE', 'name': 'generator_P0Pu', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'generator_Q0Pu', 'value': '0'},
-                {'type': 'DOUBLE', 'name': 'generator_U0Pu', 'value': str(U)},
-                {'type': 'DOUBLE', 'name': 'generator_UPhase0', 'value': str(theta)},
-            ]
-
-            for par_attrib in par_attribs:
-                etree.SubElement(gen_par_set, etree.QName(namespace, 'par'), par_attrib)
-
-            etree.SubElement(omega_par_set, etree.QName(namespace, 'par'), {'type': 'DOUBLE', 'name': 'weight_gen_' + str(omega_index), 'value': str(SNom)})
-            omega_index += 1
-
     etree.SubElement(omega_par_set, etree.QName(namespace, 'par'), {'type': 'INT', 'name': 'nbGen', 'value': str(omega_index)})
 
     # return dyd_root, par_root  # Unecessary since they are mutable
