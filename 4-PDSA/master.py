@@ -810,10 +810,10 @@ class ContingencyLaunched:
     def add_job(self, job: Job):
         static_id = job.static_id
         if static_id in self.static_ids:
-            self.dynamic_seeds[static_id].append(job)
+            self.dynamic_seeds[static_id].append(job.dynamic_seed)
         else:
             self.static_ids.append(static_id)
-            self.dynamic_seeds[static_id] = [job]
+            self.dynamic_seeds[static_id] = [job.dynamic_seed]
 
 
 class ContingencyResults:
