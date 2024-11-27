@@ -508,7 +508,7 @@ class JobQueue:
             if nb_static_ids_to_launch < 1:
                 continue  # Enough samples launched for this contingency
 
-            for i in range(nb_static_ids_to_launch):
+            for i in range(1, nb_static_ids_to_launch + 1):
                 if nb_static_ids_launched + i >= len(self.static_samples):
                     logger.logger.warn("MIN_NUMBER_STATIC_SEED_CRITICAL_CONTINGENCY larger than number of available static samples, stopping at {}".format(len(self.static_samples)))
                     break
