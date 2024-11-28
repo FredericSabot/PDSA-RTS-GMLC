@@ -659,6 +659,22 @@ class JobQueue:
             etree.indent(tree, space="\t")  # Pretty-print
             tree.write('AnalysisOutput.xml', xml_declaration=True, encoding='UTF-8')
 
+        root[:] = sorted(root, key=lambda element: element.get('cost_w_hidden'), reverse=True)  # Sort by decreasing order of cost
+        short_root = root
+        for i, element in enumerate(root):
+            if i < 10:
+                pass
+            else:
+                short_root.remove(element)
+
+        if WITH_LXML:
+            with open('AnalysisOutput_critical.xml', 'wb') as doc:
+                doc.write(etree.tostring(short_root, pretty_print = True, xml_declaration = True, encoding='UTF-8'))
+        else:
+            tree = etree.ElementTree(short_root)
+            etree.indent(tree, space="\t")  # Pretty-print
+            tree.write('AnalysisOutput_critical.xml', xml_declaration=True, encoding='UTF-8')
+
         delta_t = time.time() - t0
         logger.logger.info('Write analysis output completed in {}s'.format(delta_t))
 
