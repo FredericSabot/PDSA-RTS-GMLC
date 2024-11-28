@@ -76,13 +76,16 @@ def add_gen_disc_to_dyd(dyd_root, par_root,  genID, t_disc, parID = 'GenDisc'):
     """
     blackbox_attrib = {'id': 'DISC_' + genID, 'lib': 'EventSetPointBoolean', 'parFile': NETWORK_NAME + '.par', 'parId': parID}
     etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), blackbox_attrib)
-    connect_attrib = {'id1': 'DISC_' + genID, 'var1': 'event_state1', 'id2': genID, 'var2': 'generator_switchOffSignal2'}
+    if '_PV_' in genID or '_RTPV_' in genID or '_WIND_' in genID:
+        connect_attrib = {'id1': 'DISC_' + genID, 'var1': 'event_state1', 'id2': genID, 'var2': 'ibg_injector_switchOffSignal2'}
+    else:
+        connect_attrib = {'id1': 'DISC_' + genID, 'var1': 'event_state1', 'id2': genID, 'var2': 'generator_switchOffSignal2'}
     etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'connect'), connect_attrib)
 
     # Add to par
     gen_disc_par_set = etree.SubElement(par_root, etree.QName(DYNAWO_NAMESPACE, 'set'), {'id' : parID})
     par_attribs = [
-        {'type':'DOUBLE', 'name':'event_tEvent', 'value': t_disc},
+        {'type':'DOUBLE', 'name':'event_tEvent', 'value': f'{t_disc}'},
         {'type':'BOOL', 'name':'event_stateEvent1', 'value':'true'}
     ]
     for par_attrib in par_attribs:
