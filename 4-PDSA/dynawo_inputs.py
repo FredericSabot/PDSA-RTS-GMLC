@@ -56,7 +56,7 @@ def write_job_files(job : job.Job):
 
     add_dyn_data.add_dyn_data(NETWORK_NAME, network, WITH_LXML, dyd_root, par_root, DYNAWO_NAMESPACE, motor_share, CONTINGENCY_MINIMUM_VOLTAGE_LEVEL)
     dynawo_init_events.add_init_events(dyd_root, par_root, job.contingency.init_events)
-    dynawo_protections.add_protections(dyd_root, par_root, network, job.dynamic_seed)
+    dynawo_protections.add_protections(dyd_root, par_root, network, job.dynamic_seed, job.contingency.protection_hidden_failures)
 
     # Write dyd and par files
     if WITH_LXML:

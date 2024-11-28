@@ -9,7 +9,7 @@ import random
 import pandas as pd
 
 
-def add_protections(dyd_root, par_root, network: pp.network.Network, seed):
+def add_protections(dyd_root, par_root, network: pp.network.Network, seed, protection_hidden_failures: list[str]):
     """
     Add all protection models to Dynawo input files
     """
@@ -59,7 +59,7 @@ def add_protections(dyd_root, par_root, network: pp.network.Network, seed):
         if NETWORK_NAME == 'Texas':
             line_rating *= 1.5  # Necessary for OPF to converge during summer
 
-        add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2lines, line_id, line_rating, CB_time, CB_max_error, special)
+        add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2lines, line_id, line_rating, CB_time, CB_max_error, special, protection_hidden_failures)
         add_line_overload_protection(dyd_root, par_root, lines, voltage_levels, line_id, line_rating)
 
 
@@ -241,7 +241,8 @@ def add_UFLS(dyd_root, par_root, network):
         etree.SubElement(ufls_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
 
 
-def add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2lines, line_id, line_rating, CB_time, CB_max_error, special, measurement_max_error = 0.1):
+def add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2lines, line_id, line_rating, CB_time, CB_max_error, special,
+                             protection_hidden_failures: list[str], measurement_max_error = 0.1):
     """
     Add line distance protection model to Dynawo input files
     """
@@ -366,6 +367,66 @@ def add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2line
             ]
         for par_attrib in par_attribs:
             etree.SubElement(dist_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
+
+
+        if WITH_HIDDEN_FAILURES:
+            hidden_failure_id = protection_id + '_hidden_failure'
+            for hidden_failure in protection_hidden_failures:
+                if hidden_failure.startswith(protection_id):
+                    hidden_failure_id += '_activated'
+
+            dist_attrib = {'id': hidden_failure_id, 'lib': lib, 'parFile': NETWORK_NAME + '.par', 'parId': hidden_failure_id}
+            etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'blackBoxModel'), dist_attrib)
+
+            connect_attribs = [
+                {'id1': hidden_failure_id, 'var1': 'distance_UMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_U{}_value'.format(side)},
+                {'id1': hidden_failure_id, 'var1': 'distance_PMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_P{}_value'.format(side)},
+                {'id1': hidden_failure_id, 'var1': 'distance_QMonitoredPu', 'id2': 'NETWORK', 'var2': line_id + '_Q{}_value'.format(side)},
+                {'id1': hidden_failure_id, 'var1': 'distance_lineState', 'id2': 'NETWORK', 'var2': line_id + '_state'}
+            ]
+            for connect_attrib in connect_attribs:
+                etree.SubElement(dyd_root, etree.QName(DYNAWO_NAMESPACE, 'connect'), connect_attrib)
+
+            # Parameters
+            dist_par_set = etree.SubElement(par_root, etree.QName(DYNAWO_NAMESPACE, 'set'), {'id' : hidden_failure_id})
+
+            par_attribs = [
+                {'type':'INT', 'name':'distance_LineSide', 'value':str(side)},
+                {'type':'DOUBLE', 'name':'distance_tZone_0_', 'value':str(0.02)},
+                {'type':'DOUBLE', 'name':'distance_tZone_1_', 'value':str(0.3)},
+                {'type':'DOUBLE', 'name':'distance_tZone_2_', 'value':str(0.6)},
+                {'type':'DOUBLE', 'name':'distance_tZone_3_', 'value':'999999'},
+                {'type':'DOUBLE', 'name':'distance_RPu_0_', 'value': '0'}, # str(X1 * 10)},  # Z1 trips a bit too often
+                {'type':'DOUBLE', 'name':'distance_XPu_0_', 'value': '0'}, # str(X1 * 10)},  # Z1 trips a bit too often
+                {'type':'DOUBLE', 'name':'distance_RPu_1_', 'value': str(X2 * 10)},  # 10x the range because of wrong setting, but blinder should avoid tripping in normal operation
+                {'type':'DOUBLE', 'name':'distance_XPu_1_', 'value': str(X2 * 10)},
+                {'type':'DOUBLE', 'name':'distance_RPu_2_', 'value': str(R3 * 10)},
+                {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * 10)},
+                {'type':'DOUBLE', 'name':'distance_RPu_3_', 'value': '0'},
+                {'type':'DOUBLE', 'name':'distance_XPu_3_', 'value': '0'},
+                {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(blinder_angle)},
+                {'type':'DOUBLE', 'name':'distance_BlinderReachPu', 'value': str(blinder_reach)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_0_', 'value': str(CB_time)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_1_', 'value': str(CB_time)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_2_', 'value': str(CB_time)},
+                {'type':'DOUBLE', 'name':'distance_CircuitBreakerTime_3_', 'value': str(CB_time)},
+                {'type':'BOOL', 'name':'distance_TrippingZone_0_', 'value': 'false'},  # Do not actually trip
+                {'type':'BOOL', 'name':'distance_TrippingZone_1_', 'value': 'false'},
+                {'type':'BOOL', 'name':'distance_TrippingZone_2_', 'value': 'false'},
+                {'type':'BOOL', 'name':'distance_TrippingZone_3_', 'value': 'false'},
+            ]
+
+            for hidden_failure in protection_hidden_failures:
+                if hidden_failure.startswith(protection_id):
+                    if hidden_failure.endswith('_Z1'):
+                        par_attribs[-4] = {'type':'BOOL', 'name':'distance_TrippingZone_0_', 'value': 'true'}  # Activate hidden failure
+                    elif hidden_failure.endswith('_Z2'):
+                        par_attribs[-3] = {'type':'BOOL', 'name':'distance_TrippingZone_1_', 'value': 'true'}
+                    elif hidden_failure.endswith('_Z3'):
+                        par_attribs[-2] = {'type':'BOOL', 'name':'distance_TrippingZone_2_', 'value': 'true'}
+
+            for par_attrib in par_attribs:
+                etree.SubElement(dist_par_set, etree.QName(DYNAWO_NAMESPACE, 'par'), par_attrib)
 
 
 def add_line_overload_protection(dyd_root, par_root, lines, voltage_levels, line_id, line_rating):

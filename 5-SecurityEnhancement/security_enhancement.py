@@ -214,6 +214,8 @@ if __name__ == '__main__':
         colors = []
 
         for j, sample in enumerate(critical_contingency):
+            if sample.tag != 'StaticId':
+                continue
             samples.append(features[sample.get('static_id')])
             labels.append(float(sample.get('mean_load_shed')) > 0)
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass
 from contingencies import Contingency
 import contingencies
@@ -26,15 +27,25 @@ class Job:
         self.timed_out = False
         self.working_dir = os.path.join('./simulations', f'{CASE}_{NETWORK_NAME}', str(self.static_id), str(self.dynamic_seed), self.contingency.id)
 
+    @classmethod
+    def from_parent_and_protection_failure(cls, parent: Job, protection_hidden_failure):
+        contingency = Contingency.from_parent_and_protection_failure(parent.contingency, protection_hidden_failure)
+        return cls(parent.static_id, parent.dynamic_seed, contingency)
+
+    @classmethod
+    def from_parent_and_generator_failure(cls, parent: Job, generator_failure):
+        contingency = Contingency.from_parent_and_generator_failure(parent.contingency, generator_failure)
+        return cls(parent.static_id, parent.dynamic_seed, contingency)
+
     def complete(self, elapsed_time):
         self.elapsed_time = elapsed_time
-        self.results = get_job_results(self.working_dir)
+        self.results = get_job_results(self.working_dir, self.contingency.fault_location)
         self.completed = True
         shutil.rmtree(self.working_dir, ignore_errors=True)
 
     def skip(self):
         self.elapsed_time = 1
-        self.results = Results(0, 0, [])
+        self.results = Results(0, 0, [], [], [])
         self.completed = True
 
     def run(self):
@@ -127,7 +138,7 @@ class Job:
         out = '\nJob {}\n'.format(self.id)
         out += 'Static id: {}\n'.format(self.static_id)
         out += 'Dynamic seed: {}\n'.format(self.dynamic_seed)
-        out += 'Contingency: {}\n'.format(self.contingency)
+        out += 'Contingency: {}\n'.format(self.contingency.id)
         if self.timed_out:
             out += 'Job timeout\n'
         elif not self.completed:

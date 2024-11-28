@@ -12,12 +12,26 @@ import logger
 from scipy.interpolate import interp1d
 import scipy.integrate
 import numpy as np
+import pypowsybl as pp
 
 
-def get_job_results(working_dir):
+def get_job_results(working_dir, fault_location):
     """
     Estimate the consequences and read the event timeline of a given scenario based on the simulation output files (located in working_dir)
     """
+    excited_generator_failures = []
+    network = pp.network.load(os.path.join(working_dir, NETWORK_NAME + '.iidm'))
+    gens = network.get_generators()
+    for gen_id in gens.index:
+        if gens.at[gen_id, 'bus_id'] != fault_location:  # If generator connected to same bus as the fault (also account for if generator is connected at all)
+            continue
+            # TODO: compute some sort of electrical distance between fault and generator, not just faults on same bus as generator
+        if (gens.at[gen_id, 'p']**2 + gens.at[gen_id, 'q']**2)**0.5 < GENERATOR_HIDDEN_FAILURE_MINIMUM_OUTPUT_MVA:
+            continue
+        if 'RTPV' in gen_id:  # Disconnection of DERs already modelled (not an "hidden" failure since it's common)
+            continue
+        excited_generator_failures.append(gen_id)
+
     log_file = os.path.join(working_dir, 'outputs', 'logs', 'dynawo.log')  # TODO: read file name from job instead of assuming it is outputs/dynawo.log
     # TODO: while at it, can check/force for <dyn:timeline exportMode="TXT" filter="true"/>
 
@@ -42,21 +56,18 @@ def get_job_results(working_dir):
                 break
 
     if t_end == 0:
-        logger.logger.warn("t_end could not be found (log file not found or incomplete) or simulation crashed at launch")
+        logger.logger.warn(f"t_end could not be found (log file not found or incomplete) or simulation crashed at launch, {working_dir}")
 
     # Read timeline
     timeline_file = os.path.join(working_dir, 'outputs', 'timeLine', 'timeline.log')
 
     timeline = []
     trip_timeline = []
-    """
-    # unused
-    distance_arming_timeline = []
-    distance_disarming_timeline = [] """
     generator_disconnection_timeline = []
     disconnected_models = []
+    excited_hidden_failures = []
     if not os.path.exists(timeline_file):  # Might not be created if timeouts
-        return Results(100.2, 0, trip_timeline)
+        return Results(100.2, 0, trip_timeline, excited_hidden_failures, excited_generator_failures)
 
     with open(os.path.join(timeline_file), 'r') as f:
         events = f.readlines()
@@ -64,18 +75,36 @@ def get_job_results(working_dir):
             (time, model, event_description) = event.strip().split(' | ')
             event = TimeLineEvent(float(time), model, event_description)
 
-            if model in disconnected_models:
-                continue  # Disregard spurious events for models that are already disconnected
+            if 'hidden_failure' in event.model:
+                if 'trip' in event.event_description:
+                    if float(time) < T_INIT:  # Hidden failure activated in normal operation (before fault) --> skip
+                        if 'Base' in working_dir:
+                            # Only print warning for base contingency (since it will be identical for all contingencies, so avoid polluting the logs)
+                            logger.logger.warning(f'{working_dir}: {model} tripped in normal operation (before fault), so skipped')
+                        continue
 
-            timeline.append(event)
+                    if 'Distance' in event.event_description:  # Separate hidden failure depending on failure mode
+                        if event.event_description.endswith('zone 1'):
+                            excited_hidden_failures.append(model + '_Z1')
+                        if event.event_description.endswith('zone 2'):
+                            excited_hidden_failures.append(model + '_Z2')
+                        if event.event_description.endswith('zone 3'):
+                            excited_hidden_failures.append(model + '_Z3')
+                    else:
+                        excited_hidden_failures.append(model)
+            else:
+                if model in disconnected_models:
+                    continue  # Disregard spurious events for models that are already disconnected
 
-            if 'trip' in event.event_description:
-                trip_timeline.append(event)
-                disconnected_models.append(event.model)
-            if 'UFLS step' in event.event_description and 'activated' in event.event_description:
-                trip_timeline.append(event)
-            if 'GENERATOR : disconnecting' in event.event_description:
-                generator_disconnection_timeline.append(event)
+                timeline.append(event)
+
+                if 'trip' in event.event_description:
+                    trip_timeline.append(event)
+                    disconnected_models.append(event.model)
+                if 'UFLS step' in event.event_description and 'activated' in event.event_description:
+                    trip_timeline.append(event)
+                if 'GENERATOR : disconnecting' in event.event_description:
+                    generator_disconnection_timeline.append(event)
 
     ###
     # Compute load shedding
@@ -187,7 +216,7 @@ def get_job_results(working_dir):
 
     cost = load_shedding_to_cost(load_shedding, total_load)
 
-    return Results(load_shedding, cost, trip_timeline)
+    return Results(load_shedding, cost, trip_timeline, excited_hidden_failures, excited_generator_failures)
 
 
 def load_shedding_to_cost(load_shedding, total_load):
@@ -239,6 +268,9 @@ def get_job_results_special(working_dir):
 
             if model in disconnected_models:
                 continue  # Disregard spurious events for protections that already tripped
+
+            if 'hidden_failure' in event.model:
+                continue  # Disregard fake trips from hidden failure models
 
             if 'trip' in event.event_description:
                 trip_timeline.append(event)

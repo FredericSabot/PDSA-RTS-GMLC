@@ -1,3 +1,4 @@
+from __future__ import annotations
 from mpi4py import MPI
 from common import *
 from job import Job, SpecialJob
@@ -17,6 +18,7 @@ from natsort import natsorted
 import time
 import pickle
 import shutil
+from collections import defaultdict
 # from pympler import asizeof
 
 class Master:
@@ -59,7 +61,7 @@ class Master:
                         self.get_data_from_slave(status)
                         jobs_to_run, wait_for_data = self.job_queue.get_next_jobs(init=False)
 
-                    if len(jobs_to_run) == 0:  # No more jobs to run and not waiting for data just after call to get_next_job call()
+                    if len(jobs_to_run) == 0:  # No more jobs to run and not waiting for data just after call to get_next_job call(), so stop
                         break
 
                 status = MPI.Status()
@@ -208,26 +210,15 @@ class JobQueue:
             random_generator.shuffle(samples)
             self.static_samples_per_contingency[contingency.id] = samples
 
-        self.simulation_results: dict[str, ContingencyResults]
-        self.simulation_results = {}
-        self.simulations_launched : dict[str, ContingencyLaunched]
-        self.simulations_launched = {}
+        self.simulation_results: defaultdict[str, ContingencyResults] = defaultdict(ContingencyResults)
+        self.simulations_launched : dict[str, ContingencyLaunched] = defaultdict(ContingencyLaunched)
         self.total_risk = 0
         self.total_cost = 0
-        self.risk_per_contingency = {}
-        self.cost_per_contingency = {}
-        for contingency in self.contingencies:
-            self.simulation_results[contingency.id] = ContingencyResults()
-            self.simulations_launched[contingency.id] = ContingencyLaunched()
-            self.risk_per_contingency[contingency.id] = 0
-            self.cost_per_contingency[contingency.id] = 0
+        self.risk_per_contingency = defaultdict(int)
+        self.cost_per_contingency = defaultdict(int)
 
         # To make the algorithm deterministic (in an MPI context), a seed is given to each set of (contingency, static_id, number of runs for this contingency and static id)
-        self.dynamic_seed_counters = {}
-        for contingency in self.contingencies:
-            self.dynamic_seed_counters[contingency.id] = {}
-            for static_sample in self.static_samples:
-                self.dynamic_seed_counters[contingency.id][static_sample] = hash(static_sample)
+        self.dynamic_seed_counters = defaultdict(lambda: {static_sample: hash(static_sample) for static_sample in self.static_samples})
 
         self.priority_queue: list[Job]
         self.priority_queue = []
@@ -242,7 +233,7 @@ class JobQueue:
         If REUSE_RESULTS_FAST_FORWARD, those results are directly included in the results of the analysis,
         otherwise, they are only included if the master requests to perform a job that exists in saved_results
         """
-        self.saved_results: dict[dict[dict[Job]]]
+        self.saved_results: dict[str, dict[int, dict[int, Job]]]
         if os.path.exists(self.saved_results_path):
             with open(self.saved_results_path, 'rb') as file:
                 try:
@@ -267,12 +258,13 @@ class JobQueue:
         logger.logger.info('Write saved results completed in {}s'.format(delta_t))
 
     def fast_forward_load_job_results(self):
-        for contingency_id, contingency in self.saved_results.items():
-            logger.logger.info('Fast forward load of contingency {}'.format(contingency_id))
-            for static_id in contingency.values():
-                for saved_job in static_id.values():
-                    self.simulations_launched[saved_job.contingency.id].add_job(saved_job)  # Emulate an actual job launch
-                    self.store_completed_job(saved_job, exists=True)
+        for contingency in self.contingencies:  # Only fast-forward base contingencies, not hidden-failures (otherwise can generate duplicate + allows to change MAX_TOTAL_HIDDEN_FAILURES and other similar parameters)
+            if contingency.id in self.saved_results:
+                logger.logger.info('Fast forward load of contingency {}'.format(contingency.id))
+                for static_id in self.saved_results[contingency.id].values():
+                    for saved_job in static_id.values():
+                        self.simulations_launched[saved_job.contingency.id].add_job(saved_job)  # Emulate an actual job launch
+                        self.store_completed_job(saved_job, exists=True)
 
     def add_job_to_priority_queue(self, job: Job):
         self.priority_queue.append(job)
@@ -300,13 +292,62 @@ class JobQueue:
                         dynamic_seed = self.dynamic_seed_counters[job.contingency.id][job.static_id]
                         self.dynamic_seed_counters[job.contingency.id][job.static_id] += 1
 
-                        if job.contingency.id in self.saved_results:
-                            if job.static_id in self.saved_results[job.contingency.id]:
-                                if dynamic_seed in self.saved_results[job.contingency.id][job.static_id]:
-                                    saved_job = self.saved_results[job.contingency.id][job.static_id][dynamic_seed]
-                                    self.store_completed_job(saved_job, exists=True)
-                                    continue
-                        self.add_job_to_priority_queue(Job(job.static_id, dynamic_seed, job.contingency))
+                        saved_job = self.saved_results.get(job.contingency.id, {}).get(job.static_id, {}).get(dynamic_seed, None)
+                        if saved_job is not None:
+                            saved_job = self.saved_results[job.contingency.id][job.static_id][dynamic_seed]
+                            self.store_completed_job(saved_job, exists=True)
+                        else:
+                            self.add_job_to_priority_queue(Job(job.static_id, dynamic_seed, job.contingency))
+
+        if WITH_HIDDEN_FAILURES:
+            if job.results.load_shedding > 30:
+                pass  # Don't model hidden failure for cases that already lead to load shedding (cascades ==> many possibilities for hidden failure would need to be considered, but low impact)
+            elif job.contingency.order + 1 > MAX_HIDDEN_FAILURE_ORDER:
+                pass  # Don't create new jobs with order higher than MAX_HIDDEN_FAILURE_ORDER
+            else:
+                excited_hidden_failures = list(set(job.results.excited_hidden_failures))
+                excited_hidden_failures.sort()
+                for parent_failure in job.contingency.protection_hidden_failures:
+                    if parent_failure in excited_hidden_failures:
+                        excited_hidden_failures.remove(parent_failure)
+
+                if len(excited_hidden_failures) > MAX_POSSIBLE_PROTECTION_HIDDEN_FAILURES:
+                    logger.logger.warning(f'{job.contingency.id}, {job.static_id}, {job.dynamic_seed}, can lead to more than {MAX_POSSIBLE_PROTECTION_HIDDEN_FAILURES} possible hidden failures ({len(excited_hidden_failures)}), skipping some.')
+
+                # Create jobs with one additional hidden failure activated compared to the parent job
+                for hidden_failure in excited_hidden_failures[:MAX_POSSIBLE_PROTECTION_HIDDEN_FAILURES]:
+                    new_job = job.__class__.from_parent_and_protection_failure(job, hidden_failure)
+                    self.launch_hidden_failure_job(job, new_job)
+
+                # Create jobs with one hidden failure in a nearby generator
+                for generator_failure in sorted(list(set(job.results.excited_generator_failures))):
+                    if generator_failure in job.contingency.generator_failures:
+                        continue
+                    new_job = job.__class__.from_parent_and_generator_failure(job, generator_failure)
+                    self.launch_hidden_failure_job(job, new_job)
+
+
+    def launch_hidden_failure_job(self, parent_job: Job, hidden_failure_job: Job):
+        # Search in launched simulations if same job does not already exists (e.g. job created with hidden failure A then B, vs. B then A are equivalent)
+        job_already_exists = False
+        if hidden_failure_job.static_id in self.simulations_launched[hidden_failure_job.contingency.id].static_ids:
+            if hidden_failure_job.dynamic_seed in self.simulations_launched[hidden_failure_job.contingency.id].dynamic_seeds[hidden_failure_job.static_id]:
+                job_already_exists = True
+
+        if job_already_exists:
+            pass  # Not needed to rerun it
+        elif DOUBLE_MC_LOOP and not isinstance(parent_job, SpecialJob):
+            pass  # Only allow special jobs to create jobs with additional hidden failures (avoid duplicates and remaining cases are a bit too specific (hidden failure activated only when the path of the cascade is affected by small protection uncertainties))
+        else:
+            if REUSE_RESULTS_FAST_FORWARD:
+                saved_job = self.saved_results.get(hidden_failure_job.contingency.id, {}).get(hidden_failure_job.static_id, {}).get(hidden_failure_job.dynamic_seed, None)
+                if saved_job is not None:
+                    self.simulations_launched[saved_job.contingency.id].add_job(saved_job)  # Emulate an actual job launch
+                    self.store_completed_job(saved_job, exists=True)
+                else:
+                    self.add_job_to_priority_queue(hidden_failure_job)
+            else:
+                self.add_job_to_priority_queue(hidden_failure_job)
 
 
     def create_job(self, contingency: Contingency, static_id):
@@ -332,6 +373,7 @@ class JobQueue:
             logger.logger.info(("##############################################"))
             logger.logger.info(("# Launching {} priority runs".format(len(jobs))))
             logger.logger.info(("##############################################"))
+            return jobs, False
 
         if init:
             # Run an arbitrary number of simulations to start up the algorithm (allow to have a first estimate of the total
@@ -393,6 +435,11 @@ class JobQueue:
                     continue
 
                 contingencies_to_run.append(contingency)
+
+            if not contingencies_to_run and len(jobs) > 0:
+                logger.logger.info("Only priority runs remaining")
+                wait_for_data = False
+                return jobs, wait_for_data
 
             if not contingencies_to_run and not contingencies_waiting:
                 logger.logger.info("##############################################")
@@ -538,8 +585,6 @@ class JobQueue:
         root.set('total_computation_time', str(total_computation_time))
 
         for contingency in self.contingencies:
-            total_cases = 0
-            cases_unsecure = 0
             contingency_results = self.simulation_results[contingency.id]
             mean = contingency_results.get_average_load_shedding()
             max_shedding = contingency_results.get_maximum_load_shedding()
@@ -547,98 +592,64 @@ class JobQueue:
             N = sum([len(contingency_results.jobs[static_id]) for static_id in contingency_results.static_ids])
             N_static = len(contingency_results.static_ids)
             indicators = self.get_statistical_indicators(contingency)
+            total_cases = len(contingency_results.static_ids)
+            cases_unsecure = sum([1 if contingency_results.get_average_cost_per_static_id(static_id) > 0 else 0 for static_id in contingency_results.static_ids])
             contingency_attrib = {'id': contingency.id,
                                   'frequency': '{:.6g}'.format(contingency.frequency),
                                   'mean_load_shed': '{:.4g}'.format(mean),
                                   'max_load_shed': '{:.4g}'.format(max_shedding),
                                   'risk': '{:.4g}'.format(contingency.frequency * mean),
                                   'cost': '{:.4g}'.format(contingency.frequency * mean_cost),
+                                  'risk_w_hidden': '{:.4g}'.format(contingency.frequency * mean),  # Written here to book attrib order, updated later
+                                  'cost_w_hidden': '{:.4g}'.format(contingency.frequency * mean_cost),  # Written here to book attrib order, updated later
                                   'N': str(N),
-                                  'N_static': str(N_static)}
+                                  'N_static': str(N_static),
+                                  'share_unsecure': str(cases_unsecure / total_cases * 100) if total_cases > 0 else 'N/A'}
             for i, indicator in enumerate(indicators):
                 contingency_attrib['ind_{}'.format(i+1)] = '{:.4g}'.format(indicator)
             contingency_element = etree.SubElement(root, 'Contingency', contingency_attrib)
 
-            for static_id in contingency_results.static_ids:
-                min_shc = 999
-                voltage_stable = True
-                min_CCT = 999
-                transient_stable = True
-                max_RoCoF = 0
-                max_power_loss_over_reserve = 0
-                frequency_stable = True
-                mean = contingency_results.get_average_load_shedding_per_static_id(static_id)
-                mean_cost = contingency_results.get_average_cost_per_static_id(static_id)
-                total_cases += 1
-                if mean_cost > 0:
-                    cases_unsecure += 1
-                variance = contingency_results.get_cost_variance_per_static_id_allow_error(static_id, value_on_error=np.nan)
-                N = len(contingency_results.jobs[static_id])
-                static_id_attrib = {'static_id': static_id,
-                                    'mean_load_shed': '{:.4g}'.format(mean),
-                                    'risk': '{:.4g}'.format(mean * contingency.frequency),
-                                    'cost': '{:.4g}'.format(mean_cost * contingency.frequency),
-                                    'std_dev': '{:.4g}'.format(sqrt(variance)),
-                                    'N': '{:.4g}'.format(N)}
-                if DOUBLE_MC_LOOP:
-                    special_job = contingency_results.jobs[static_id][0]
-                    static_id_attrib['variable_order'] = str(special_job.variable_order)
-                    static_id_attrib['missing_events'] = str(special_job.missing_events)
+            # Add all static_ids and dynamic_seeds simulated for the contingency as SubElements
+            self.contingency_results_to_xml(contingency_element, contingency.frequency, contingency_results)
 
-                job = contingency_results.jobs[static_id][0]
-                tripped_models = job.results.get_sanitised_tripped_models()
+            # Add all child contingencies created by hidden failures
+            risk_hidden = 0
+            cost_hidden = 0
+            for sub_contingency_id in self.simulation_results:
+                if '~' not in sub_contingency_id:
+                    continue  # Normal contingency (not generated by hidden failure)
 
-                # Write first 3 elements to trip
-                index = 0
-                for tripped_model in tripped_models:
-                    static_id_attrib['trip_{}'.format(index)] = tripped_model
-                    index += 1
-                    if index >= 3:
-                        break
+                base_contingency_id = sub_contingency_id.split('~')[0]
+                if base_contingency_id != contingency.id:
+                    continue  # Child contingency (hidden failure) from another parent contingency
 
-                static_id_element = etree.SubElement(contingency_element, 'StaticId', static_id_attrib)
+                contingency_results = self.simulation_results[sub_contingency_id]
+                mean = contingency_results.get_average_load_shedding()
+                max_shedding = contingency_results.get_maximum_load_shedding()
+                mean_cost = contingency_results.get_average_cost()
+                N = sum([len(contingency_results.jobs[static_id]) for static_id in contingency_results.static_ids])
+                N_static = len(contingency_results.static_ids)
+                total_cases_parent = len(self.simulation_results[contingency.id].static_ids)
+                total_cases = len(contingency_results.static_ids)
+                cases_unsecure = sum([1 if contingency_results.get_average_cost_per_static_id(static_id) > 0 else 0 for static_id in contingency_results.static_ids])
+                frequency = contingency.frequency * HIDDEN_FAILURE_PROBA ** (len(sub_contingency_id.split('~')) - 1) * (total_cases / total_cases_parent)
+                risk_hidden += frequency * mean
+                cost_hidden += frequency * mean_cost
+                sub_contingency_attrib = {'id': sub_contingency_id,
+                                  'frequency': '{:.6g}'.format(frequency),
+                                  'conditional_probability': '{:.3g}'.format(total_cases / total_cases_parent),  # How often the hidden failure is excited when the main contingency occurs
+                                  'mean_load_shed': '{:.4g}'.format(mean),
+                                  'max_load_shed': '{:.4g}'.format(max_shedding),
+                                  'risk': '{:.4g}'.format(frequency * mean),
+                                  'cost': '{:.4g}'.format(frequency * mean_cost),
+                                  'N': str(N),
+                                  'N_static': str(N_static),
+                                  'share_unsecure': str(cases_unsecure / total_cases * 100) if total_cases > 0 else 'N/A'}
+                sub_contingency_element = etree.SubElement(contingency_element, 'Contingency', sub_contingency_attrib)
+                self.contingency_results_to_xml(sub_contingency_element, frequency, contingency_results)
 
-                for job in contingency_results.jobs[static_id]:
-                    job_attrib = {'dyn_id': str(job.dynamic_seed),
-                                'simulation_time': '{:.2g}'.format(job.elapsed_time),
-                                'timeout': str(job.timed_out)}
-                    if job.completed or job.timed_out:
-                        job_attrib['load_shedding'] = '{:.2g}'.format(job.results.load_shedding)
-                        job_attrib['cost'] = '{:.2g}'.format(job.results.cost)
-                        if not job.voltage_stable:
-                            voltage_stable = False
-                        if not job.transient_stable:
-                            transient_stable = False
-                        if job.cct < min_CCT:
-                            min_CCT = job.cct
-                        if job.shc_ratio < min_shc:
-                            min_shc = job.shc_ratio
-                        if not job.frequency_stable:
-                            frequency_stable = False
-                        if job.RoCoF > max_RoCoF:
-                            max_RoCoF = job.RoCoF
-                        if job.power_loss_over_reserve > max_power_loss_over_reserve:
-                            max_power_loss_over_reserve = job.power_loss_over_reserve
-
-                    # Write first 3 elements to trip
-                    tripped_models = job.results.get_sanitised_tripped_models()
-                    index = 0
-                    for tripped_model in tripped_models:
-                        job_attrib['trip_{}'.format(index)] = tripped_model
-                        index += 1
-                        if index >= 3:
-                            break
-                    etree.SubElement(static_id_element, 'Job', job_attrib)
-
-                static_id_element.set('voltage_stable', str(voltage_stable))
-                static_id_element.set('transient_stable', str(transient_stable))
-                static_id_element.set('frequency_stable', str(frequency_stable))
-                static_id_element.set('shc_ratio', '{:.4g}'.format(min_shc))
-                static_id_element.set('CCT', '{:.4g}'.format(min_CCT))
-                static_id_element.set('RoCoF', '{:.4g}'.format(max_RoCoF))
-                static_id_element.set('dP_over_reserves', '{:.4g}'.format(max_power_loss_over_reserve))
-            if total_cases > 0:
-                contingency_element.set('share_unsecure', str(cases_unsecure / total_cases * 100))
+            contingency_element.set('risk_w_hidden', '{:.4g}'.format(float(contingency_attrib['risk']) + risk_hidden))
+            contingency_element.set('cost_w_hidden', '{:.4g}'.format(float(contingency_attrib['cost']) + cost_hidden))
 
         if WITH_LXML:
             with open('AnalysisOutput.xml', 'wb') as doc:
@@ -650,6 +661,84 @@ class JobQueue:
 
         delta_t = time.time() - t0
         logger.logger.info('Write analysis output completed in {}s'.format(delta_t))
+
+
+    def contingency_results_to_xml(self, contingency_element: etree.Element, frequency, contingency_results: ContingencyResults):
+        for static_id in contingency_results.static_ids:
+            min_shc = 999
+            voltage_stable = True
+            min_CCT = 999
+            transient_stable = True
+            max_RoCoF = 0
+            max_power_loss_over_reserve = 0
+            frequency_stable = True
+            mean = contingency_results.get_average_load_shedding_per_static_id(static_id)
+            mean_cost = contingency_results.get_average_cost_per_static_id(static_id)
+            variance = contingency_results.get_cost_variance_per_static_id_allow_error(static_id, value_on_error=np.nan)
+            N = len(contingency_results.jobs[static_id])
+            static_id_attrib = {'static_id': static_id,
+                                'mean_load_shed': '{:.4g}'.format(mean),
+                                'risk': '{:.4g}'.format(mean * frequency),
+                                'cost': '{:.4g}'.format(mean_cost * frequency),
+                                'std_dev': '{:.4g}'.format(sqrt(variance)),
+                                'N': '{:.4g}'.format(N)}
+            if DOUBLE_MC_LOOP:
+                special_job = contingency_results.jobs[static_id][0]
+                static_id_attrib['variable_order'] = str(special_job.variable_order)
+                static_id_attrib['missing_events'] = str(special_job.missing_events)
+
+            job = contingency_results.jobs[static_id][0]
+            tripped_models = job.results.get_sanitised_tripped_models()
+
+            # Write first 3 elements to trip
+            index = 0
+            for tripped_model in tripped_models:
+                static_id_attrib['trip_{}'.format(index)] = tripped_model
+                index += 1
+                if index >= 3:
+                    break
+
+            static_id_element = etree.SubElement(contingency_element, 'StaticId', static_id_attrib)
+
+            for job in contingency_results.jobs[static_id]:
+                job_attrib = {'dyn_id': str(job.dynamic_seed),
+                            'simulation_time': '{:.2g}'.format(job.elapsed_time),
+                            'timeout': str(job.timed_out)}
+                if job.completed or job.timed_out:
+                    job_attrib['load_shedding'] = '{:.2g}'.format(job.results.load_shedding)
+                    job_attrib['cost'] = '{:.2g}'.format(job.results.cost)
+                    if not job.voltage_stable:
+                        voltage_stable = False
+                    if not job.transient_stable:
+                        transient_stable = False
+                    if job.cct < min_CCT:
+                        min_CCT = job.cct
+                    if job.shc_ratio < min_shc:
+                        min_shc = job.shc_ratio
+                    if not job.frequency_stable:
+                        frequency_stable = False
+                    if job.RoCoF > max_RoCoF:
+                        max_RoCoF = job.RoCoF
+                    if job.power_loss_over_reserve > max_power_loss_over_reserve:
+                        max_power_loss_over_reserve = job.power_loss_over_reserve
+
+                # Write first 3 elements to trip
+                tripped_models = job.results.get_sanitised_tripped_models()
+                index = 0
+                for tripped_model in tripped_models:
+                    job_attrib['trip_{}'.format(index)] = tripped_model
+                    index += 1
+                    if index >= 3:
+                        break
+                etree.SubElement(static_id_element, 'Job', job_attrib)
+
+            static_id_element.set('voltage_stable', str(voltage_stable))
+            static_id_element.set('transient_stable', str(transient_stable))
+            static_id_element.set('frequency_stable', str(frequency_stable))
+            static_id_element.set('shc_ratio', '{:.4g}'.format(min_shc))
+            static_id_element.set('CCT', '{:.4g}'.format(min_CCT))
+            static_id_element.set('RoCoF', '{:.4g}'.format(max_RoCoF))
+            static_id_element.set('dP_over_reserves', '{:.4g}'.format(max_power_loss_over_reserve))
 
 
     def is_statistical_accuracy_reached(self, contingency: Contingency) -> bool:

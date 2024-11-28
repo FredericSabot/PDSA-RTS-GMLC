@@ -8,6 +8,8 @@ class Results:
     load_shedding: float
     cost: float
     trip_timeline: list[dynawo_outputs.TimeLineEvent]
+    excited_hidden_failures: list[str]
+    excited_generator_failures: list[str]
 
     def __repr__(self) -> str:
         return CSV_SEPARATOR.join([str(self.load_shedding), str(self.cost)] + [str(timeline_event) for timeline_event in self.trip_timeline])

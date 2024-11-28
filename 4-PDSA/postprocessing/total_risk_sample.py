@@ -31,8 +31,12 @@ contingency_ids = random.choices(population=range(len(root)), weights=frequencie
 for i, contingency_id in enumerate(contingency_ids):
     contingency = root[contingency_id]
 
-    static_id = random.choice(range(len(contingency)))
-    consequence = float(contingency[static_id].get('cost')) / float(contingency.get('frequency'))  # cost actually refers to risk in cost units
+    static_ids = []
+    for static_id in contingency:
+        if static_id.tag == 'StaticId':
+            static_ids.append(static_id)
+    static_id = random.choice(range(len(static_ids)))
+    consequence = float(static_ids[static_id].get('cost')) / float(contingency.get('frequency'))  # cost actually refers to risk in cost units
     # consequence = float(contingency[static_id].get('mean_load_shed'))
     consequences.append(consequence)
 

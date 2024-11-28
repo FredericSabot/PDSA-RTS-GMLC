@@ -203,7 +203,10 @@ for contingency in sorted(root, key = lambda item:item.get('cost'), reverse=True
     estimated_costs = []
     for seed in range(20):
         random.seed(seed)
-        static_ids = contingency.getchildren()
+        static_ids = []
+        for static_id in contingency:
+            if static_id.tag == 'StaticId':
+                static_ids.append(static_id)
         random.shuffle(static_ids)
 
         cluster_results = {}

@@ -131,6 +131,8 @@ for contingency in root:
         pass #continue
 
     for static_id in contingency:
+        if static_id.tag != 'Static_Id':
+            continue
         once = True
         for job in static_id:
             total_computation_time[contingency_type] += float(job.get('simulation_time')) / 3600

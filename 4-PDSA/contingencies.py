@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass
 import pypowsybl as pp
 from common import *
@@ -25,13 +26,43 @@ class InitFault(InitEvent):
         return self.fault_id + '_' + self.element
 
 
-@dataclass
 class Contingency:
-    id: str
-    frequency: float
-    init_events: list[InitEvent]
-    clearing_time: float
-    fault_location: str = None
+    def __init__(self, id, order, frequency, init_events, clearing_time, fault_location=None, base_id=None, protection_hidden_failures = [], generator_failures = []):
+        self.id: str = id
+        self.order: int = order
+        self.frequency: float = frequency
+        self.init_events: list[InitEvent] = init_events
+        self.clearing_time: float = clearing_time
+        self.fault_location: str = fault_location
+        self.base_id: str = base_id
+        if base_id is None:
+            self.base_id = id  # id = parent.base_id + '~'.join(protection_hidden_failures)
+        self.protection_hidden_failures: list[str] = protection_hidden_failures
+        self.generator_failures: list[str] = generator_failures
+
+    @classmethod
+    def from_parent_and_protection_failure(cls, parent: Contingency, protection_hidden_failure):
+        if protection_hidden_failure in parent.protection_hidden_failures:
+            raise RuntimeError('Child contingency has no new protection hidden failure compared to its parent')
+
+        protection_hidden_failures = parent.protection_hidden_failures + [protection_hidden_failure]
+        protection_hidden_failures.sort()
+        id = '~'.join([parent.base_id] + protection_hidden_failures + parent.generator_failures)
+
+        return cls(id, parent.order + 1, parent.frequency * HIDDEN_FAILURE_PROBA, parent.init_events, parent.clearing_time, parent.fault_location, parent.base_id, protection_hidden_failures, parent.generator_failures)
+
+    @classmethod
+    def from_parent_and_generator_failure(cls, parent: Contingency, generator_failure):
+        if generator_failure in parent.generator_failures:
+            raise RuntimeError('Child contingency has no new generator failure compared to its parent')
+
+        generator_failures = parent.generator_failures + [generator_failure]
+        generator_failures.sort()
+        id = '~'.join([parent.base_id] + parent.protection_hidden_failures + generator_failures)
+
+        init_events = parent.init_events + [InitEvent(T_CLEARING, INIT_EVENT_CATEGORIES.GEN_DISC, generator_failure)]
+
+        return cls(id, parent.order + 1, parent.frequency * HIDDEN_FAILURE_PROBA, init_events, parent.clearing_time, parent.fault_location, parent.base_id, parent.protection_hidden_failures, generator_failures)
 
     """
     To limit the number of contingencies, double(/triple/...) lines are only counted once, but the associated contingencies
@@ -74,7 +105,7 @@ class Contingency:
 
     @staticmethod
     def create_base_contingency():
-        return [Contingency('Base', OUTAGE_RATE_PER_KM, [], 0)]  # Contingency with no events, use a low frequency to avoid running it too often
+        return [Contingency('Base', 0, OUTAGE_RATE_PER_KM * 10, [], 0)]  # Contingency with no events, use a relatively low frequency to avoid running it too often
 
     @staticmethod
     def create_N_1_contingencies(with_lines = True, with_generators = False, with_normal_clearing = True, with_delayed_clearing = True):
@@ -105,7 +136,7 @@ class Contingency:
                         init_events.append(InitEvent(time_start=T_CLEARING, category=INIT_EVENT_CATEGORIES.LINE_DISC, element=line_id))
 
                         fault_location = lines.at[line_id, 'bus{}_id'.format(end)]
-                        contingencies.append(Contingency(contingency_id, frequency, init_events, T_CLEARING - T_INIT, fault_location))
+                        contingencies.append(Contingency(contingency_id, 1, frequency, init_events, T_CLEARING - T_INIT, fault_location))
 
                     if with_delayed_clearing:
                         init_events = []
@@ -114,7 +145,7 @@ class Contingency:
                         init_events.append(InitEvent(time_start=T_BACKUP, category=INIT_EVENT_CATEGORIES.LINE_DISC, element=line_id))
 
                         fault_location = lines.at[line_id, 'bus{}_id'.format(end)]
-                        contingencies.append(Contingency(contingency_id + '_DELAYED', frequency * DELAYED_CLEARING_RATE, init_events, T_BACKUP - T_INIT, fault_location))
+                        contingencies.append(Contingency(contingency_id + '_DELAYED', 1, frequency * DELAYED_CLEARING_RATE, init_events, T_BACKUP - T_INIT, fault_location))
 
         if with_generators:
             raise NotImplementedError('The code below most likely works, but automatic merging of generator contingencies has not been implemented (and identical generators might not always be connected at the same time)')
@@ -127,7 +158,7 @@ class Contingency:
                                             fault_id=fault_id, r=R_FAULT, x=X_FAULT))
                 init_events.append(InitEvent(time_start=T_CLEARING, category=INIT_EVENT_CATEGORIES.GEN_DISC, element=line_id))
 
-                contingencies.append(Contingency(contingency_id, init_events))
+                contingencies.append(Contingency(contingency_id, 1, init_events))
 
         contingencies = Contingency.merge_identical_contingencies(contingencies)
         return contingencies
@@ -218,7 +249,7 @@ class Contingency:
                                                      r=r_replacement_fault, x=x_replacement_fault))
 
                         fault_location = lines.at[line_id, 'bus{}_id'.format(fault_side)]
-                        contingencies.append(Contingency(contingency_id, frequency, init_events, T_BACKUP - T_INIT, fault_location))
+                        contingencies.append(Contingency(contingency_id, 2, frequency, init_events, T_BACKUP - T_INIT, fault_location))
 
         contingencies = Contingency.merge_identical_contingencies(contingencies)
         return contingencies

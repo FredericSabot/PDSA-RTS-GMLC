@@ -69,3 +69,11 @@ DELAYED_CLEARING_RATE = 0.1  # On-demand probability of delayed-clearing
 CB_FAILURE_RATE = 0.01  # Based on (9 + 6 + 2) CB failures to open in 10 years with around 300 faults per year (17/3000 = 0.0056 rounded to 0.01) according to Table 5.1 of Haarla et. al. "Transmission Grid Security: A PSA approach"
 
 CSV_SEPARATOR = ','
+
+WITH_HIDDEN_FAILURES = True
+HIDDEN_FAILURE_PROBA = 0.1
+MAX_HIDDEN_FAILURE_ORDER = 2  # Maximum order of contingencies caused by hidden failure (e.g. if set to 3, an N-1 contingency can lead to up to 2 consecutive hidden failures, and an N-2 contingency, to 1 hidden failure (2+1=3))
+MAX_POSSIBLE_PROTECTION_HIDDEN_FAILURES = 10  # Maximum number of different possible protection hidden failures to simulate for a given scenario (if more possibilities are found, they will be skipped and a warning printed)
+GENERATOR_HIDDEN_FAILURE_MINIMUM_OUTPUT_MVA = 30  # The hidden failure of generators with a smaller output (absolute value in MVA) will not be considered as it has a low impact on the network
+if NETWORK_NAME == 'Texas':
+    GENERATOR_HIDDEN_FAILURE_MINIMUM_OUTPUT_MVA = 200

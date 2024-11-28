@@ -14,6 +14,8 @@ unsecure_cases = 0
 convergence_cases = 0
 for contingency in root:
     for static_id in contingency:
+            if static_id.tag != 'StaticId':
+                 continue
             for job in static_id:
                 if 'DELAYED' in contingency.get('id'):
                     cases += 1

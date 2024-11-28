@@ -16,6 +16,8 @@ for contingency in sorted(root, key = lambda item:item.get('cost'), reverse=True
 trip_sets = {}
 
 for static_id in contingency:
+    if static_id.tag != 'Static_Id':
+        continue
     trip_0 = static_id.get('trip_0')
     trip_1 = static_id.get('trip_1')
     trip_2 = static_id.get('trip_2')
