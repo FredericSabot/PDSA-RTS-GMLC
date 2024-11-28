@@ -25,6 +25,7 @@
 4-PDSA/AnalysisOutput_critical.xml
 4-PDSA/postprocessing/contingency_classification.csv
 4-PDSA/postprocessing/distance_matrix.csv
+4-PDSA/postprocessing/HiddenFailureAnalysis.xml
 *.zip
 *.pyc
 *.pickle
