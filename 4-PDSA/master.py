@@ -277,8 +277,17 @@ class JobQueue:
             self.saved_results[job.contingency.id][job.static_id][job.dynamic_seed] = job
 
         self.simulation_results[job.contingency.id].add_job(job)
-        self.risk_per_contingency[job.contingency.id] = self.simulation_results[job.contingency.id].get_average_load_shedding() * job.contingency.frequency
-        self.cost_per_contingency[job.contingency.id] = self.simulation_results[job.contingency.id].get_average_cost() * job.contingency.frequency
+
+        if '~' in job.contingency.id:
+            base_contingency_id = job.contingency.id.split('~')[0]
+            total_cases_base = len(self.simulation_results[base_contingency_id].static_ids)
+            total_cases = len(self.simulation_results[job.contingency.id].static_ids)
+            conditional_probability = total_cases / total_cases_base if total_cases_base > 0 else 0
+        else:
+            conditional_probability = 1
+
+        self.risk_per_contingency[job.contingency.id] = self.simulation_results[job.contingency.id].get_average_load_shedding() * job.contingency.frequency * conditional_probability
+        self.cost_per_contingency[job.contingency.id] = self.simulation_results[job.contingency.id].get_average_cost() * job.contingency.frequency * conditional_probability
         self.total_risk = sum(self.risk_per_contingency.values())
         self.total_cost = sum(self.cost_per_contingency.values())
 
