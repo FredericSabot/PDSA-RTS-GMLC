@@ -3,6 +3,7 @@ from collections import defaultdict
 import pypowsybl as pp
 
 NETWORK_NAME = 'RTS'
+HIDDEN_FAILURE_PROBA = 0.1
 
 analysis_root = etree.parse('../AnalysisOutput.xml').getroot()
 
@@ -43,6 +44,7 @@ for failure_type in ['Distance', 'Generator']:
             continue
 
         frequency_failure = 0
+        frequency_excitation = 0
         risk_failure = 0
         cost_failure = 0
         failure_element = etree.SubElement(failure_type_element, 'Failure')
@@ -50,14 +52,18 @@ for failure_type in ['Distance', 'Generator']:
             contingency_id = contingency.get('id')
             base_contingency_id = contingency_id.split('~')[0]
             base_contingency = base_contingencies[base_contingency_id]
+            hidden_failure_order = len(contingency_id.split('~')[1:])
             base_risk = float(base_contingency.get('risk'))
             base_cost = float(base_contingency.get('cost'))
             frequency = float(contingency.get('frequency'))
             frequency_failure += frequency
+            frequency_excitation_contingency = frequency / HIDDEN_FAILURE_PROBA ** hidden_failure_order  # Frequency at which the hidden failure is activated =
+            frequency_excitation += frequency_excitation_contingency
 
             # Increase of risk caused by increase of load shedding in scenario with hidden failure compared to base case
             added_risk = frequency * float(contingency.get('mean_load_shed')) - float(base_contingency.get('mean_load_shed'))
             contingency.set('added_risk', str(added_risk))
+            contingency.set('frequency_excitation', str(frequency_excitation_contingency))
 
             mean_consequences = float(contingency.get('cost')) / frequency
             mean_consequences_base = float(base_contingency.get('cost')) / float(base_contingency.get('frequency'))
@@ -70,12 +76,15 @@ for failure_type in ['Distance', 'Generator']:
 
         failure_element.set('id', failure)
         failure_element.set('frequency', str(frequency_failure))
+        failure_element.set('frequency_excitation', str(frequency_excitation))
         failure_element.set('risk', str(risk_failure))
         failure_element.set('cost', str(cost_failure))
         failure_element.set('vl', str(voltage_level))
         frequency_failure_type += frequency_failure
         risk_failure_type += risk_failure
         cost_failure_type += cost_failure
+        if frequency_excitation > 1:
+            print(f'Warning: element "{element_id}" has hidden failure(s) that is excited more than once a year ({frequency_excitation}), check credibility')
     failure_type_element.set('frequency', str(frequency_failure_type))
     failure_type_element.set('risk', str(risk_failure_type))
     failure_type_element.set('cost', str(cost_failure_type))
