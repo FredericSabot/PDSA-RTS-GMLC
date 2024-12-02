@@ -35,7 +35,7 @@ class Master:
 
     def create_contingency_list(self):
         base_contingency = Contingency.create_base_contingency()
-        N_1_contingencies = Contingency.create_N_1_contingencies(with_normal_clearing=False)
+        N_1_contingencies = Contingency.create_N_1_contingencies(with_normal_clearing=True)
         N_2_contingencies = Contingency.create_N_2_contingencies()
 
         self.contingency_list = base_contingency + N_1_contingencies + N_2_contingencies
@@ -800,6 +800,7 @@ class JobQueue:
         mean_per_static_id = np.array([contingency_results.get_average_cost_per_static_id(static_id) for static_id in static_ids])
         mean = np.mean(mean_per_static_id)
         std_dev = sqrt(np.var(mean_per_static_id))  # TODO: add sqrt(N/(N-1)) factor and handle div by 0 in this case
+        # TODO: account for hidden failures
 
         if N == 0:
             N += 1
@@ -809,8 +810,11 @@ class JobQueue:
         indicator_1 = contingency.frequency * sqrt(std_dev**2 / N)
 
         # SE of risk from unobserved samples with 99% confidence
+        max_consequences = MAX_CONSEQUENCES
+        if contingency.order < 2 and 'DELAYED' not in contingency.id:
+            max_consequences /= 10  # Be less conservative for simple N-1 contingencies to avoid wasting computation time
         p = 1 - 0.01**(1/N)
-        b = max((MAX_CONSEQUENCES-mean)**2, (mean-0)**2)
+        b = max((max_consequences-mean)**2, (mean-0)**2)
         indicator_2 = contingency.frequency * sqrt(p*b/N)
 
         # Total SE
