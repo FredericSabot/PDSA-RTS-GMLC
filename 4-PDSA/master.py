@@ -35,7 +35,10 @@ class Master:
 
     def create_contingency_list(self):
         base_contingency = Contingency.create_base_contingency()
-        N_1_contingencies = Contingency.create_N_1_contingencies(with_normal_clearing=True)
+        if WITH_HIDDEN_FAILURES or not NEGLECT_NORMAL_FAULT_RISK:
+            N_1_contingencies = Contingency.create_N_1_contingencies(with_normal_clearing=True)
+        else:
+            N_1_contingencies = Contingency.create_N_1_contingencies(with_normal_clearing=False)
         N_2_contingencies = Contingency.create_N_2_contingencies()
 
         self.contingency_list = base_contingency + N_1_contingencies + N_2_contingencies

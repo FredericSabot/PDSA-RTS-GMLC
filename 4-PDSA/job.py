@@ -42,6 +42,9 @@ class Job:
         self.results = get_job_results(self.working_dir, self.contingency.fault_location)
         self.completed = True
         shutil.rmtree(self.working_dir, ignore_errors=True)
+        if NEGLECT_NORMAL_FAULT_RISK:
+            if self.contingency.order < 2 and ('DELAYED' not in self.contingency.id and '~' not in self.contingency.id):
+                self.results.load_shedding = 0
 
     def skip(self):
         self.elapsed_time = 1

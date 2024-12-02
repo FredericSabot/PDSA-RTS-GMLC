@@ -75,7 +75,8 @@ CSV_SEPARATOR = ','
 WITH_HIDDEN_FAILURES = True
 HIDDEN_FAILURE_PROBA = 0.1
 MAX_HIDDEN_FAILURE_ORDER = 2  # Maximum order of contingencies caused by hidden failure (e.g. if set to 3, an N-1 contingency can lead to up to 2 consecutive hidden failures, and an N-2 contingency, to 1 hidden failure (2+1=3))
-MAX_POSSIBLE_PROTECTION_HIDDEN_FAILURES = 10  # Maximum number of different possible protection hidden failures to simulate for a given scenario (if more possibilities are found, they will be skipped and a warning printed)
+MAX_POSSIBLE_PROTECTION_HIDDEN_FAILURES = 100  # Maximum number of different possible protection hidden failures to simulate for a given scenario (if more possibilities are found, they will be skipped and a warning printed)
 GENERATOR_HIDDEN_FAILURE_MINIMUM_OUTPUT_MVA = 30  # The hidden failure of generators with a smaller output (absolute value in MVA) will not be considered as it has a low impact on the network
 if NETWORK_NAME == 'Texas':
     GENERATOR_HIDDEN_FAILURE_MINIMUM_OUTPUT_MVA = 200
+NEGLECT_NORMAL_FAULT_RISK = True  # Neglect consequences of N-1 contingencies with fault cleared in normal time (still simulated to generate hidden failures). Because of the way operating conditions are generated, the system is not always dispatched in an N-1 secure way while this could be avoided in practice in real-time operations
