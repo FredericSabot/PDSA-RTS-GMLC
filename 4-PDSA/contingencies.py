@@ -134,6 +134,7 @@ class Contingency:
                         init_events.append(InitFault(time_start=T_INIT, time_end=T_CLEARING, category=INIT_EVENT_CATEGORIES.BUS_FAULT, element=bus_id,
                                                 fault_id=fault_id, r=R_FAULT, x=X_FAULT))
                         init_events.append(InitEvent(time_start=T_CLEARING, category=INIT_EVENT_CATEGORIES.LINE_DISC, element=line_id))
+                        init_events.append(InitEvent(time_start=T_RECLOSE, category=INIT_EVENT_CATEGORIES.LINE_RECLOSE, element=line_id))
 
                         fault_location = lines.at[line_id, 'bus{}_id'.format(end)]
                         contingencies.append(Contingency(contingency_id, 1, frequency, init_events, T_CLEARING - T_INIT, fault_location))

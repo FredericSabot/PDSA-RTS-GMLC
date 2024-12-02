@@ -10,6 +10,7 @@ class INIT_EVENT_CATEGORIES(Enum):
     BUS_FAULT = 1
     LINE_DISC = 2
     GEN_DISC = 3
+    LINE_RECLOSE = 4
 
 # DYNAWO_PATH = '/home/fsabot/Desktop/dynawo_new/myEnvDynawo.sh'
 DYNAWO_PATH = '/home/ulb/beams_energy/fsabot/dynawo/dynawo.sh'
@@ -60,6 +61,7 @@ BASEFREQUENCY = 60
 T_INIT = 5  # Fault time
 T_CLEARING = T_INIT + 0.1
 T_BACKUP = T_INIT + 0.2
+T_RECLOSE = T_INIT + 0.2
 T_END = 20  # End of simulation time
 R_FAULT = 0.001  # In pu
 X_FAULT = 0.001
