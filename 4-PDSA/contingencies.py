@@ -122,7 +122,7 @@ class Contingency:
                 Vb = float(vl.at[voltage_level, 'nominal_v']) * 1e3
                 if Vb < CONTINGENCY_MINIMUM_VOLTAGE_LEVEL:
                     continue
-                frequency = OUTAGE_RATE_PER_KM * Contingency.line_lengths.at[line_id]
+                frequency = OUTAGE_RATE_PER_KM * Contingency.line_lengths.at[line_id] / 2  # Frequency divided by 2 because fault represented on both ends of lines
                 bus_ids = ['@' + line_id + '@@NODE1@', '@' + line_id + '@@NODE2@']
                 ends = [1, 2]
                 for bus_id, end in zip(bus_ids, ends):
@@ -213,7 +213,7 @@ class Contingency:
             r_replacement_fault = R_FAULT + r_line
             x_replacement_fault = X_FAULT + x_line
 
-            frequency = OUTAGE_RATE_PER_KM * Contingency.line_lengths.at[line_id] * CB_FAILURE_RATE
+            frequency = OUTAGE_RATE_PER_KM * Contingency.line_lengths.at[line_id] * CB_FAILURE_RATE / 2  # Frequency divided by 2 because fault represented on both ends of lines
 
             for fault_side in [1, 2]:
                 for CB_fail_side in [1, 2]:
