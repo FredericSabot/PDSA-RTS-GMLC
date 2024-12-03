@@ -1,17 +1,20 @@
 #!/bin/bash
 # Submission script for Nic5
 #SBATCH --job-name=DPSA
-#SBATCH --time=04:00:00 # hh:mm:ss
-#SBATCH --time-min=01:00:00 # hh:mm:ss
+#SBATCH --time=08:00:00 # hh:mm:ss
+#SBATCH --time-min=04:00:00 # hh:mm:ss
 #
-#SBATCH --ntasks=100
-#SBATCH --mem-per-cpu=6000 # megabytes
+#SBATCH --ntasks=320
+#SBATCH --mem-per-cpu=8000 # megabytes
 #SBATCH --partition=batch
 #
-#SBATCH --signal=USR1@60  #Send USR1 signal 60s before job end
+#SBATCH --signal=USR1@600  #Send USR1 signal 10min (+/- 1min) before job end
 #
 #SBATCH --mail-user=frederic.sabot@ulb.be
 #SBATCH --mail-type=END,FAIL
+
+date
+cd $SLURM_SUBMIT_DIR
 
 if false
 then
@@ -28,11 +31,34 @@ else
 fi
 
 
-# cp -r PDSA-RTS-GMLC $GLOBALSCRATCH
-# cd $GLOBALSCRATCH/PDSA-RTS-GMLC/4-PDSA
-# cd PDSA-RTS-GMLC/4-PDSA
+cleanup(){
+    echo Saving output files  # Note: the script (and thus cp) is only executed on the first allocated node (so cp *.log would only give part of the logs)
+    cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/log0.log" "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA" &
+    cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/*.pickle" "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA" &
+    cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/*.xml"    "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA" &
+    wait
+    echo Deleting temp files
+    rm -rf "$LOCALSCRATCH"
+    rm "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC.tar"
+}
 
-# timeout 3550
-# mpiexec -n $SLURM_NTASKS -env I_MPI_JOB_SIGNAL_PROPAGATION=enable python main.py  # Intel MPI flags to propagate signals to subprocesses
+echo Creating tar
+tar --exclude-vcs --exclude 4-PDSA/simulations -cf PDSA-RTS-GMLC.tar PDSA-RTS-GMLC
+echo Copying tar to LOCALSCRATCH
+sbcast -f "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC.tar" "$LOCALSCRATCH/PDSA-RTS-GMLC.tar"
+if [ ! "$?" == "0" ]; then
+    # CHECK EXIT CODE. When SBCAST fails, it may leave partial files on the compute nodes, and if you continue to launch srun,
+    # your application may pick up partially complete shared library files, which would give you confusing errors.
+    echo "SBCAST failed!"
+    exit 1
+fi
+
+echo Extracting archive
+cd "$LOCALSCRATCH"
+srun -n $SLURM_JOB_NUM_NODES --ntasks-per-node=1 tar -xf PDSA-RTS-GMLC.tar
+cd "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA"
+
+echo Launching process
 mpiexec --verbose -mca orte_abort_on_non_zero_status 1 -n $SLURM_NTASKS python -m mpi4py main.py
-# cp AnalysisOutput.xml $HOME/ # $SLURM_JOB_ID
+
+cleanup
