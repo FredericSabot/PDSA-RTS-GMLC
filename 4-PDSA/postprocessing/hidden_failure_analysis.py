@@ -61,7 +61,7 @@ for failure_type in ['Distance', 'Generator']:
             frequency_excitation += frequency_excitation_contingency
 
             # Increase of risk caused by increase of load shedding in scenario with hidden failure compared to base case
-            added_risk = frequency * float(contingency.get('mean_load_shed')) - float(base_contingency.get('mean_load_shed'))
+            added_risk = frequency * (float(contingency.get('mean_load_shed')) - float(base_contingency.get('mean_load_shed')))
             contingency.set('added_risk', str(added_risk))
             contingency.set('frequency_excitation', str(frequency_excitation_contingency))
 
