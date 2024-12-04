@@ -15,7 +15,7 @@ import numpy as np
 import pypowsybl as pp
 
 
-def get_job_results(working_dir, fault_location):
+def get_job_results(working_dir, fault_location) -> Results:
     """
     Estimate the consequences and read the event timeline of a given scenario based on the simulation output files (located in working_dir)
     """

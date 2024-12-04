@@ -45,6 +45,7 @@ class Job:
         if NEGLECT_NORMAL_FAULT_RISK:
             if self.contingency.order < 2 and ('DELAYED' not in self.contingency.id and '~' not in self.contingency.id):
                 self.results.load_shedding = 0
+                self.results.cost = 0
 
     def skip(self):
         self.elapsed_time = 1
