@@ -39,23 +39,18 @@ cleanup(){
     wait
     echo Deleting temp files
     rm -rf "$LOCALSCRATCH"
-    rm "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC.tar"
 }
 
 echo Creating tar
 tar --exclude-vcs --exclude 4-PDSA/simulations -cf PDSA-RTS-GMLC.tar PDSA-RTS-GMLC
 echo Copying tar to LOCALSCRATCH
-sbcast -f "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC.tar" "$LOCALSCRATCH/PDSA-RTS-GMLC.tar"
-if [ ! "$?" == "0" ]; then
-    # CHECK EXIT CODE. When SBCAST fails, it may leave partial files on the compute nodes, and if you continue to launch srun,
-    # your application may pick up partially complete shared library files, which would give you confusing errors.
-    echo "SBCAST failed!"
-    exit 1
-fi
+srun -n $SLURM_JOB_NUM_NODES --ntasks-per-node=1 cp "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC.tar" "$LOCALSCRATCH/PDSA-RTS-GMLC.tar"
+rm "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC.tar"
 
 echo Extracting archive
 cd "$LOCALSCRATCH"
 srun -n $SLURM_JOB_NUM_NODES --ntasks-per-node=1 tar -xf PDSA-RTS-GMLC.tar
+srun -n $SLURM_JOB_NUM_NODES --ntasks-per-node=1 rm "$LOCALSCRATCH/PDSA-RTS-GMLC.tar"
 cd "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA"
 
 echo Launching process
