@@ -30,17 +30,6 @@ else
     module load SciPy-bundle  # For Scipy itself
 fi
 
-
-cleanup(){
-    echo Saving output files  # Note: the script (and thus cp) is only executed on the first allocated node (so cp *.log would only give part of the logs)
-    cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/log0.log" "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA" &
-    cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/*.pickle" "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA" &
-    cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/*.xml"    "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA" &
-    wait
-    echo Deleting temp files
-    rm -rf "$LOCALSCRATCH"
-}
-
 echo Creating tar
 tar --exclude-vcs --exclude 4-PDSA/simulations -cf PDSA-RTS-GMLC.tar PDSA-RTS-GMLC
 echo Copying tar to LOCALSCRATCH
@@ -56,4 +45,12 @@ cd "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA"
 echo Launching process
 mpiexec --verbose -mca orte_abort_on_non_zero_status 1 -n $SLURM_NTASKS python -m mpi4py main.py
 
-cleanup
+echo Saving output files  # Note: the script (and thus cp) is only executed on the first allocated node (so cp *.log would only give part of the logs)
+cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/log0.log" "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA/"
+cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/saved_results.pickle" "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA/"  # Does not work well with wildcards
+cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/saved_results_bak.pickle" "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA/"
+cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/AnalysisOutput.xml"    "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA/"
+cp "$LOCALSCRATCH/PDSA-RTS-GMLC/4-PDSA/AnalysisOutput_critical.xml"    "$SLURM_SUBMIT_DIR/PDSA-RTS-GMLC/4-PDSA/"
+
+echo Deleting temp files
+rm -rf "$LOCALSCRATCH"
