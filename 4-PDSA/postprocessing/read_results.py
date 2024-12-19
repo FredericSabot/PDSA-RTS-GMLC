@@ -9,7 +9,7 @@ simulated, otherwise the false positives rate will be estimated as 0), computati
 simulations per contingency type, etc.
 """
 
-# TODO: clean up this mess
+# TODO: clean up this mess and fix for new AnalysisOutput.xml with hidden failures
 
 NETWORK_NAME = 'RTS'
 n = pp.network.load(f'../../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
