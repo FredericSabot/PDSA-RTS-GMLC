@@ -396,12 +396,12 @@ def add_line_dist_protection(dyd_root, par_root, lines, voltage_levels, bus2line
                 {'type':'DOUBLE', 'name':'distance_tZone_1_', 'value':str(0.3)},
                 {'type':'DOUBLE', 'name':'distance_tZone_2_', 'value':str(0.6)},
                 {'type':'DOUBLE', 'name':'distance_tZone_3_', 'value':'999999'},
-                {'type':'DOUBLE', 'name':'distance_RPu_0_', 'value': '0'}, # str(X1 * 10)},  # Z1 trips a bit too often
-                {'type':'DOUBLE', 'name':'distance_XPu_0_', 'value': '0'}, # str(X1 * 10)},  # Z1 trips a bit too often
-                {'type':'DOUBLE', 'name':'distance_RPu_1_', 'value': str(X2 * 10)},  # 10x the range because of wrong setting, but blinder should avoid tripping in normal operation
-                {'type':'DOUBLE', 'name':'distance_XPu_1_', 'value': str(X2 * 10)},
-                {'type':'DOUBLE', 'name':'distance_RPu_2_', 'value': str(R3 * 10)},
-                {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * 10)},
+                {'type':'DOUBLE', 'name':'distance_RPu_0_', 'value': '0'}, # str(X1 * 3)},  # Z1 trips a bit too often
+                {'type':'DOUBLE', 'name':'distance_XPu_0_', 'value': '0'}, # str(X1 * 3)},  # Z1 trips a bit too often
+                {'type':'DOUBLE', 'name':'distance_RPu_1_', 'value': str(X2 * 3)},  # 10x the range because of wrong setting, but blinder should avoid tripping in normal operation
+                {'type':'DOUBLE', 'name':'distance_XPu_1_', 'value': str(X2 * 3)},
+                {'type':'DOUBLE', 'name':'distance_RPu_2_', 'value': str(R3 * 3)},
+                {'type':'DOUBLE', 'name':'distance_XPu_2_', 'value': str(X3 * 3)},
                 {'type':'DOUBLE', 'name':'distance_RPu_3_', 'value': '0'},
                 {'type':'DOUBLE', 'name':'distance_XPu_3_', 'value': '0'},
                 {'type':'DOUBLE', 'name':'distance_BlinderAnglePu', 'value': str(blinder_angle)},
