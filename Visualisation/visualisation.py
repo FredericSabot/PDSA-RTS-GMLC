@@ -10,7 +10,7 @@ from add_dyn_data import select_gfm_generators
 import pypowsybl as pp
 random.seed(42)
 
-NETWORK_NAME = 'Texas'
+NETWORK_NAME = 'RTS'
 HOUR = 2000
 
 GEOGRAPHIC_SCALE = 400
@@ -215,7 +215,7 @@ app.layout = html.Div([
                 'width': '20px',
                 'height': '20px',
                 'background-color': '#FF0000',  # red
-                'font-size': '10px'
+                'font-size': '20px'
             }
         },
         {
@@ -223,7 +223,7 @@ app.layout = html.Div([
             'style': {
                 'width': 6,
                 'line-color': '#FF0000 ',  # red
-                'font-size': '10px'
+                'font-size': '20px'
             }
         },
         {
@@ -232,7 +232,7 @@ app.layout = html.Div([
                 'width': '10px',
                 'height': '10px',
                 'background-color': '#00FF00',  # green
-                'font-size': '6px'
+                'font-size': '10px'
             }
         },
         {
@@ -240,7 +240,7 @@ app.layout = html.Div([
             'style': {
                 'width': 4,
                 'line-color': '#00FF00',  # green
-                'font-size': '6px'
+                'font-size': '10px'
             }
         },
         {
