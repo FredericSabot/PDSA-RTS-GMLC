@@ -19,10 +19,14 @@ Each step generates data needed by the next, and steps should thus be performed 
 
 If you find this code useful, please cite the following paper that also includes additional information on how to perform a PDSA:
 
-{% raw %}
-```
-@article{PDSA_RTS,
-    To add after publication
+```bibtex
+@misc{sabot2025PDSA,
+      title={Towards Probabilistic Dynamic Security Assessment and Enhancement of Large Power Systems},
+      author={Frédéric Sabot and Pierre-Etienne Labeau and Pierre Henneaux},
+      year={2025},
+      eprint={2505.01147},
+      archivePrefix={arXiv},
+      primaryClass={eess.SY},
+      url={https://arxiv.org/abs/2505.01147},
 }
 ```
-{% endraw %}
