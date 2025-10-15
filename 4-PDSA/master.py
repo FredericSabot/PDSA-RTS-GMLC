@@ -29,11 +29,12 @@ class Master:
         self.comm = MPI.COMM_WORLD
         self.slaves = set(slaves)
         self.slaves_state = {slave: 'Waiting' for slave in self.slaves}
-        self.create_contingency_list()
+        self.contingency_list = Master.create_contingency_list()
         self.job_queue = JobQueue(self.contingency_list)
         self.run()
 
-    def create_contingency_list(self):
+    @staticmethod
+    def create_contingency_list():
         base_contingency = Contingency.create_base_contingency()
         if WITH_HIDDEN_FAILURES or not NEGLECT_NORMAL_FAULT_RISK:
             N_1_contingencies = Contingency.create_N_1_contingencies(with_normal_clearing=True)
@@ -41,12 +42,14 @@ class Master:
             N_1_contingencies = Contingency.create_N_1_contingencies(with_normal_clearing=False)
         N_2_contingencies = Contingency.create_N_2_contingencies()
 
-        self.contingency_list = base_contingency + N_1_contingencies + N_2_contingencies
-        logger.logger.info('Considering {} contingencies: {} base, {} N-1, {} N-2'.format(len(self.contingency_list), len(base_contingency), len(N_1_contingencies), len(N_2_contingencies)))
+        contingency_list = base_contingency + N_1_contingencies + N_2_contingencies
+        logger.logger.info('Considering {} contingencies: {} base, {} N-1, {} N-2'.format(len(contingency_list), len(base_contingency), len(N_1_contingencies), len(N_2_contingencies)))
+        return contingency_list
 
     def run(self):
         init = True
         jobs_to_run, _ = self.job_queue.get_next_jobs(init=True)
+        logger.logger.info(f"Launching first {len(jobs_to_run)} simulations for initialisation")
         n_iter = 0
         try:
             while True:
@@ -57,7 +60,7 @@ class Master:
                     n_iter += 1
                     jobs_to_run, wait_for_data = self.job_queue.get_next_jobs(init=False)
                     logger.logger.info("")
-                    logger.logger.info("Launching batch {} of simulations".format(n_iter))
+                    logger.logger.info(f"Launching batch {n_iter} of simulations (with {len(jobs_to_run)} jobs)")
 
                     while wait_for_data:
                         self.comm.probe(source=MPI.ANY_SOURCE, tag=MPI_TAGS.DONE.value, status=status)
@@ -78,6 +81,13 @@ class Master:
                     self.get_data_from_slave(status)
                 else:
                     raise NotImplementedError("Unexpected tag:", tag)
+
+                if os.name == 'nt':
+                    if os.path.exists("stop.txt"):  # MS MPI does not pass signals to processes (https://stackoverflow.com/a/39399235)
+                        print("Interrupted", flush=True)
+                        # So, as cringe as it may seem, to gracefully interrupt the simulation, we must create a "stop.txt"
+                        os.remove("stop.txt")
+                        raise KeyboardInterrupt
 
             self.job_queue.write_saved_results()
             self.job_queue.write_analysis_output()
@@ -106,9 +116,12 @@ class Master:
             self.job_queue.write_analysis_output(done=True)
             # self.show_memory_usage()
         except KeyboardInterrupt:
+            logger.logger.warning("Simulation interrupted by user")
             self.job_queue.write_saved_results()
             self.job_queue.write_analysis_output()
             # self.show_memory_usage()
+            if os.name == 'nt':  # With MS MPI, only the master gets interrupted, so abort to stop the other processes
+                MPI.COMM_WORLD.Abort(1)
 
     """ def show_memory_usage(self):
         print('1  Job queue', asizeof.asizeof(self.job_queue) / 1e6)

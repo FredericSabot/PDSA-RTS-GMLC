@@ -16,6 +16,43 @@ import shutil
 import screening
 import pypowsybl as pp
 
+def run_with_timeout(cmd, timeout, grace_period=10):
+    """
+    Run a command with a timeout, capturing stderr.
+    Terminates the process safely on both Linux/macOS and Windows.
+    """
+    is_windows = os.name == "nt"
+    timed_out = False
+
+    if is_windows:
+        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    else:
+        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, start_new_session=True)
+
+    try:
+        _, stderr = proc.communicate(timeout=timeout)
+        return timed_out, stderr.decode(errors="replace")
+
+    except subprocess.TimeoutExpired:
+        if is_windows:
+            # Send CTRL+BREAK to allow graceful shutdown
+            proc.send_signal(signal.CTRL_BREAK_EVENT)
+            time.sleep(grace_period)
+            # Kill if does not stop itself
+            proc.kill()
+
+        else:
+            # Terminate with ctrl+c
+            os.killpg(os.getpgid(proc.pid), signal.SIGINT)
+            time.sleep(grace_period)
+            # Kill whole process if does not stop itself (including process group with Dynawo)
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+
+        _, stderr = proc.communicate()
+        timed_out = True
+        return timed_out, stderr.decode(errors="replace")
+
+
 class Job:
     _ids = count(0)
     def __init__(self, static_id, dynamic_seed, contingency: Contingency):
@@ -69,31 +106,16 @@ class Job:
 
         # Launch cmd and interrupt it if last longer than JOB_TIMEOUT_S
         cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '.jobs')]
-        proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, start_new_session=True)
-        try:
-            _, stderr = proc.communicate(timeout=JOB_TIMEOUT_S)
-        except subprocess.TimeoutExpired:
-            stderr = ''
-            os.killpg(os.getpgid(proc.pid), signal.SIGINT)  # Send ctrl+c signal to Dynawo (https://stackoverflow.com/a/4791612, but setsid replaced by start_new_session according to https://docs.python.org/3/library/subprocess.html)
-            time.sleep(10)  # Let some time for Dynawo to gracefully interrupt and write output files
-            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)  # Kill if needed
-            self.timed_out = True
+        self.timed_out, stderr = run_with_timeout(cmd, timeout=JOB_TIMEOUT_S)
 
-        if ('Error' in str(stderr) or self.timed_out) and NETWORK_NAME != 'Texas':  # Simulation failed, so retry with another solver (not for Texas case because IDA not performant enough on large networks)
+        if ('Error' in stderr or self.timed_out) and NETWORK_NAME != 'Texas':  # Simulation failed, so retry with another solver (not for Texas case because IDA not performant enough on large networks)
             # Delete output files of failed attempt
             output_dir = os.path.join(self.working_dir, 'outputs')
             shutil.rmtree(output_dir, ignore_errors=True)
             # Retry with another solver
             cmd = [DYNAWO_PATH, 'jobs', os.path.join(self.working_dir, NETWORK_NAME + '_alt_solver.jobs')]
             logger.logger.log(logger.logging.TRACE, 'Launching job %s with alternative solver' % self)
-            proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-
-            try:
-                proc.communicate(timeout=JOB_TIMEOUT_S)
-            except subprocess.TimeoutExpired:
-                os.killpg(os.getpgid(proc.pid), signal.SIGINT)
-                time.sleep(10)  # Let some time for Dynawo to gracefully interrupt and write output files
-                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            self.timed_out, stderr = run_with_timeout(cmd, timeout=JOB_TIMEOUT_S)
 
         delta_t = time.time() - t0
         self.complete(delta_t)

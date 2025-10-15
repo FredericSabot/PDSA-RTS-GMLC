@@ -4,6 +4,7 @@ from master import Master
 from slave import Slave
 import logger
 import signal
+import os
 import sys
 
 def mpiabort_excepthook(type, value, traceback):
@@ -20,8 +21,9 @@ def main():
     # Catches SIGTERM, SIGINT, SIGUSR1, and SIGUSR2 and gracefully terminate when received
     signal.signal(signal.SIGTERM, terminate)
     signal.signal(signal.SIGINT, terminate)
-    signal.signal(signal.SIGUSR1, terminate)
-    signal.signal(signal.SIGUSR2, terminate)
+    if os.name == 'posix':
+        signal.signal(signal.SIGUSR1, terminate)
+        signal.signal(signal.SIGUSR2, terminate)
 
     if rank == 0:
         Master(slaves=range(1, size))
@@ -30,7 +32,7 @@ def main():
 
     logger.logger.debug('Task completed (rank %d)' % (rank))
 
-def terminate(self, *args):
+def terminate(*args):
     raise KeyboardInterrupt
 
 if __name__ == "__main__":

@@ -262,7 +262,7 @@ def get_job_results_special(working_dir):
                 (time, model, event_description) = event.strip().split(' | ')
             except ValueError as e:
                 print(working_dir)
-                print(event)
+                print(event, flush=True)
                 raise e
             event = TimeLineEvent(float(time), model, event_description)
 
