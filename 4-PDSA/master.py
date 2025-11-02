@@ -736,13 +736,14 @@ class JobQueue:
 
     def contingency_results_to_xml(self, contingency_element: etree.Element, frequency, contingency_results: ContingencyResults):
         for static_id in contingency_results.static_ids:
-            min_shc = 999
-            voltage_stable = True
-            min_CCT = 999
-            transient_stable = True
-            max_RoCoF = 0
-            max_power_loss_over_reserve = 0
-            frequency_stable = True
+            if WITH_SCREENING:
+                min_shc = 999
+                voltage_stable = True
+                min_CCT = 999
+                transient_stable = True
+                max_RoCoF = 0
+                max_power_loss_over_reserve = 0
+                frequency_stable = True
             mean = contingency_results.get_average_load_shedding_per_static_id(static_id)
             mean_cost = contingency_results.get_average_cost_per_static_id(static_id)
             variance = contingency_results.get_cost_variance_per_static_id_allow_error(static_id, value_on_error=np.nan)
@@ -778,20 +779,21 @@ class JobQueue:
                 if job.completed or job.timed_out:
                     job_attrib['load_shedding'] = '{:.2g}'.format(job.results.load_shedding)
                     job_attrib['cost'] = '{:.2g}'.format(job.results.cost)
-                    if not job.voltage_stable:
-                        voltage_stable = False
-                    if not job.transient_stable:
-                        transient_stable = False
-                    if job.cct < min_CCT:
-                        min_CCT = job.cct
-                    if job.shc_ratio < min_shc:
-                        min_shc = job.shc_ratio
-                    if not job.frequency_stable:
-                        frequency_stable = False
-                    if job.RoCoF > max_RoCoF:
-                        max_RoCoF = job.RoCoF
-                    if job.power_loss_over_reserve > max_power_loss_over_reserve:
-                        max_power_loss_over_reserve = job.power_loss_over_reserve
+                    if WITH_SCREENING:
+                        if not job.voltage_stable:
+                            voltage_stable = False
+                        if not job.transient_stable:
+                            transient_stable = False
+                        if job.cct < min_CCT:
+                            min_CCT = job.cct
+                        if job.shc_ratio < min_shc:
+                            min_shc = job.shc_ratio
+                        if not job.frequency_stable:
+                            frequency_stable = False
+                        if job.RoCoF > max_RoCoF:
+                            max_RoCoF = job.RoCoF
+                        if job.power_loss_over_reserve > max_power_loss_over_reserve:
+                            max_power_loss_over_reserve = job.power_loss_over_reserve
 
                 # Write first 3 elements to trip
                 tripped_models = job.results.get_sanitised_tripped_models()
@@ -803,13 +805,14 @@ class JobQueue:
                         break
                 etree.SubElement(static_id_element, 'Job', job_attrib)
 
-            static_id_element.set('voltage_stable', str(voltage_stable))
-            static_id_element.set('transient_stable', str(transient_stable))
-            static_id_element.set('frequency_stable', str(frequency_stable))
-            static_id_element.set('shc_ratio', '{:.4g}'.format(min_shc))
-            static_id_element.set('CCT', '{:.4g}'.format(min_CCT))
-            static_id_element.set('RoCoF', '{:.4g}'.format(max_RoCoF))
-            static_id_element.set('dP_over_reserves', '{:.4g}'.format(max_power_loss_over_reserve))
+            if WITH_SCREENING:
+                static_id_element.set('voltage_stable', str(voltage_stable))
+                static_id_element.set('transient_stable', str(transient_stable))
+                static_id_element.set('frequency_stable', str(frequency_stable))
+                static_id_element.set('shc_ratio', '{:.4g}'.format(min_shc))
+                static_id_element.set('CCT', '{:.4g}'.format(min_CCT))
+                static_id_element.set('RoCoF', '{:.4g}'.format(max_RoCoF))
+                static_id_element.set('dP_over_reserves', '{:.4g}'.format(max_power_loss_over_reserve))
 
 
     def is_statistical_accuracy_reached(self, contingency: Contingency) -> bool:

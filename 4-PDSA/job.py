@@ -92,9 +92,10 @@ class Job:
     def run(self):
         logger.logger.log(logger.logging.TRACE, 'Launching job %s' % self)
 
-        self.stability_screening()
+        if WITH_SCREENING:
+            self.stability_screening()
 
-        if not self.voltage_stable or not self.transient_stable or not self.frequency_stable or BYPASS_SCREENING:
+        if not WITH_SCREENING or (not self.voltage_stable or not self.transient_stable or not self.frequency_stable or BYPASS_SCREENING):
             self.call_dynawo()
         else:
             self.skip()

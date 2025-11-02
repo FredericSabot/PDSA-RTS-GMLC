@@ -33,6 +33,7 @@ else:
 
 REUSE_RESULTS = True  # If true, don't rerun cases already simulated, note that setting this to False does not delete old versions of saved_results.pickle and saved_results_bak.pickle
 REUSE_RESULTS_FAST_FORWARD = True  # If True, load all results from saved_results.pickle even if not relevant
+WITH_SCREENING = False
 BYPASS_SCREENING = True  # If True, simulate scenarios which are deemed secure by the screening process (necessary to estimate false negative rate)
 
 MIN_NUMBER_STATIC_SEED = 5  # Minimum number of random operating conditions considered per contingency

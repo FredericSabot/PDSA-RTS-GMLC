@@ -1,6 +1,7 @@
 from lxml import etree
 import pypowsybl as pp
 import numpy as np
+from common import *
 
 """
 This scripts computes various statistics based on the results of the PDSA (../AnalysisOutput.xml) such
@@ -38,6 +39,8 @@ for line_id in lines.index:
             break
 
 def positive(static_id, contingency_id):
+    if not WITH_SCREENING:
+        return True
     found = False
     for line in wind_lines:
         if line in contingency_id:
