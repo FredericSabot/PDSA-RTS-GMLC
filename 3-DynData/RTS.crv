@@ -1,5 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <curvesInput xmlns="http://www.rte-france.com/dynawo">
+  <curve model="122_WIND_1" variable="photovoltaics_injector_PInjPu"/>
+  <curve model="122_WIND_1" variable="photovoltaics_injector_QInjPu"/>
+  <curve model="122_WIND_1" variable="photovoltaics_injector_terminal_V_re"/>
+  <curve model="122_WIND_1" variable="photovoltaics_injector_terminal_i_re"/>
+  <curve model="122_WIND_1" variable="photovoltaics_injector_terminal_V_im"/>
+  <curve model="122_WIND_1" variable="photovoltaics_injector_terminal_i_im"/>
+  <curve model="122_WIND_1" variable="photovoltaics_pll_omegaPLLPu"/>
+
+
   <curve model="NETWORK" variable="B-101_Upu_value"/>
   <curve model="NETWORK" variable="B-102_Upu_value"/>
   <curve model="NETWORK" variable="B-103_Upu_value"/>

@@ -11,7 +11,8 @@ References
     Measurement System," in IEEE Transactions on Power Delivery, vol. 25, no. 3,
     pp. 1483-1491, July 2010, doi: 10.1109/TPWRD.2010.2041797.
 - Steam governor; default IEEEG1 parameters
-- Generic inverter-based generation models: Gilles Chaspierre's PhD thesis
+- WECC PV and Wind models
+- (Generic inverter-based generation models: Gilles Chaspierre's PhD thesis, removed)
 """
 
 def unit_group_translation(network_name, unit_group, P_max):
@@ -250,10 +251,10 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
             continue
 
         if unit_group == 'PV' or unit_group == 'RTPV':
-            lib = 'GenericIBG'
+            lib = 'PhotovoltaicsWeccCurrentSourceB'
             synchronous = False
         elif unit_group == 'Wind':
-            lib = 'GenericIBG'
+            lib = 'WTG4BWeccCurrentSource'
             synchronous = False
         elif unit_group == 'Syncon':
             lib = 'GeneratorSynchronousThreeWindingsRtsSyncon'
@@ -284,10 +285,14 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
                 etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'GFM-CONNECTOR'})
                 etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'OMEGA_REF', 'connector': 'OmegaRefToGFM', 'index2': str(omega_index)})
                 etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': 'OMEGA_REF', 'id2': 'NETWORK', 'connector': 'OmegaRefToNumCCMachine', 'index1': str(omega_index), 'name2': genID})
-            elif unit_group == 'PV' or unit_group == 'RTPV' or unit_group == 'Wind':
-                etree.SubElement(dyd_root, etree.QName(namespace, 'connect'), {'id1': genID, 'var1': 'ibg_omegaRefPu', 'id2': 'OMEGA_REF', 'var2': 'omegaRef_0_value'})
-                etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'PV'})
-                etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'PV-CONNECTOR'})
+            elif unit_group == 'Wind':
+                etree.SubElement(dyd_root, etree.QName(namespace, 'connect'), {'id1': genID, 'var1': 'WTG4B_omegaRefPu', 'id2': 'OMEGA_REF', 'var2': 'omegaRef_0_value'})
+                etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'Wind'})
+                etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'WIND-WECC-CONNECTOR'})
+            elif unit_group == 'PV' or unit_group == 'RTPV':
+                etree.SubElement(dyd_root, etree.QName(namespace, 'connect'), {'id1': genID, 'var1': 'photovoltaics_omegaRefPu', 'id2': 'OMEGA_REF', 'var2': 'omegaRef_0_value'})
+                etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'WECC-PV'})
+                etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'PV-WECC-CONNECTOR'})
             else:
                 raise NotImplemented(unit_group, 'is not considered')
 
@@ -672,136 +677,189 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
                 ]
 
             elif unit_group == 'Wind':
-                par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis
-                    {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_US1', 'value': '0.94'},
-                    {'type': 'DOUBLE', 'name': 'ibg_US2', 'value': '1.06'},
-                    {'type': 'DOUBLE', 'name': 'ibg_kRCI', 'value': '2.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_kRCA', 'value': '-2.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_m', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_n', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tG', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_Tm', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_IpSlewMaxPu', 'value': '0.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_IqSlewMaxPu', 'value': '5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0.14'},  # LVRT from ENA EREC G99
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.14'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '2.2'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTMinPu', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.85'},
-                    {'type': 'DOUBLE', 'name': 'ibg_OmegaMaxPu', 'value': '1.05'},
-                    {'type': 'DOUBLE', 'name': 'ibg_OmegaDeadBandPu', 'value': '1.01'},
-                    {'type': 'DOUBLE', 'name': 'ibg_OmegaMinPu', 'value': '0.95'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tFilterOmega', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.4'},  # Original: 1.2, increased because of overvoltages caused by plant itself, requires better modelling
-                    {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
-                    {'type': 'DOUBLE', 'name': 'ibg_tf', 'value': '0.1'},
+                par_attribs = [  # Parameters copied from https://github.com/dynawo/dynawo/blob/v1.7/examples/DynaSwing/WECC/Wind/WECCWTG4BCurrentSource/WECCWTG4B.par
+                    # TODO: check actual source
+                    {'type': 'DOUBLE', 'name': 'WTG4B_SNom', 'value': str(SNom)},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_RPu', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_XPu', 'value': str(0.15 * 100/SNom)},  # Reduced, else fails to initialize
+                    {'type': 'DOUBLE', 'name': 'WTG4B_DDn', 'value': '20'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_DUp', 'value': '0.001'},
+                    {'type': 'BOOL', 'name': 'WTG4B_FreqFlag', 'value': 'true'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_IMaxPu', 'value': '1.3'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_IqFrzPu', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Iqh1Pu', 'value': '1.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Iql1Pu', 'value': '-1.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_IqrMaxPu', 'value': '20'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_IqrMinPu', 'value': '-20'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Kc', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Ki', 'value': '1.5'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Kig', 'value': '2.36'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Kp', 'value': '0.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Kpg', 'value': '0.05'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Kqi', 'value': '0.5'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Kqp', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Kqv', 'value': '2'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Kvi', 'value': '0.7'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Kvp', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_PMaxPu', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_PMinPu', 'value': '0'},
+                    {'type': 'BOOL', 'name': 'WTG4B_PQFlag', 'value': 'false'},
+                    {'type': 'BOOL', 'name': 'WTG4B_PfFlag', 'value': 'false'},
+                    {'type': 'BOOL', 'name': 'WTG4B_QFlag', 'value': 'true'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_QMaxPu', 'value': '0.4'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_QMinPu', 'value': '-0.4'},
+                    {'type': 'BOOL', 'name': 'WTG4B_RateFlag', 'value': 'false'},
+                    {'type': 'BOOL', 'name': 'WTG4B_RefFlag', 'value': 'true'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tFilterPC', 'value': '0.04'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tFilterGC', 'value': '0.02'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tFt', 'value': '1e-5'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tFv', 'value': '0.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tG', 'value': '0.02'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tIq', 'value': '0.01'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tLag', 'value': '0.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tP', 'value': '0.05'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tPord', 'value': '0.01'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tRv', 'value': '0.01'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VUpPu', 'value': '1.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDipPu', 'value': '0.9'},
+                    {'type': 'BOOL', 'name': 'WTG4B_VFlag', 'value': 'true'},
+                    {'type': 'BOOL', 'name': 'WTG4B_VCompFlag', 'value': 'false'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VFrz', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VMaxPu', 'value': '1.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VMinPu', 'value': '0.9'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VRef0Pu', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_DPMaxPu', 'value': '2'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_DPMinPu', 'value': '-2'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_DbdPu', 'value': '0.01'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Dbd1Pu', 'value': '-0.05'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_Dbd2Pu', 'value': '0.05'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_EMaxPu', 'value': '0.5'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_EMinPu', 'value': '-0.5'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_FDbd1Pu', 'value': '0.004'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_FDbd2Pu', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_FEMaxPu', 'value': '999'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_FEMinPu', 'value': '-999'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_RrpwrPu', 'value': '10'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_KiPLL', 'value': '20'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_KpPLL', 'value': '3'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_OmegaMaxPu', 'value': '1.5'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_OmegaMinPu', 'value': '0.5'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tHoldIq', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_tHoldIpMax', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VRef1Pu', 'value': '0'},
+                    {'type': 'BOOL', 'name': 'WTG4B_PFlag', 'value': 'true'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp11', 'value': '1.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp12', 'value': '1.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp21', 'value': '1.15'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp22', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp31', 'value': '1.16'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp32', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp41', 'value': '1.17'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIp42', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq11', 'value': '1.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq12', 'value': '1.1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq21', 'value': '1.15'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq22', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq31', 'value': '1.16'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq32', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq41', 'value': '1.17'},
+                    {'type': 'DOUBLE', 'name': 'WTG4B_VDLIq42', 'value': '1'}
                 ]
 
-                if network_name == 'RTS':
-                    par_attribs += [{'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0.5'}]
-                else:
-                    par_attribs += [{'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0'}]
+                # TODO: if still needed
+                # if network_name == 'RTS':
+                #     par_attribs += [{'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0.5'}]
+                # else:
+                #     par_attribs += [{'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0'}]
 
 
                 references = [
-                    {'name': 'ibg_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
+                    {'name': 'WTG4B_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
                     # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
-                    {'name': 'ibg_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
-                    {'name': 'ibg_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
-                    {'name': 'ibg_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
+                    {'name': 'WTG4B_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
+                    {'name': 'WTG4B_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
+                    {'name': 'WTG4B_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
                 ]
 
-            elif unit_group == 'PV':
-                par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis
-                    {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_US1', 'value': '0.9'},
-                    {'type': 'DOUBLE', 'name': 'ibg_US2', 'value': '1.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_kRCI', 'value': '2.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_kRCA', 'value': '-2.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_m', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_n', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tG', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_Tm', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_IpSlewMaxPu', 'value': '0.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_IqSlewMaxPu', 'value': '5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0.15'},  # LVRT from ENA EREC G99
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.15'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '2.2'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTMinPu', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.85'},
-                    {'type': 'DOUBLE', 'name': 'ibg_OmegaMaxPu', 'value': '1.05'},
-                    {'type': 'DOUBLE', 'name': 'ibg_OmegaDeadBandPu', 'value': '1.01'},
-                    {'type': 'DOUBLE', 'name': 'ibg_OmegaMinPu', 'value': '0.95'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tFilterOmega', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.2'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_', 'value': '3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
-                    {'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tf', 'value': '1'},
+            elif unit_group == 'PV' or unit_group == 'RTPV':
+                # <dyn:connect id1="122_WIND_1" var1="photovoltaics_omegaRefPu" id2="OMEGA_REF" var2="omegaRef_0_value"/> # TODO: add protections (no partial)
+#   <dyn:macroConnect id1="122_WIND_1" id2="NETWORK" connector="WECC-CONNECTOR"/>
+#   <set id="122_WIND_1">
+                par_attribs = [  # Parameters copied from https://github.com/dynawo/dynawo/blob/v1.7/examples/DynaSwing/WECC/PV/WECCPVCurrentSource/WECCPV.par
+                    # TODO: check actual source
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_SNom', 'value': str(SNom)},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_RPu', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_XPu', 'value': '0.15'},  # Reduced, else fails to initialize
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_DDn', 'value': '20'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_DUp', 'value': '0.001'},
+                    {'type': 'BOOL', 'name': 'photovoltaics_FreqFlag', 'value': 'true'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_IMaxPu', 'value': '1.05'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Iqh1Pu', 'value': '2'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Iql1Pu', 'value': '-2'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_IqrMaxPu', 'value': '20'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_IqrMinPu', 'value': '-20'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Kc', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Ki', 'value': '1.5'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Kig', 'value': '2.36'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Kp', 'value': '0.1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Kpg', 'value': '0.05'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Kqi', 'value': '0.5'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Kqp', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Kqv', 'value': '2'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Kvi', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Kvp', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_PMaxPu', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_PMinPu', 'value': '0'},
+                    {'type': 'BOOL', 'name': 'photovoltaics_PQFlag', 'value': 'false'},
+                    {'type': 'BOOL', 'name': 'photovoltaics_PfFlag', 'value': 'false'},
+                    {'type': 'BOOL', 'name': 'photovoltaics_QFlag', 'value': 'true'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_QMaxPu', 'value': '0.4'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_QMinPu', 'value': '-0.4'},
+                    {'type': 'BOOL', 'name': 'photovoltaics_RateFlag', 'value': 'false'},
+                    {'type': 'BOOL', 'name': 'photovoltaics_RefFlag', 'value': 'true'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_tFilterPC', 'value': '0.04'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_tFilterGC', 'value': '0.02'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_tFt', 'value': '1e-5'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_tFv', 'value': '0.1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_tG', 'value': '0.02'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_tIq', 'value': '0.02'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_tLag', 'value': '0.1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_tP', 'value': '0.04'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_tPord', 'value': '0.02'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_tRv', 'value': '0.02'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_VUpPu', 'value': '1.1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_VDipPu', 'value': '0.9'},
+                    {'type': 'BOOL', 'name': 'photovoltaics_VFlag', 'value': 'true'},
+                    {'type': 'BOOL', 'name': 'photovoltaics_VCompFlag', 'value': 'false'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_VFrz', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_VMaxPu', 'value': '1.1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_VMinPu', 'value': '0.9'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_VRef0Pu', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_VRef1Pu', 'value': '0'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_DPMaxPu', 'value': '999'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_DPMinPu', 'value': '-999'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_DbdPu', 'value': '0.01'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Dbd1Pu', 'value': '-0.1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_Dbd2Pu', 'value': '0.1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_EMaxPu', 'value': '999'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_EMinPu', 'value': '-999'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_FDbd1Pu', 'value': '0.004'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_FDbd2Pu', 'value': '1'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_FEMaxPu', 'value': '999'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_FEMinPu', 'value': '-999'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_RrpwrPu', 'value': '10'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_KiPLL', 'value': '20'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_KpPLL', 'value': '3'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_OmegaMaxPu', 'value': '1.5'},
+                    {'type': 'DOUBLE', 'name': 'photovoltaics_OmegaMinPu', 'value': '0.5'}
                 ]
 
                 references = [
-                    {'name': 'ibg_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
+                    {'name': 'photovoltaics_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
                     # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
-                    {'name': 'ibg_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
-                    {'name': 'ibg_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
-                    {'name': 'ibg_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
-                ]
-
-            elif unit_group == 'RTPV':
-                par_attribs = [  # Typical parameters from Gilles Chaspierre's PhD thesis, no voltage/frequency support from rooftop solar (LV connected)
-                    {'type': 'DOUBLE', 'name': 'ibg_IMaxPu', 'value': '1.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UQPrioPu', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_US1', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_US2', 'value': '10'},
-                    {'type': 'DOUBLE', 'name': 'ibg_kRCI', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_kRCA', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_m', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_n', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tG', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_Tm', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_IpSlewMaxPu', 'value': '0.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_IqSlewMaxPu', 'value': '5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMin', 'value': '0.15'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTInt', 'value': '0.3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tLVRTMax', 'value': '1.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTMinPu', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTIntPu', 'value': '0.25'},  # Original: 0.5, made more strict to help frequency stable screening (TODO: better estimate of the amount of RTPV disconnection instead)
-                    {'type': 'DOUBLE', 'name': 'ibg_ULVRTArmingPu', 'value': '0.85'},  # Original: 0.9
-                    {'type': 'DOUBLE', 'name': 'ibg_OmegaMaxPu', 'value': '1.05'},
-                    {'type': 'DOUBLE', 'name': 'ibg_OmegaDeadBandPu', 'value': '1.05'},
-                    {'type': 'DOUBLE', 'name': 'ibg_OmegaMinPu', 'value': '0.95'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tFilterOmega', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.2'},
-                    {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_', 'value': '3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
-                    {'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0'},
-                    {'type': 'DOUBLE', 'name': 'ibg_tf', 'value': '1'},
-                ]
-
-                references = [
-                    {'name': 'ibg_P0Pu', 'origData': 'IIDM', 'origName': 'p_pu', 'type': 'DOUBLE'},
-                    # Use targetQ instead of Q because Powsybl sets the same Q for all generators of a bus irrespective of the generator sizes
-                    {'name': 'ibg_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
-                    {'name': 'ibg_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
-                    {'name': 'ibg_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
+                    {'name': 'photovoltaics_Q0Pu', 'origData': 'IIDM', 'origName': 'targetQ_pu', 'type': 'DOUBLE'},
+                    {'name': 'photovoltaics_U0Pu', 'origData': 'IIDM', 'origName': 'v_pu', 'type': 'DOUBLE'},
+                    {'name': 'photovoltaics_UPhase0', 'origData': 'IIDM', 'origName': 'angle_pu', 'type': 'DOUBLE'},
                 ]
 
             else:

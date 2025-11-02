@@ -17,6 +17,14 @@
     <dyn:connect var1="ibg_injector_switchOffSignal1" var2="@STATIC_ID@@NODE@_switchOff"/>
     <dyn:connect var1="ibg_terminal" var2="@STATIC_ID@@NODE@_ACPIN"/>
   </dyn:macroConnector>
+  <dyn:macroConnector id="PV-WECC-CONNECTOR">
+    <dyn:connect var1="photovoltaics_injector_switchOffSignal1" var2="@STATIC_ID@@NODE@_switchOff"/>
+    <dyn:connect var1="photovoltaics_terminal" var2="@STATIC_ID@@NODE@_ACPIN"/>
+  </dyn:macroConnector>
+  <dyn:macroConnector id="WIND-WECC-CONNECTOR">
+    <dyn:connect var1="WTG4B_injector_switchOffSignal1" var2="@STATIC_ID@@NODE@_switchOff"/>
+    <dyn:connect var1="WTG4B_terminal" var2="@STATIC_ID@@NODE@_ACPIN"/>
+  </dyn:macroConnector>
   <dyn:macroConnector id="Wind-CONNECTOR">
     <dyn:connect var1="WTG4B_injector_switchOffSignal1" var2="@STATIC_ID@@NODE@_switchOff"/>
     <dyn:connect var1="WTG4B_terminal" var2="@STATIC_ID@@NODE@_ACPIN"/>
@@ -57,5 +65,10 @@
     <dyn:staticRef var="ibg_injector_PInjPu" staticVar="p"/>
     <dyn:staticRef var="ibg_injector_QInjPu" staticVar="q"/>
     <dyn:staticRef var="ibg_injector_state" staticVar="state"/>
+  </dyn:macroStaticReference>
+  <dyn:macroStaticReference id="WECC-PV">
+    <dyn:staticRef var="photovoltaics_measurements_PPu" staticVar="p"/>
+    <dyn:staticRef var="photovoltaics_measurements_QPu" staticVar="q"/>
+    <dyn:staticRef var="photovoltaics_injector_state" staticVar="state"/>
   </dyn:macroStaticReference>
 </dyn:dynamicModelsArchitecture>
