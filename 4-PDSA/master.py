@@ -429,7 +429,7 @@ class JobQueue:
             # Run an arbitrary number of simulations to start up the algorithm (allow to have a first estimate of the total
             # risk and sampled variances)
             for contingency in self.contingencies:
-                for i in range(MIN_NUMBER_STATIC_SEED):
+                for i in range(min(MIN_NUMBER_STATIC_SEED, len(self.static_samples_per_contingency[contingency.id]))):
                     static_sample = self.static_samples_per_contingency[contingency.id][i]
 
                     if DOUBLE_MC_LOOP:
@@ -462,15 +462,16 @@ class JobQueue:
                 if contingency in self.contingencies_skipped:
                     continue
 
+                min_number_static_seed = min(MIN_NUMBER_STATIC_SEED, len(self.static_samples_per_contingency[contingency.id]))
                 # Check if all initial runs have been completed
                 init_completed = True
-                if len(self.simulation_results[contingency.id].static_ids) < MIN_NUMBER_STATIC_SEED:
+                if len(self.simulation_results[contingency.id].static_ids) < min_number_static_seed:
                     contingencies_waiting.append(contingency)
                     logger.logger.log(logger.logging.TRACE, 'Contingency {} waiting for first static seed runs'.format(contingency.id))
                     init_completed = False
                 else:
                     if DOUBLE_MC_LOOP:  # Check if all dynamic runs of all initial runs have been completed
-                        for static_id in self.simulation_results[contingency.id].static_ids[:MIN_NUMBER_STATIC_SEED]:
+                        for static_id in self.simulation_results[contingency.id].static_ids[:min_number_static_seed]:
                             nb_completed_runs = len(self.simulation_results[contingency.id].jobs[static_id])
                             special_job = self.simulation_results[contingency.id].jobs[static_id][0]
                             if (special_job.variable_order or special_job.missing_events) and nb_completed_runs < MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED:

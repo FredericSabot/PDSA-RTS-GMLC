@@ -40,6 +40,8 @@ def write_job_files(job : job.Job):
     if NETWORK_NAME == 'RTS':
         if CASE == 'january':
             motor_share = 0.3
+        elif CASE == "single_point":
+            motor_share = 0.3
         elif CASE == 'july':
             motor_share = 0.5
         elif CASE == 'year':
