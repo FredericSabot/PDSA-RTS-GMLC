@@ -1,6 +1,7 @@
 from results import Results
 from common import *
 from dataclasses import dataclass
+import dataclasses
 if WITH_LXML:
     from lxml import etree
 else:
@@ -278,11 +279,11 @@ def get_job_results_special(working_dir):
     slow_trip_timeline = [timeline_event for timeline_event in trip_timeline if 'tripped zone 2' in timeline_event.event_description or 'tripped zone 3' in timeline_event.event_description]
     fast_trip_timeline = [timeline_event for timeline_event in trip_timeline if 'tripped zone 1' in timeline_event.event_description or 'tripped zone 4' in timeline_event.event_description]
 
-    for timeline_event in fast_trip_timeline:
+    for i, timeline_event in enumerate(fast_trip_timeline):
         if timeline_event.event_description == 'Distance protection tripped zone 1':  # Translate fast timeline events into slow equivalents for easier matching
-            timeline_event.event_description = 'Distance protection tripped zone 2'
+            fast_trip_timeline[i] = TimeLineEvent(timeline_event.time, timeline_event.model, "Distance protection tripped zone 2")
         if timeline_event.event_description == 'Distance protection tripped zone 4':
-            timeline_event.event_description = 'Distance protection tripped zone 3'
+            fast_trip_timeline[i] = TimeLineEvent(timeline_event.time, timeline_event.model, "Distance protection tripped zone 3")
 
     same_order = True
     index = 0
@@ -320,7 +321,7 @@ def get_job_results_special(working_dir):
 
     return not same_order, missing_events
 
-@dataclass
+@dataclass(frozen=True)
 class TimeLineEvent:
     time: float
     model: str
@@ -328,6 +329,13 @@ class TimeLineEvent:
 
     def __repr__(self) -> str:
         return CSV_SEPARATOR.join([str(self.time), self.model, self.event_description])
+
+    def get_event_name(self) -> str:
+        return self.model + '_' + self.event_description
+
+    def to_xml(self):
+        attributes = {k: str(v) for k, v in dataclasses.asdict(self).items()}   # Convert attributes to str for xml
+        return etree.Element("TimeLineEvent", attributes)
 
 def timeline_events_match(timeline_event_1: TimeLineEvent, timeline_event_2: TimeLineEvent) -> bool:
     if timeline_event_1.model == timeline_event_2.model and timeline_event_1.event_description == timeline_event_2.event_description:

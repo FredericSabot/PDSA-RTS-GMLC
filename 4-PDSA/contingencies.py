@@ -4,6 +4,7 @@ import pypowsybl as pp
 from common import *
 from dynawo_protections import get_buses_to_lines, get_adjacent_lines
 import pandas as pd
+from pathlib import Path
 
 @dataclass
 class InitEvent:
@@ -70,8 +71,8 @@ class Contingency:
     as OUTAGE_RATE_PER_KM * length. If substation configurations were considered, this should be updated, i.e. a topology computation
     should be done to identify which contingencies are equivalent
     """
-    line_lengths = pd.read_csv(f'../{NETWORK_NAME}-Data/branch.csv', index_col=0).Length
-    n = pp.network.load(f'../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
+    line_lengths = pd.read_csv(Path(__file__).parent / f'../{NETWORK_NAME}-Data/branch.csv', index_col=0).Length
+    n = pp.network.load(Path(__file__).parent / f'../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
     lines = n.get_lines()
     vl = n.get_voltage_levels()
 
@@ -111,7 +112,7 @@ class Contingency:
     def create_N_1_contingencies(with_lines = True, with_generators = False, with_normal_clearing = True, with_delayed_clearing = True):
         contingencies = []
         # Read network
-        n = pp.network.load(f'../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
+        n = pp.network.load(Path(__file__).parent / f'../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
         lines = n.get_lines()
         vl = n.get_voltage_levels()
 
@@ -195,7 +196,7 @@ class Contingency:
         """
         contingencies = []
         # Read network
-        n = pp.network.load(f'../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
+        n = pp.network.load(Path(__file__).parent / f'../{NETWORK_NAME}-Data/{NETWORK_NAME}.iidm')
         lines = n.get_lines()
         vl = n.get_voltage_levels()
 

@@ -5,7 +5,7 @@ All the main parameters of the analysis are defined in common.py
 # Requirements
 
 ```
-python -m pip install pypowsybl lxml logger mpi4py natsort
+python -m pip install pypowsybl lxml logger mpi4py natsort scipy
 ```
 
 Install [dynawo](https://dynawo.github.io/) and set DYNAWO_PATH in 4-PDSA/common.py accordingly. Currently, the dynamic models used are only available on my fork of Dynawo on the branch [30_RTQ2024](https://github.com/FredericSabot/dynawo/tree/30_RTS2024). You can compile it from source, or I can make release on demand.

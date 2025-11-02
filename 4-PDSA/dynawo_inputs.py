@@ -12,7 +12,7 @@ import dynawo_protections
 import dynawo_init_events
 import pypowsybl as pp
 import sys
-sys.path.insert(1, '../3-DynData')
+sys.path.insert(1, str((Path(__file__).parent / '../3-DynData')))
 import add_dyn_data
 
 def write_job_files(job : job.Job):
