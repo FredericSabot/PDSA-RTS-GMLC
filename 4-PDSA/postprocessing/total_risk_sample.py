@@ -28,7 +28,7 @@ N = int(1.5e5)
 
 contingency_ids = random.choices(population=range(len(root)), weights=frequencies, k=N)
 
-for i, contingency_id in enumerate(contingency_ids):
+for i, contingency_id in enumerate(contingency_ids, start=1):
     contingency = root[contingency_id]
 
     static_ids = []
@@ -40,23 +40,23 @@ for i, contingency_id in enumerate(contingency_ids):
     # consequence = float(contingency[static_id].get('mean_load_shed'))
     consequences.append(consequence)
 
-    if (i + 1 ) % 200 == 0:
+    if i % 200 == 0:
         x.append(i)
         var = np.var(consequences)
         mean = np.mean(consequences)
 
-        indicator_1 = sum_f * sqrt(var / (i+1))
+        indicator_1 = sum_f * sqrt(var / i)
 
         # SE of risk from unobserved samples with 99% confidence
-        p = 1 - 0.01**(1/(i+1))
+        p = 1 - 0.01**(1/i)
         b = max((MAX_CONSEQUENCES-mean)**2, (mean-0)**2)
-        indicator_2 = sum_f * sqrt(p*b/(i+1))
+        indicator_2 = sum_f * sqrt(p*b/i)
 
         std_dev.append(indicator_1)
         coverage.append(indicator_2)
         total.append(sqrt(indicator_1**2 + indicator_2**2))
 
-        print(i+1, indicator_1, indicator_2, sqrt(indicator_1**2 + indicator_2**2), sep='\t')
+        print(i, indicator_1, indicator_2, sqrt(indicator_1**2 + indicator_2**2), sep='\t')
 
 print(np.var(consequences))  # 234 (MW**2) for cost, 22%**2 for load_shed
 
