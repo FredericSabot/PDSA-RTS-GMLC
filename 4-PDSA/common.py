@@ -28,6 +28,10 @@ elif NETWORK_NAME == 'Texas':
     CONTINGENCY_MINIMUM_VOLTAGE_LEVEL = 340e3
     DISTANCE_PROTECTION_MINIMUM_VOLTAGE_LEVEL = 340e3  # To computationally expensive to model distance protection everywhere (model could be improved)
     JOB_TIMEOUT_S = 1800  # Timeout for a single job in seconds
+elif NETWORK_NAME == 'IEEE39':
+    CONTINGENCY_MINIMUM_VOLTAGE_LEVEL = 1
+    DISTANCE_PROTECTION_MINIMUM_VOLTAGE_LEVEL = 0
+    JOB_TIMEOUT_S = 300  # Timeout for a single job in seconds
 else:
     raise NotImplementedError
 
@@ -48,6 +52,8 @@ if NETWORK_NAME == 'RTS':
     MAX_CONSEQUENCES = 500  # Average consequences of a full blackout, i.e. result of load_shedding_to_cost(100, average_load), with average load = 4348 MW
 elif NETWORK_NAME == 'Texas':
     MAX_CONSEQUENCES = 5000
+elif NETWORK_NAME == 'IEEE39':
+    MAX_CONSEQUENCES = 700  # Consequences of a full blackout, i.e. result of load_shedding_to_cost(100, average_load), with load = 6100 MW
 else:
     raise NotImplementedError
 

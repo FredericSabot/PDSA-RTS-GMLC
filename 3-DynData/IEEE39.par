@@ -708,4 +708,12 @@
     <par type="BOOL" name="event_disconnectExtremity" value="true"/>
     <par type="BOOL" name="event_disconnectOrigin" value="false"/>
   </set>
+  <set id="DummyLoad">
+		<par type="DOUBLE" name="load_alpha" value="2"/>
+		<par type="DOUBLE" name="load_beta" value="2"/>
+		<reference type="DOUBLE" name="load_P0Pu" origData="IIDM" origName="p_pu"/>
+		<reference type="DOUBLE" name="load_Q0Pu" origData="IIDM" origName="q_pu"/>
+		<reference type="DOUBLE" name="load_U0Pu" origData="IIDM" origName="v_pu"/>
+		<reference type="DOUBLE" name="load_UPhase0" origData="IIDM" origName="angle_pu"/>
+  </set>
 </parametersSet>

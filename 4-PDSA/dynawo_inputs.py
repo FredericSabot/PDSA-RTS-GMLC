@@ -54,7 +54,7 @@ def write_job_files(job : job.Job):
                 motor_share = 0.3
         else:
             raise NotImplementedError
-    elif NETWORK_NAME == 'Texas':
+    elif NETWORK_NAME in ['IEEE39', 'Texas']:
         motor_share = 0
     else:
         raise NotImplementedError

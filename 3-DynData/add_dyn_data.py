@@ -167,8 +167,6 @@ def select_gfm_generators(network_name, buses_csv, gens_csv, gens, min_gfm_share
 
 
 def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root, par_root, namespace, motor_share = 0.3, contingency_minimum_voltage_level = 0):
-    if network_name == "IEEE39":
-        return  # IEEE 39 network has its own dynamic data already specified, dynamic models are on https://github.com/FredericSabot/dynawo/tree/31_BPAGG
     if with_lxml:
         from lxml import etree
     else:
@@ -186,6 +184,8 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
             load_attrib = {'id': 'Dummy_' +  loadID, 'lib': 'LoadAlphaBeta', 'parFile': network_name + '.par', 'parId': 'DummyLoad', 'staticId': loadID}
             loadID = 'Dummy_' + loadID
         else:
+            if network_name == "IEEE39":  # IEEE 39 network has its own dynamic data already specified, only Dummy loads needs to be added
+                continue
             if motor_share != 0:
                 load_attrib = {'id': loadID, 'lib': 'LoadAlphaBetaMotorSimplified', 'parFile': network_name + '.par', 'parId': 'GenericLoadAlphaBetaMotor', 'staticId': loadID}
             else:
@@ -197,6 +197,9 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
 
         if 'Motor' in  load_attrib['lib']:
             etree.SubElement(dyd_root, etree.QName(namespace, 'connect'), {'id1': loadID, 'var1': 'load_omegaRefPu', 'id2': 'OMEGA_REF', 'var2': 'omegaRef_0'})
+
+    if network_name == "IEEE39":
+        return  # IEEE 39 network has its own dynamic data already specified, dynamic models are on https://github.com/FredericSabot/dynawo/tree/31_BPAGG
 
     motor_par_set = etree.SubElement(par_root, etree.QName(namespace, 'set'), {'id' : 'GenericLoadAlphaBetaMotor'})
     par_attribs = [

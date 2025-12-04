@@ -86,10 +86,12 @@ class Contingency:
         duplicate = False
         if NETWORK_NAME == 'RTS':
             separator = '-'
+        elif NETWORK_NAME == 'IEEE39':
+            separator = "*****"  # No duplicate lines in the IEEE39 network
         elif NETWORK_NAME == 'Texas':
             separator = '_'
         else:
-            raise
+            raise NotImplementedError
 
         if separator in line_id:
             base_line, copy_id = line_id.split(separator)
