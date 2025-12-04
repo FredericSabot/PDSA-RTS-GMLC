@@ -167,6 +167,8 @@ def select_gfm_generators(network_name, buses_csv, gens_csv, gens, min_gfm_share
 
 
 def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root, par_root, namespace, motor_share = 0.3, contingency_minimum_voltage_level = 0):
+    if network_name == "IEEE39":
+        return  # IEEE 39 network has its own dynamic data already specified, dynamic models are on https://github.com/FredericSabot/dynawo/tree/31_BPAGG
     if with_lxml:
         from lxml import etree
     else:
@@ -816,7 +818,7 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
     # return dyd_root, par_root  # Unecessary since they are mutable
 
 if __name__ == '__main__':
-    for network_name in ['RTS', 'Texas']:
+    for network_name in ['RTS', 'Texas', 'IEEE39']:
         input_file = f'../{network_name}-Data/{network_name}.iidm'
         network = pp.network.load(input_file)
 
@@ -824,6 +826,10 @@ if __name__ == '__main__':
         dyd_root = etree.parse('base.dyd', XMLparser).getroot()
         par_root = etree.parse('base.par', XMLparser).getroot()
         namespace = 'http://www.rte-france.com/dynawo'
+
+        if network_name == "IEEE39":
+            dyd_root = etree.parse('IEEE39.dyd', XMLparser).getroot()
+            par_root = etree.parse('IEEE39.par', XMLparser).getroot()
 
         if network_name == 'RTS':
             add_dyn_data(network_name, network, True, dyd_root, par_root, namespace, motor_share=0.3)

@@ -29,13 +29,16 @@ def write_job_files(job : job.Job):
     # Add data to dyd and par files
     network = pp.network.load(iidm_file)
     dyn_data_path = '../3-DynData'
+    base_name = "base"
+    if NETWORK_NAME == "IEEE39":
+        base_name = "IEEE39"
     if WITH_LXML:
         XMLparser = etree.XMLParser(remove_blank_text=True)  # Necessary for pretty_print to work
-        dyd_root = etree.parse(os.path.join(dyn_data_path, 'base.dyd'), XMLparser).getroot()
-        par_root = etree.parse(os.path.join(dyn_data_path, 'base.par'), XMLparser).getroot()
+        dyd_root = etree.parse(os.path.join(dyn_data_path, f'{base_name}.dyd'), XMLparser).getroot()
+        par_root = etree.parse(os.path.join(dyn_data_path, f'{base_name}.par'), XMLparser).getroot()
     else:
-        dyd_root = etree.parse(os.path.join(dyn_data_path, 'base.dyd')).getroot()
-        par_root = etree.parse(os.path.join(dyn_data_path, 'base.par')).getroot()
+        dyd_root = etree.parse(os.path.join(dyn_data_path, f'{base_name}.dyd')).getroot()
+        par_root = etree.parse(os.path.join(dyn_data_path, f'{base_name}.par')).getroot()
 
     if NETWORK_NAME == 'RTS':
         if CASE == 'january':
