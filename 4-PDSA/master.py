@@ -21,7 +21,7 @@ class Master:
         self.run()
 
     @staticmethod
-    def create_contingency_list():
+    def create_contingency_list() -> list[Contingency]:
         base_contingency = Contingency.create_base_contingency()
         if WITH_HIDDEN_FAILURES or not NEGLECT_NORMAL_FAULT_RISK:
             N_1_contingencies = Contingency.create_N_1_contingencies(with_normal_clearing=True)

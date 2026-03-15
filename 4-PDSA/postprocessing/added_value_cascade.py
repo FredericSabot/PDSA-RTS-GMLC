@@ -21,7 +21,7 @@ if __name__ == '__main__':
     worst_contingencies = sorted(root, key=lambda x : float(x.get('cost')), reverse=True)
 
     f = open('contingency_classification.csv', 'w')
-    writer = csv.writer(f)
+    writer = csv.writer(f, lineterminator="\n")
 
     writer.writerow(['Contingency', 'Frequency', 'Cost', 'Green', 'Yellow', 'Orange', 'Red'])
 

@@ -129,7 +129,7 @@ for i, bus in enumerate(buses):
 
 
 parallel_line_count = {}
-with open('branch.csv', 'w') as f:
+with open('branch.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow('UID,From Bus,To Bus,R,X,B,Cont Rating,LTE Rating,STE Rating,Perm OutRate,Duration,Tr Ratio,Tran OutRate,Length'.split(','))  # Output format
 
@@ -171,7 +171,7 @@ with open('branch.csv', 'w') as f:
                 print(f'Warning: line {branch_id} has zero length and has thus been replaced by a transformer')
         writer.writerow([branch_id, from_bus, to_bus, r, x, b, rate_A, rate_B, rate_C, permanent_outage_rate, outage_duration, ratio, transient_outage_rate, length])
 
-with open('bus.csv', 'w') as f:
+with open('bus.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow('Bus ID,Bus Name,BaseKV,Bus Type,MW Load,MVAR Load,V Mag,V Angle,MW Shunt G,MVAR Shunt B,Area,Sub Area,Zone,lat,lng'.split(','))
 
@@ -206,18 +206,18 @@ with open('bus.csv', 'w') as f:
 
         writer.writerow([bus_id, bus_name, base_kv, bus_type, P, Q, V, phi, G, B, area, sub_area, zone, latitude, longitude])
 
-with open('dc_branch.csv', 'w') as f:
+with open('dc_branch.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow('UID,From Bus,To Bus,Control Mode,R Line,MW Load,V Mag kV,R Compound,Margin,Metered end,Line FOR Perm,Line FOR Trans,MTTR Line Hours,From Station FOR Active,From Station FOR Passive,From Station Scheduled Maint Rate,From Station Scheduled Maint Hours,From Switching Time Hours,To Station FOR Active,To Station FOR Passive,To Station Scheduled Maint Rate,To Station Scheduled Maint Dur Hours,To Switching Time Hours,Line Outage Prob 0,Line Outage Prob 1,Line Outage Prob 2,Line Outage Prob 3,Line Outage Rate 0,Line Outage Rate 1,Line Outage Rate 2,Line Outage Rate 3,Line Outage Dur 0,Line Outage Dur 1,Line Outage Dur 2,Line Outage Dur 3,Line Outage Loading 1,Line Outage Loading 2,Line Outage Loading 3,From Series Bridges,From Max Firing Angle,From Min Firing Angle,From R Commutating,From X Commutating,From baseKV,From Tr Ratio,From Tap Setpoint,From Tap Max,From Tap Min,From Tap Step,To Series Bridges,To Max Firing Angle,To Min Firing Angle,To R Commutating,To X Commutating,To baseKV,To Tr Ratio,To Tap Setpoint,To Tap Max,To Tap Min,To Tap Step'.split(','))
 
     pass  # No HVDC in the network
 
 
-with open('gen.csv', 'w') as f:
+with open('gen.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow('GEN UID,Bus ID,Gen ID,Unit Group,Unit Type,Category,Fuel,MW Inj,MVAR Inj,V Setpoint p.u.,PMax MW,PMin MW,QMax MVAR,QMin MVAR,Min Down Time Hr,Min Up Time Hr,Ramp Rate MW/Min,Start Time Cold Hr,Start Time Warm Hr,Start Time Hot Hr,Start Heat Cold MBTU,Start Heat Warm MBTU,Start Heat Hot MBTU,Non Fuel Start Cost $,Non Fuel Shutdown Cost $,FOR,MTTF Hr,MTTR Hr,Scheduled Maint Weeks,Fuel Price $/MMBTU,Output_pct_0,Output_pct_1,Output_pct_2,Output_pct_3,Output_pct_4,HR_avg_0,HR_incr_1,HR_incr_2,HR_incr_3,HR_incr_4,VOM,Fuel Sulfur Content %,Emissions SO2 Lbs/MMBTU,Emissions NOX Lbs/MMBTU,Emissions Part Lbs/MMBTU,Emissions CO2 Lbs/MMBTU,Emissions CH4 Lbs/MMBTU,Emissions N2O Lbs/MMBTU,Emissions CO Lbs/MMBTU,Emissions VOCs Lbs/MMBTU,Damping Ratio,Inertia MJ/MW,Base MVA,Transformer X p.u.,Unit X p.u.,Pump Load MW,Storage Roundtrip Efficiency'.split(','))
 
-    f2 = open('generator_locations.csv', 'w')  # Not part of RTS-GMLC format, but used to generate timeseries data
+    f2 = open('generator_locations.csv', 'w', newline='')  # Not part of RTS-GMLC format, but used to generate timeseries data
     writer2 = csv.writer(f2)
     writer2.writerow('GEN UID,Max Power (MW),Latitude,Longitude'.split(','))
 
@@ -343,7 +343,7 @@ with open('gen.csv', 'w') as f:
     f2.close()
 
 
-with open('timeseries_pointers.csv', 'w') as f:
+with open('timeseries_pointers.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow('Simulation,Category,Object,Parameter,Scaling Factor,Data File'.split(','))
 
@@ -367,7 +367,7 @@ with open('timeseries_pointers.csv', 'w') as f:
             writer.writerow([period, 'Area', area, 'MW Load', total_area_load, f'timeseries_data_files/Load/{period}_regional_Load.csv'])  # Identical for day-ahead and real-time
 
 
-with open('simulation_objects.csv', 'w') as f:
+with open('simulation_objects.csv', 'w', newline='') as f:
     f.write('Simulation_Parameters,Description,DAY_AHEAD,REAL_TIME\n'
             'Periods_per_Step,the number of descrete periods represented in each simulation step,24,1\n'
             'Period_Resolution,period resolution in seconds,3600,3600\n'
@@ -378,7 +378,7 @@ with open('simulation_objects.csv', 'w') as f:
             'Reserve_Products,list of reserve products scheduled,"(Spin_Up)","(Spin_Up)"\n')
 
 
-with open('reserves.csv', 'w') as f:
+with open('reserves.csv', 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerow('Reserve Product,Timeframe (sec),Requirement (MW),Eligible Regions,Eligible Device Categories,Eligible Device SubCategories,Direction'.split(','))
 

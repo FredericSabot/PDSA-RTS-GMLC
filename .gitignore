@@ -33,3 +33,7 @@
 Texas-Data/*.csv
 Texas-Data/**/*.csv
 Texas-Data/timeseries_data_files/weather_data/*
+*.png
+*.xlsx
+*.xml
+*.log

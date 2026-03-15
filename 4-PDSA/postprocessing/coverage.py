@@ -202,14 +202,14 @@ if __name__ == "__main__":
     root = etree.parse('../AnalysisOutput.xml').getroot()
     f = open('clustering.csv', 'w')
     writer = csv.writer(f)
-    writer.writerow(['Contingency id', 'Share unsecure states', 'Speed up', 'Nb samples', 'Nb sampled clusters', 'Actual cost'] + [f'Estimated costs {i+1}' for i in range(20)])
+    writer.writerow(['Contingency id', 'Share with cost', 'Speed up', 'Nb samples', 'Nb sampled clusters', 'Actual cost'] + [f'Estimated costs {i+1}' for i in range(20)])
 
     operating_point_ids = [int(os.path.basename(file).split('.')[-2]) for file in static_files]
 
     for contingency in sorted(root, key = lambda item:item.get('cost'), reverse=True):
         frequency = float(contingency.get('frequency'))
         contingency_id = contingency.get('id')
-        share_unsecure_states = contingency.get('share_unsecure')
+        share_with_cost = contingency.get('share_w_cost')
 
         estimated_costs = []
         for seed in range(20):
@@ -252,6 +252,6 @@ if __name__ == "__main__":
 
         speedup = len(static_ids) / len(cluster_results)  # Speed up might vary from run to run, but only consider last one
         # speedup = len(static_ids) / nb_actual_simulations
-        writer.writerow([contingency_id, share_unsecure_states, speedup, len(static_ids), len(cluster_results), actual_cost] + estimated_costs)
+        writer.writerow([contingency_id, share_with_cost, speedup, len(static_ids), len(cluster_results), actual_cost] + estimated_costs)
 
     f.close()

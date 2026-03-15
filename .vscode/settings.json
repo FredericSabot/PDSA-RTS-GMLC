@@ -2,6 +2,7 @@
     "cmake.configureOnOpen": false,
     "python.analysis.typeCheckingMode": "off",
     "python.analysis.extraPaths": [
-        "./3-DynData"
+        "./3-DynData",
+        "./2-SCOPF"
     ]
 }

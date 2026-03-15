@@ -106,7 +106,7 @@ total_protection_cases_with_consequences_cascading_path = 0
 
 share_protection_failure_potential = {contingency.get('id'): 0 for contingency in root}
 freq_protection_failure_potential = 0
-share_unsecure = {}
+share_with_cost = {}
 total_freq = 0
 
 def get_contingency_type(contingency_id):
@@ -230,7 +230,7 @@ for contingency in root:
                 else:
                     share_protection_failure_potential[contingency_id] += nb_potential_cases / len(contingency)
                     freq_protection_failure_potential += float(contingency.get('frequency')) * nb_potential_cases / len(contingency)
-    share_unsecure[contingency_id] = contingency.get('share_unsecure')
+    share_with_cost[contingency_id] = contingency.get('share_w_cost')
 
     # if contingency.get('id')[0] == 'B':
     total_risk[contingency_type] += float(contingency.get('risk'))
@@ -300,7 +300,7 @@ print(total_protection_cases_with_consequences_cascading_path)
 print()
 for contingency_id in share_protection_failure_potential:
     if share_protection_failure_potential[contingency_id] != 0:
-        print(contingency_id, share_protection_failure_potential[contingency_id] * 100, share_unsecure[contingency_id])
+        print(contingency_id, share_protection_failure_potential[contingency_id] * 100, share_with_cost[contingency_id])
 print(freq_protection_failure_potential)  # Only save first 3 trips, so might miss some cases, but assume full blackout below, so compensates + stable scenarios should not have more than 3 trips
 print('Max cost protection failure', freq_protection_failure_potential * 0.01 * 500)  # Assume failure proba of protection of 0.01 and max consequences 500 + that contingency was initialy secure (cannot increase consequences by 500 if was already 500)
 print('Cost', root.get('total_cost'))

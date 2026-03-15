@@ -25,6 +25,7 @@ coverage = []
 total = []
 
 N = int(1.5e5)
+random.seed(42)
 
 contingency_ids = random.choices(population=range(len(root)), weights=frequencies, k=N)
 

@@ -590,7 +590,8 @@ class JobQueue:
             N_static = len(contingency_results.static_ids)
             indicators = self.get_statistical_indicators(contingency)
             total_cases = len(contingency_results.static_ids)
-            cases_unsecure = sum([1 if contingency_results.get_average_cost_per_static_id(static_id) > 0 else 0 for static_id in contingency_results.static_ids])
+            cases_unsecure = sum([1 if any(len([event for event in job.results.trip_timeline if "RTPV" not in event.model]) > 0 for job in contingency_results.jobs[static_id]) else 0 for static_id in contingency_results.static_ids])
+            cases_with_cost = sum([1 if contingency_results.get_average_cost_per_static_id(static_id) > 0 else 0 for static_id in contingency_results.static_ids])
             contingency_attrib = {'id': contingency.id,
                                   'frequency': '{:.6g}'.format(contingency.frequency),
                                   'mean_load_shed': '{:.4g}'.format(mean),
@@ -601,7 +602,8 @@ class JobQueue:
                                   'cost_w_hidden': '',  # Written here to book attrib order, updated later
                                   'N': str(N),
                                   'N_static': str(N_static),
-                                  'share_unsecure': str(cases_unsecure / total_cases * 100) if total_cases > 0 else 'N/A'}
+                                  'share_unsecure': str(cases_unsecure / total_cases * 100) if total_cases > 0 else 'N/A',
+                                  'share_w_cost': str(cases_with_cost / total_cases * 100) if total_cases > 0 else 'N/A'}
             for i, indicator in enumerate(indicators):
                 contingency_attrib['ind_{}'.format(i+1)] = '{:.4g}'.format(indicator)
             contingency_element = etree.SubElement(root, 'Contingency', contingency_attrib)
@@ -629,7 +631,8 @@ class JobQueue:
                 N_static = len(contingency_results.static_ids)
                 total_cases_parent = len(self.simulation_results[base_contingency.id].static_ids)
                 total_cases = len(contingency_results.static_ids)
-                cases_unsecure = sum([1 if contingency_results.get_average_cost_per_static_id(static_id) > 0 else 0 for static_id in contingency_results.static_ids])
+                cases_unsecure = sum([1 if any(len([event for event in job.results.trip_timeline if "RTPV" not in event.model]) > 0 for job in contingency_results.jobs[static_id]) else 0 for static_id in contingency_results.static_ids])
+                cases_with_cost = sum([1 if contingency_results.get_average_cost_per_static_id(static_id) > 0 else 0 for static_id in contingency_results.static_ids])
                 frequency = base_contingency.frequency * HIDDEN_FAILURE_PROBA ** (len(sub_contingency_id.split('~')) - 1) * (total_cases / total_cases_parent)
                 risk_hidden += frequency * mean
                 cost_hidden += frequency * mean_cost
@@ -642,7 +645,8 @@ class JobQueue:
                                   'cost': '{:.4g}'.format(frequency * mean_cost),
                                   'N': str(N),
                                   'N_static': str(N_static),
-                                  'share_unsecure': str(cases_unsecure / total_cases * 100) if total_cases > 0 else 'N/A'}
+                                  'share_unsecure': str(cases_unsecure / total_cases * 100) if total_cases > 0 else 'N/A',
+                                  'share_w_cost': str(cases_with_cost / total_cases * 100) if total_cases > 0 else 'N/A'}
                 sub_contingency_element = etree.SubElement(contingency_element, 'Contingency', sub_contingency_attrib)
                 self.contingency_results_to_xml(sub_contingency_element, frequency, contingency_results)
 

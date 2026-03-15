@@ -193,10 +193,6 @@ load_per_area = [0] * N_areas
 for i in range(N_buses):
     load_per_area[area[i] - 1] += loads_P[i]
 
-load_participation_area = []
-for i in range(N_buses):
-    load_participation_area.append(loads_P[i] / load_per_area[area[i] - 1])
-
 admit = 1 / np.array(branches['X'])
 branch_map = np.zeros((N_branches, N_buses))
 
