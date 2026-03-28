@@ -280,7 +280,7 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
         gen = etree.SubElement(dyd_root, etree.QName(namespace, 'blackBoxModel'), gen_attrib)
 
         if synchronous:
-            etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'OMEGA_REF', 'connector': 'MS_OMEGAREF_CONNECTOR', 'index2': str(omega_index)})
+            etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': 'OMEGA_REF', 'id2': genID, 'connector': 'MS_OMEGAREF_CONNECTOR', 'index1': str(omega_index)})
             etree.SubElement(gen, etree.QName(namespace, 'macroStaticRef'), {'id': 'GEN'})
             etree.SubElement(dyd_root, etree.QName(namespace, 'macroConnect'), {'id1': genID, 'id2': 'NETWORK', 'connector': 'GEN-CONNECTOR'})
         else:
@@ -703,8 +703,8 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
                     {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
                     {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.4'},  # Original: 1.2, increased because of overvoltages caused by plant itself, requires better modelling
                     {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.5'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
+                    {'type': 'DOUBLE', 'name': 'ibg_Ki', 'value': '20'},
+                    {'type': 'DOUBLE', 'name': 'ibg_Kp', 'value': '3'},
                     {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
                     {'type': 'DOUBLE', 'name': 'ibg_tf', 'value': '0.1'},
                 ]
@@ -750,9 +750,8 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
                     {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
                     {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.2'},
                     {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_', 'value': '3'},
+                    {'type': 'DOUBLE', 'name': 'ibg_Ki', 'value': '20'},
+                    {'type': 'DOUBLE', 'name': 'ibg_Kp', 'value': '3'},
                     {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
                     {'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0'},
                     {'type': 'DOUBLE', 'name': 'ibg_tf', 'value': '1'},
@@ -793,9 +792,8 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
                     {'type': 'DOUBLE', 'name': 'ibg_tFilterU', 'value': '0.01'},
                     {'type': 'DOUBLE', 'name': 'ibg_UMaxPu', 'value': '1.2'},
                     {'type': 'DOUBLE', 'name': 'ibg_UPLLFreezePu', 'value': '0.1'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Ki', 'value': '20'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_Kp', 'value': '3'},
-                    {'type': 'DOUBLE', 'name': 'ibg_PLLFreeze_', 'value': '3'},
+                    {'type': 'DOUBLE', 'name': 'ibg_Ki', 'value': '20'},
+                    {'type': 'DOUBLE', 'name': 'ibg_Kp', 'value': '3'},
                     {'type': 'DOUBLE', 'name': 'ibg_SNom', 'value': str(SNom)},
                     {'type': 'DOUBLE', 'name': 'ibg_Kf', 'value': '0'},
                     {'type': 'DOUBLE', 'name': 'ibg_tf', 'value': '1'},

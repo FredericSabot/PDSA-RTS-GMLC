@@ -7161,9 +7161,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7198,9 +7197,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7235,9 +7233,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7272,9 +7269,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="99.5703771209088"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7309,9 +7305,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="97.04112530262621"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7346,9 +7341,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7383,9 +7377,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="97.9739761365231"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7420,9 +7413,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="54.119220245676125"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7457,9 +7449,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="52.03124061561477"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7494,9 +7485,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="98.52639240325406"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7531,9 +7521,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7568,9 +7557,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="54.023698503527136"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7605,9 +7593,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="53.39138507287482"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7642,9 +7629,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="97.9895912839726"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7679,9 +7665,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="197.0231712261276"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7716,9 +7701,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="130.97881508091297"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7753,9 +7737,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="26.791229908311415"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7790,9 +7773,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="27.10737906917598"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7827,9 +7809,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="26.475082624989106"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7864,9 +7845,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="28.055837182304863"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7901,9 +7881,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="27.960329039551734"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7938,9 +7917,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="27.42353004264768"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -7975,9 +7953,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="27.011849251763568"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8012,9 +7989,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="64.36808215257"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8049,9 +8025,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="69.71312645406171"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8086,9 +8061,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="100.9"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8123,9 +8097,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="101.7"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8160,9 +8133,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="63.1"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8197,9 +8169,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="65.4"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8234,9 +8205,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="67.0"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8271,9 +8241,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="64.8"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8308,9 +8277,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="63.8"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8345,9 +8313,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="64.1"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8382,9 +8349,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="66.6"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8419,9 +8385,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="62.4"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8456,9 +8421,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="66.9"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8493,9 +8457,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="65.2"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8530,9 +8493,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="27.8"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8567,9 +8529,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="27.3"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8604,9 +8565,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="27.0"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8641,9 +8601,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="28.3"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8678,9 +8637,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="27.2"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8715,9 +8673,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="27.0"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8752,9 +8709,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="28.2"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8789,9 +8745,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="9.3"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8826,9 +8781,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="9.7"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8863,9 +8817,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="9.4"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8900,9 +8853,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="9.1"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8937,9 +8889,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="9.1"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -8974,9 +8925,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="9.7"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -9011,9 +8961,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="9.4"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -9048,9 +8997,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="11.8"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -9085,9 +9033,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="11.2"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -9122,9 +9069,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="10.3"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -9159,9 +9105,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="4.5"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -9196,9 +9141,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.2"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.1"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="13.2"/>
     <par type="DOUBLE" name="ibg_Kf" value="0"/>
     <par type="DOUBLE" name="ibg_tf" value="1"/>
@@ -9233,8 +9177,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.4"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="155.3595185368441"/>
     <par type="DOUBLE" name="ibg_tf" value="0.1"/>
     <par type="DOUBLE" name="ibg_Kf" value="0.5"/>
@@ -9269,8 +9213,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.4"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="837.1445872727124"/>
     <par type="DOUBLE" name="ibg_tf" value="0.1"/>
     <par type="DOUBLE" name="ibg_Kf" value="0.5"/>
@@ -9305,8 +9249,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.4"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="887.338295127625"/>
     <par type="DOUBLE" name="ibg_tf" value="0.1"/>
     <par type="DOUBLE" name="ibg_Kf" value="0.5"/>
@@ -9341,8 +9285,8 @@
     <par type="DOUBLE" name="ibg_tFilterU" value="0.01"/>
     <par type="DOUBLE" name="ibg_UMaxPu" value="1.4"/>
     <par type="DOUBLE" name="ibg_UPLLFreezePu" value="0.5"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Ki" value="20"/>
-    <par type="DOUBLE" name="ibg_PLLFreeze_Kp" value="3"/>
+    <par type="DOUBLE" name="ibg_Ki" value="20"/>
+    <par type="DOUBLE" name="ibg_Kp" value="3"/>
     <par type="DOUBLE" name="ibg_SNom" value="747.477150152431"/>
     <par type="DOUBLE" name="ibg_tf" value="0.1"/>
     <par type="DOUBLE" name="ibg_Kf" value="0.5"/>
