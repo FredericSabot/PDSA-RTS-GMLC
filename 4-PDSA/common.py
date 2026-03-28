@@ -43,7 +43,7 @@ BYPASS_SCREENING = True  # If True, simulate scenarios which are deemed secure b
 MIN_NUMBER_STATIC_SEED = 5  # Minimum number of random operating conditions considered per contingency
 MIN_NUMBER_STATIC_SEED_CRITICAL_CONTINGENCY = 1000  # Minimum for worst 10 critical contingencies (useful for ML-based security enhancement)
 MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED = 5  # Number of protection samples per scenario that is sensitive to protection-related uncertainty
-NB_RUNS_PER_INDICATOR_EVALUATION = 5000  # Number of simulations performed between each update of statistical indicators (e.g. total risk) by the master, note: slightly less runs migth be done per indicator evaluation due to capping
+NB_RUNS_PER_INDICATOR_EVALUATION = 2000  # Number of simulations performed between each update of statistical indicators (e.g. total risk) by the master, note: slightly less runs migth be done per indicator evaluation due to capping
 DOUBLE_MC_LOOP = True  # Whether to use an indicator to predict the scenarios that are sensitive the protection-related uncertainties
 # and run multiple (MIN_NUMBER_DYNAMIC_RUNS_PER_STATIC_SEED) MC simulations for them. Otherwise, a single sample of protection parameters
 # is taken per sample of operating conditions
@@ -69,7 +69,7 @@ T_INIT = 5  # Fault time
 T_CLEARING = T_INIT + 0.1
 T_BACKUP = T_INIT + 0.2
 T_RECLOSE = T_INIT + 0.2
-T_END = 20  # End of simulation time
+T_END = 30  # End of simulation time (must be coherent from one from .jobs file)
 R_FAULT = 0.001  # In pu
 X_FAULT = 0.001
 
