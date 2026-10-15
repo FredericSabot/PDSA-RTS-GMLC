@@ -521,7 +521,7 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_Kf', 'value': '0'},
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_tF', 'value': '1.00'},
                     ]
-                elif unit_group == 'Coal_155' or 'CC_150':  # Reference machine F8 from Vijay Vittal book (no data on combined cycle gas turbines)
+                elif unit_group in ('Coal_155', 'CC_150'):  # Reference machine F8 from Vijay Vittal book (no data on combined cycle gas turbines)
                     pf = 0.85
                     par_attribs +=[
                         {'type': 'DOUBLE', 'name': 'generator_SNom', 'value': str(SNom)},
@@ -573,7 +573,7 @@ def add_dyn_data(network_name, network: pp.network.Network, with_lxml, dyd_root,
                         {'type': 'DOUBLE', 'name': 'generator_Tpq0', 'value': '1.50'},
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_tR', 'value': '0.001'},
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_Ka', 'value': '400'},
-                        {'type': 'DOUBLE', 'name': 'voltageRegulator_tA', 'value': '0.2'},
+                        {'type': 'DOUBLE', 'name': 'voltageRegulator_tA', 'value': '0.02'},
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_EfdRawMaxPu', 'value': '8.130'},
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_EfdRawMinPu', 'value': '-8.130'},
                         {'type': 'DOUBLE', 'name': 'voltageRegulator_Ke', 'value': '1'},
